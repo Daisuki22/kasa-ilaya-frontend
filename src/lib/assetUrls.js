@@ -1,6 +1,23 @@
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV
+    ? "http://localhost/Kasa-Ilaya-Resort/backend/api"
+    : "https://kasa-ilaya-resort-back-end.onrender.com/api");
 
 const isLocalHostname = (hostname) => LOCAL_HOSTNAMES.has(hostname.toLowerCase());
+
+const apiAssetBaseUrl = () => {
+  try {
+    const apiUrl = new URL(API_BASE_URL, typeof window === "undefined" ? "http://localhost" : window.location.href);
+    apiUrl.pathname = apiUrl.pathname.replace(/\/api\/?$/i, "").replace(/\/$/, "");
+    apiUrl.search = "";
+    apiUrl.hash = "";
+    return apiUrl.toString().replace(/\/$/, "");
+  } catch {
+    return "";
+  }
+};
 
 const appBasePath = () => {
   const viteBase = import.meta.env.BASE_URL || "/";
@@ -36,6 +53,16 @@ export const resolveAssetUrl = (value) => {
     return `${appBasePath()}${normalized.slice(1)}`.replace(/\/{2,}/g, "/");
   }
 
+  if (/^\/uploads\//i.test(normalized)) {
+    const assetBase = apiAssetBaseUrl();
+    return assetBase ? `${assetBase}${normalized}` : normalized;
+  }
+
+  if (/^\/api\/uploads\//i.test(normalized)) {
+    const assetBase = apiAssetBaseUrl();
+    return assetBase ? `${assetBase}${normalized.replace(/^\/api/i, "")}` : normalized;
+  }
+
   if (typeof window === "undefined" || !/^https?:\/\//i.test(normalized)) {
     return normalized;
   }
@@ -48,9 +75,10 @@ export const resolveAssetUrl = (value) => {
       return normalized;
     }
 
-    const uploadMatch = url.pathname.match(/\/[^/]+\/api\/(uploads\/.*)$/i);
-    if (import.meta.env.DEV && uploadMatch) {
-      return `${currentUrl.origin}/api/${uploadMatch[1]}${url.search}${url.hash}`;
+    const uploadMatch = url.pathname.match(/(?:^|\/)api\/(uploads\/.*)$/i) || url.pathname.match(/(?:^|\/)(uploads\/.*)$/i);
+    if (uploadMatch) {
+      const assetBase = apiAssetBaseUrl();
+      return assetBase ? `${assetBase}/${uploadMatch[1]}${url.search}${url.hash}` : normalized;
     }
 
     url.protocol = currentUrl.protocol;
