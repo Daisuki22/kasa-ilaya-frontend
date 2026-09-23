@@ -282,7 +282,7 @@ export default function Login() {
   };
 
   const handleGoogleUnavailable = () => {
-    toast.error('Google sign-in is not configured yet. Add KASA_GOOGLE_CLIENT_ID on the server first.');
+    toast.error('Google sign-in is temporarily unavailable. Please sign in with email for now.');
   };
 
   const notifyOtpMailStatus = (response, successMessage) => {
