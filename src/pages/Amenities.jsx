@@ -121,10 +121,10 @@ export default function Amenities() {
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur">
               <TreePalm className="h-4 w-4" />
-              Resort amenities
+              Resort Gallery
             </div>
             <h1 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-              Amenities made for restful stays and memorable gatherings
+              Gallery made for restful stays and memorable gatherings
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
               Explore Kasa Ilaya Resort&apos;s pools, event spaces, private corners, and guest facilities before planning your visit.
@@ -170,7 +170,7 @@ export default function Amenities() {
         <div className="grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.9fr_1.1fr] lg:px-4 lg:py-10">
           <div>
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">
-              {settings?.amenities_section_label || "Our Amenities"}
+              {settings?.amenities_section_label || "Our Gallery"}
             </span>
             <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
               {settings?.amenities_section_title || "Everything You Need"}
@@ -284,7 +284,7 @@ export default function Amenities() {
             <div>
               <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Facilities</span>
               <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
-                Available resort amenities
+                Available resort Gallery entries
               </h2>
             </div>
             <p className="max-w-2xl leading-8 text-muted-foreground">
@@ -330,7 +330,7 @@ export default function Amenities() {
               Plan your visit
             </div>
             <h2 className="mt-5 font-display text-3xl font-bold text-white sm:text-4xl">
-              Ready to match the amenities with the right package?
+              Ready to match the Gallery with the right package?
             </h2>
             <p className="mt-4 max-w-2xl leading-8 text-white/75">
               Compare day tour, night tour, and longer stay options so your group gets the right space, schedule, and facilities.

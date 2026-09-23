@@ -71,14 +71,14 @@ export const resolveAssetUrl = (value) => {
     const url = new URL(normalized);
     const currentUrl = new URL(window.location.href);
 
-    if (!isLocalHostname(url.hostname) || isLocalHostname(currentUrl.hostname)) {
-      return normalized;
-    }
-
     const uploadMatch = url.pathname.match(/(?:^|\/)api\/(uploads\/.*)$/i) || url.pathname.match(/(?:^|\/)(uploads\/.*)$/i);
     if (uploadMatch) {
       const assetBase = apiAssetBaseUrl();
       return assetBase ? `${assetBase}/${uploadMatch[1]}${url.search}${url.hash}` : normalized;
+    }
+
+    if (!isLocalHostname(url.hostname) || isLocalHostname(currentUrl.hostname)) {
+      return normalized;
     }
 
     url.protocol = currentUrl.protocol;
