@@ -21,6 +21,8 @@ const isValidPhoneNumber = (value) => {
 };
 
 const MIN_SIGNUP_AGE = 18;
+const DEFAULT_GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  || '834800627360-tj8514jf4tqk46oodm358bu9thvub21f.apps.googleusercontent.com';
 
 const toDateInputValue = (date) => {
   const year = date.getFullYear();
@@ -114,7 +116,10 @@ export default function Login() {
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signUpForm, setSignUpForm] = useState({ first_name: '', middle_name: '', last_name: '', birth_date: '', phone: '', email: '', password: '', confirmPassword: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [googleConfig, setGoogleConfig] = useState({ enabled: false, client_id: '' });
+  const [googleConfig, setGoogleConfig] = useState({
+    enabled: Boolean(DEFAULT_GOOGLE_CLIENT_ID),
+    client_id: DEFAULT_GOOGLE_CLIENT_ID,
+  });
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const [isCheckingGoogle, setIsCheckingGoogle] = useState(true);
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState('');
@@ -185,15 +190,19 @@ export default function Login() {
           return;
         }
 
+        const clientId = config?.client_id || DEFAULT_GOOGLE_CLIENT_ID;
         setGoogleConfig({
-          enabled: Boolean(config?.enabled && config?.client_id),
-          client_id: config?.client_id || '',
+          enabled: Boolean(clientId),
+          client_id: clientId,
         });
         setIsCheckingGoogle(false);
       })
       .catch(() => {
         if (isMounted) {
-          setGoogleConfig({ enabled: false, client_id: '' });
+          setGoogleConfig({
+            enabled: Boolean(DEFAULT_GOOGLE_CLIENT_ID),
+            client_id: DEFAULT_GOOGLE_CLIENT_ID,
+          });
           setIsCheckingGoogle(false);
         }
       });
