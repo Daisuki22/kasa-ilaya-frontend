@@ -5,6 +5,41 @@ const createId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 10
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '/api' : '/Kasa-Ilaya-Resort/backend/api');
 const WELCOME_INTRO_SESSION_KEY = 'ki-welcome-intro-shown';
 const THEME_STORAGE_KEY = 'kasa-ilaya-theme';
+const AUTH_MARKER_KEY = `ki-authenticated:${API_BASE_URL}`;
+let inMemoryAuthMarker = false;
+
+const hasClientAuthMarker = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    return window.localStorage.getItem(AUTH_MARKER_KEY) === 'true' || inMemoryAuthMarker;
+  } catch {
+    return inMemoryAuthMarker;
+  }
+};
+
+const markClientAuthenticated = () => {
+  inMemoryAuthMarker = true;
+
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(AUTH_MARKER_KEY, 'true');
+  } catch {
+    // The in-memory marker keeps this tab authenticated until it closes.
+  }
+};
+
+const unauthenticatedError = () => {
+  const error = new Error('Not authenticated.');
+  error.error = 'Not authenticated.';
+  error.status = 401;
+  return error;
+};
 
 const clearClientAuthState = () => {
   if (typeof window === 'undefined') {
@@ -30,6 +65,7 @@ const clearClientAuthState = () => {
 
   try { window.sessionStorage.clear(); } catch {}
   try { window.localStorage.clear(); } catch {}
+  inMemoryAuthMarker = false;
 
   preservedSession.forEach((value, key) => {
     try { window.sessionStorage.setItem(key, value); } catch {}
@@ -69,6 +105,7 @@ const request = async (path, options = {}) => {
 
   const response = await fetch(buildApiUrl(path), {
     credentials: 'include',
+    cache: 'no-store',
     ...fetchOptions,
     headers,
     body,
@@ -187,6 +224,10 @@ const createEntityHandler = (entityName) => ({
 export const baseClient = {
   auth: {
     async me() {
+      if (!hasClientAuthMarker()) {
+        throw unauthenticatedError();
+      }
+
       return request('/auth.php?action=me', { suppressAuthEvent: true });
     },
     async login(data) {
@@ -194,6 +235,9 @@ export const baseClient = {
         method: 'POST',
         body: data,
       });
+      if (payload?.user) {
+        markClientAuthenticated();
+      }
       dispatchAuthChange();
       return payload;
     },
@@ -214,6 +258,9 @@ export const baseClient = {
         method: 'POST',
         body: data,
       });
+      if (payload?.user) {
+        markClientAuthenticated();
+      }
       dispatchAuthChange();
       return payload;
     },
@@ -222,6 +269,9 @@ export const baseClient = {
         method: 'POST',
         body: data,
       });
+      if (payload?.user) {
+        markClientAuthenticated();
+      }
       dispatchAuthChange();
       return payload;
     },
