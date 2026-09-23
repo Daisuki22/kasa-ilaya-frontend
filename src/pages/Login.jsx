@@ -292,7 +292,7 @@ export default function Login() {
 
   const notifyOtpMailStatus = (response, successMessage) => {
     if (response?.mail_sent === false) {
-      toast.error('Verification code was created, but email delivery failed. Please check the email service settings.');
+      toast.error(response.mail_error || 'Verification code was created, but email delivery failed. Please check the email service settings.');
       return;
     }
 

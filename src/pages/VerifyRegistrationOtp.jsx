@@ -57,7 +57,7 @@ export default function VerifyRegistrationOtp() {
     try {
       const response = await baseClient.auth.sendRegistrationOtp({ email });
       if (response?.mail_sent === false) {
-        toast.error('Verification code was created, but email delivery failed. Please check the email service settings.');
+        toast.error(response.mail_error || 'Verification code was created, but email delivery failed. Please check the email service settings.');
         return;
       }
 
