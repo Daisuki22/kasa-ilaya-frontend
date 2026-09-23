@@ -17,7 +17,7 @@ const isValidEmail = (value) => /^(?:[^\s@]+)@(?:[^\s@]+)\.[^\s@]+$/.test(value)
 
 const isValidPhoneNumber = (value) => {
   const normalized = value.replace(/\D/g, '');
-  return normalized.length >= 10 && normalized.length <= 13;
+  return /^09\d{9}$/.test(normalized) || /^639\d{9}$/.test(normalized);
 };
 
 const MIN_SIGNUP_AGE = 18;
@@ -393,7 +393,7 @@ export default function Login() {
     }
 
     if (phone && !isValidPhoneNumber(phone)) {
-      toast.error('Please enter a valid phone number.');
+      toast.error('Please enter a valid Philippine mobile number using 09XXXXXXXXX or 639XXXXXXXXX.');
       return;
     }
 
@@ -484,9 +484,7 @@ export default function Login() {
               <CardDescription className="pt-2 text-sm leading-6">
                 {activeTab === 'signin'
                   ? 'Welcome back. Sign in to continue to your guest dashboard.'
-                  : googleConfig.enabled
-                    ? 'Create a guest account with Google or email.'
-                    : 'Create a guest account with your email.'}
+                  : 'Create a guest account with Google or email.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0">
@@ -496,20 +494,24 @@ export default function Login() {
                       <div className="flex min-h-11 justify-center">
                         <div ref={googleButtonRef} className="min-h-11" />
                       </div>
-                    ) : isCheckingGoogle ? (
-                      <div className="flex h-11 items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Checking sign-in options...
-                      </div>
-                    ) : null}
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 w-full gap-2 rounded-lg border-border bg-background"
+                        disabled
+                        title={isCheckingGoogle ? 'Checking Google sign-in...' : 'Google sign-in is not configured yet.'}
+                      >
+                        {isCheckingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
+                        Continue with Google
+                      </Button>
+                    )}
 
-                    {googleConfig.enabled ? (
-                      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        <div className="h-px flex-1 bg-border" />
-                        <span>Email</span>
-                        <div className="h-px flex-1 bg-border" />
-                      </div>
-                    ) : null}
+                    <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      <div className="h-px flex-1 bg-border" />
+                      <span>Email</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
 
                     {googleConfig.enabled && !isGoogleReady ? (
                       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
