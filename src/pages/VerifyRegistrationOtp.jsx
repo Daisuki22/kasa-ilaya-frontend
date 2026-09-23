@@ -12,7 +12,8 @@ export default function VerifyRegistrationOtp() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const email = searchParams.get('email') || '';
-  const [otp, setOtp] = useState('');
+  const sampleOtp = searchParams.get('sample_otp') || '';
+  const [otp, setOtp] = useState(sampleOtp);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(60);
@@ -61,7 +62,12 @@ export default function VerifyRegistrationOtp() {
         return;
       }
 
-      toast.success('Verification code sent.');
+      if (response?.sample_registration_otp) {
+        setOtp(response.sample_registration_otp);
+        toast.success(`Sample verification code: ${response.sample_registration_otp}`);
+      } else {
+        toast.success('Verification code sent.');
+      }
       setResendSeconds(60);
     } catch (error) {
       if (error?.retry_after_seconds) {
@@ -93,7 +99,9 @@ export default function VerifyRegistrationOtp() {
                 placeholder="123456"
                 required
               />
-              <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to your email address.</p>
+              <p className="text-sm text-muted-foreground">
+                {sampleOtp ? `Sample code for testing: ${sampleOtp}` : 'Enter the 6-digit code sent to your email address.'}
+              </p>
             </div>
 
             <div className="flex items-center justify-between gap-3">

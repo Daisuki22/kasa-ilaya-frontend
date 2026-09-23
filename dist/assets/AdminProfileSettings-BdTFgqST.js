@@ -1,1 +1,0 @@
-import{j as t}from"./index-soUR5hxd.js";import i from"./ProfileSettings-B8qywc-j.js";import"./card-BQTUyaNJ.js";import"./input-CW91wvCv.js";import"./label-Dunra8Ju.js";import"./loader-circle-ByXobu34.js";import"./upload-C6inHLAN.js";function a(){return t.jsx(i,{title:"Admin Profile Settings",description:"Manage your admin account details and password."})}export{a as default};

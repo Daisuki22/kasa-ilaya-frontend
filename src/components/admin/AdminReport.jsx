@@ -764,6 +764,32 @@ export default function AdminReport() {
   const averageBooking = totalBookings ? totalRevenue / totalBookings : 0;
   const reportPeriodLabel = getReportPeriodLabel(period);
   const generatedAt = format(new Date(), "MMM d, yyyy h:mm a");
+  const preparedDate = format(new Date(), "MMM d, yyyy");
+  const revenueRows = [
+    { label: "Room / Villa Bookings", amount: totalRevenue },
+    { label: "Event / Venue Rentals", amount: 0 },
+    { label: "Food & Beverage Sales", amount: 0 },
+    { label: "Other Income (Amenities, Add-ons, etc.)", amount: 0 },
+  ];
+  const directCostRows = [
+    { label: "Food & Beverage Cost", amount: 0 },
+    { label: "Event Supplies & Materials", amount: 0 },
+    { label: "Housekeeping / Amenities Supplies", amount: 0 },
+  ];
+  const operatingExpenseRows = [
+    { label: "Salaries & Wages", amount: 0 },
+    { label: "Utilities (Electricity, Water, Internet)", amount: 0 },
+    { label: "Maintenance & Repairs", amount: 0 },
+    { label: "Marketing & Advertising", amount: 0 },
+    { label: "Permits, Licenses & Insurance", amount: 0 },
+    { label: "Depreciation", amount: 0 },
+    { label: "Miscellaneous Expenses", amount: 0 },
+  ];
+  const totalSales = revenueRows.reduce((sum, row) => sum + row.amount, 0);
+  const totalDirectCosts = directCostRows.reduce((sum, row) => sum + row.amount, 0);
+  const grossProfit = totalSales - totalDirectCosts;
+  const totalOperatingExpenses = operatingExpenseRows.reduce((sum, row) => sum + row.amount, 0);
+  const netProfit = grossProfit - totalOperatingExpenses;
 
   const packageCounts = packages.map((pkg) => ({
     name: pkg.name,
@@ -886,6 +912,76 @@ export default function AdminReport() {
         </Card>
       ) : (
         <>
+          <section className="print-only profit-report-print">
+            <div className="profit-report-page">
+              <header className="profit-report-letterhead">
+                <div className="profit-report-rule" />
+                <img src="/img/Logo.png" alt="Kasa Ilaya Resort and Event Place" />
+                <p>Sitio Pook ng Munting Ilog, Ulat, Silang, Cavite</p>
+                <p>Resort and Event Place - Private</p>
+                <div className="profit-report-rule" />
+              </header>
+
+              <div className="profit-report-title">
+                <h1>PROFIT REPORT</h1>
+                <p>(Statement of Income and Expenses)</p>
+              </div>
+
+              <div className="profit-report-meta">
+                <div>
+                  <strong>REPORTING PERIOD</strong>
+                  <span>From: {selectedRange?.start || "__________"} To: {selectedRange?.end || "__________"}</span>
+                </div>
+                <div>
+                  <strong>PREPARED BY</strong>
+                  <span>Resort Admin</span>
+                </div>
+                <div>
+                  <strong>DATE PREPARED</strong>
+                  <span>{preparedDate}</span>
+                </div>
+              </div>
+
+              <table className="profit-report-statement">
+                <tbody>
+                  <tr className="profit-section"><td colSpan={2}>REVENUE / SALES</td></tr>
+                  {revenueRows.map((row) => (
+                    <tr key={row.label}><td>{row.label}</td><td>{formatCurrency(row.amount)}</td></tr>
+                  ))}
+                  <tr className="profit-total"><td>TOTAL REVENUE (A)</td><td>{formatCurrency(totalSales)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>COST OF SALES / DIRECT COSTS</td></tr>
+                  {directCostRows.map((row) => (
+                    <tr key={row.label}><td>{row.label}</td><td>{formatCurrency(row.amount)}</td></tr>
+                  ))}
+                  <tr className="profit-total"><td>TOTAL COST OF SALES (B)</td><td>{formatCurrency(totalDirectCosts)}</td></tr>
+                  <tr className="profit-highlight"><td>GROSS PROFIT (A - B)</td><td>{formatCurrency(grossProfit)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>OPERATING EXPENSES</td></tr>
+                  {operatingExpenseRows.map((row) => (
+                    <tr key={row.label}><td>{row.label}</td><td>{formatCurrency(row.amount)}</td></tr>
+                  ))}
+                  <tr className="profit-total"><td>TOTAL OPERATING EXPENSES (C)</td><td>{formatCurrency(totalOperatingExpenses)}</td></tr>
+                  <tr className="profit-section"><td>NET PROFIT / (LOSS) (Gross Profit - C)</td><td>{formatCurrency(netProfit)}</td></tr>
+                </tbody>
+              </table>
+
+              <div className="profit-report-notes">
+                <strong>Remarks / Notes:</strong>
+              </div>
+
+              <footer className="profit-report-footer">
+                <span>Kasa Ilaya Resort and Event Place</span>
+                <span>Page 1</span>
+              </footer>
+            </div>
+
+            <div className="profit-report-page profit-report-signatures">
+              <div>
+                <span>Prepared by / Signature over Printed Name</span>
+                <span>Approved by / Signature over Printed Name</span>
+              </div>
+            </div>
+          </section>
+
           <div className="report-print-summary grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <Card>
               <CardContent className="p-5 sm:p-6 sm:pt-6">

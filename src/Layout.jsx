@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
-  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
+  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield, Images,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
   ChartBarIcon, CreditCard
 } from "lucide-react";
@@ -43,7 +43,7 @@ const userNav = [
   { name: "About", icon: Sun, page: "About" },
   { name: "Contact", icon: Bell, page: "Contact" },
   { name: "Packages", icon: Package, page: "Packages" },
-  { name: "Amenities", icon: TreePalm, page: "Amenities" },
+  { name: "Gallery", icon: Images, page: "Amenities" },
   { name: "My Bookings", icon: CalendarCheck, page: "MyBookings" },
 ];
 
@@ -183,13 +183,13 @@ export default function Layout({ children, currentPageName }) {
   const { data: notificationLogs = [] } = useQuery({
     queryKey: ["user-notification-logs", user?.email, isRegularAdmin, isSuperAdminUser],
     queryFn: () => {
-      if (isSuperAdminUser) {
+      if (isRegularAdmin || isSuperAdminUser) {
         return baseClient.entities.ActivityLog.list("-created_date", 120);
       }
 
       return baseClient.entities.ActivityLog.filter({ user_email: user?.email }, "-created_date", 30);
     },
-    enabled: Boolean(user?.email) && !isRegularAdmin,
+    enabled: Boolean(user?.email),
     refetchInterval: 30000,
   });
 
@@ -253,7 +253,7 @@ export default function Layout({ children, currentPageName }) {
 
   const activityNotifications = asArray(notificationLogs)
     .filter((entry) => {
-      if (isSuperAdminUser) {
+      if (isRegularAdmin || isSuperAdminUser) {
         return true;
       }
 
@@ -268,7 +268,7 @@ export default function Layout({ children, currentPageName }) {
       link:
         entry.entity_type === "Booking"
           ? createPageUrl((isRegularAdmin || isSuperAdminUser) ? "AdminBookings" : "MyBookings")
-          : createPageUrl(isRegularAdmin || isSuperAdminUser ? "AdminActivityLogs" : "ProfileSettings"),
+          : createPageUrl(isSuperAdminUser ? "AdminActivityLogs" : isRegularAdmin ? "AdminDashboard" : "ProfileSettings"),
     }));
 
   const chatNotifications = asArray(notificationInquiries)
@@ -284,7 +284,7 @@ export default function Layout({ children, currentPageName }) {
     }));
 
   const notifications = (isRegularAdmin
-    ? [...bookingNotifications, ...chatNotifications]
+    ? [...bookingNotifications, ...activityNotifications, ...chatNotifications]
     : isSuperAdminUser
       ? [...bookingNotifications, ...activityNotifications, ...chatNotifications]
       : [...bookingNotifications, ...activityNotifications, ...accountNotifications, ...chatNotifications]

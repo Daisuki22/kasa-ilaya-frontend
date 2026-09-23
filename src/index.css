@@ -871,3 +871,189 @@ h1, h2, h3, h4, h5, h6, .font-display {
     word-break: keep-all !important;
   }
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 7mm;
+  }
+
+  .report-print-area > :not(.profit-report-print) {
+    display: none !important;
+  }
+
+  .profit-report-print,
+  .profit-report-print * {
+    visibility: visible !important;
+  }
+
+  .profit-report-print {
+    display: block !important;
+    width: 100% !important;
+    color: #064023 !important;
+    font-family: "Times New Roman", Times, serif !important;
+  }
+
+  .profit-report-page {
+    position: relative;
+    width: 100%;
+    min-height: 276mm;
+    padding: 18mm 18mm 14mm;
+    border: 1px solid #bfc7c1;
+    background: #ffffff !important;
+    page-break-after: always;
+  }
+
+  .profit-report-page:last-child {
+    page-break-after: auto;
+  }
+
+  .profit-report-letterhead {
+    text-align: center;
+    color: #064023 !important;
+  }
+
+  .profit-report-letterhead img {
+    display: block;
+    width: 34mm;
+    height: auto;
+    margin: 1mm auto 0;
+  }
+
+  .profit-report-letterhead p {
+    margin: 0;
+    font-size: 7px !important;
+    line-height: 1.1 !important;
+  }
+
+  .profit-report-rule {
+    height: 1px;
+    margin: 0 0 1mm;
+    background: #0f5132 !important;
+  }
+
+  .profit-report-letterhead .profit-report-rule:last-child {
+    margin: 2mm 0 0;
+  }
+
+  .profit-report-title {
+    margin-top: 2mm;
+    text-align: center;
+  }
+
+  .profit-report-title h1 {
+    margin: 0;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    color: #064023 !important;
+  }
+
+  .profit-report-title p {
+    margin: 0;
+    font-size: 9px !important;
+    font-style: italic;
+    color: #064023 !important;
+  }
+
+  .profit-report-meta {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    gap: 10mm;
+    margin: 6mm 0 5mm;
+    padding: 3mm 4mm;
+    background: #e8f1ea !important;
+  }
+
+  .profit-report-meta strong,
+  .profit-report-meta span {
+    display: block;
+    color: #064023 !important;
+    font-size: 7px !important;
+    line-height: 1.35 !important;
+  }
+
+  .profit-report-meta span {
+    margin-top: 1mm;
+    border-bottom: 1px solid #9fb6a8;
+    padding-bottom: 1mm;
+  }
+
+  .profit-report-statement {
+    width: 100%;
+    border-collapse: collapse !important;
+    table-layout: fixed;
+    color: #111827 !important;
+    font-size: 8px !important;
+  }
+
+  .profit-report-statement td {
+    border: 1px solid #cfd8d2 !important;
+    padding: 1.6mm 2mm !important;
+    line-height: 1.1 !important;
+  }
+
+  .profit-report-statement td:first-child {
+    width: 74%;
+  }
+
+  .profit-report-statement td:last-child {
+    width: 26%;
+    text-align: right !important;
+  }
+
+  .profit-report-statement .profit-section td,
+  .profit-report-statement .profit-section {
+    background: #145a32 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+
+  .profit-report-statement .profit-total td,
+  .profit-report-statement .profit-highlight td {
+    background: #edf6ef !important;
+    color: #111827 !important;
+    font-weight: 700 !important;
+  }
+
+  .profit-report-notes {
+    height: 22mm;
+    margin-top: 7mm;
+    color: #064023 !important;
+    font-size: 8px !important;
+  }
+
+  .profit-report-footer {
+    position: absolute;
+    right: 18mm;
+    bottom: 11mm;
+    left: 18mm;
+    display: flex;
+    justify-content: center;
+    gap: 4mm;
+    border-top: 1px solid #d6ddd8;
+    padding-top: 2mm;
+    color: #9ca3af !important;
+    font-size: 6px !important;
+  }
+
+  .profit-report-signatures {
+    padding-top: 32mm;
+  }
+
+  .profit-report-signatures > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12mm;
+    margin-top: 0;
+  }
+
+  .profit-report-signatures span {
+    border-top: 1px solid #111827;
+    padding-top: 1mm;
+    color: #111827 !important;
+    font-size: 7px !important;
+  }
+}

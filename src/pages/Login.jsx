@@ -432,6 +432,9 @@ export default function Login() {
       });
       notifyOtpMailStatus(payload, 'Account created successfully. Verification code sent to your email.');
       const params = new URLSearchParams({ email });
+      if (payload?.sample_registration_otp) {
+        params.set('sample_otp', payload.sample_registration_otp);
+      }
       navigate(`${createPageUrl('VerifyRegistrationOtp')}?${params.toString()}`);
     } catch (error) {
       toast.error(error.message || 'Unable to create account.');
