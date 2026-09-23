@@ -281,10 +281,6 @@ export default function Login() {
     }
   };
 
-  const handleGoogleUnavailable = () => {
-    toast.error('Google sign-in is temporarily unavailable. Please sign in with email for now.');
-  };
-
   const notifyOtpMailStatus = (response, successMessage) => {
     if (response?.mail_sent === false) {
       toast.error('Verification code was created, but email delivery failed. Please check the email service settings.');
@@ -488,7 +484,9 @@ export default function Login() {
               <CardDescription className="pt-2 text-sm leading-6">
                 {activeTab === 'signin'
                   ? 'Welcome back. Sign in to continue to your guest dashboard.'
-                  : 'Create a guest account with Google or email.'}
+                  : googleConfig.enabled
+                    ? 'Create a guest account with Google or email.'
+                    : 'Create a guest account with your email.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0">
@@ -498,18 +496,20 @@ export default function Login() {
                       <div className="flex min-h-11 justify-center">
                         <div ref={googleButtonRef} className="min-h-11" />
                       </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-11 w-full gap-2 rounded-lg border-border bg-background"
-                        onClick={handleGoogleUnavailable}
-                        disabled={isCheckingGoogle}
-                      >
-                        {isCheckingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
-                        Continue with Google
-                      </Button>
-                    )}
+                    ) : isCheckingGoogle ? (
+                      <div className="flex h-11 items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Checking sign-in options...
+                      </div>
+                    ) : null}
+
+                    {googleConfig.enabled ? (
+                      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        <div className="h-px flex-1 bg-border" />
+                        <span>Email</span>
+                        <div className="h-px flex-1 bg-border" />
+                      </div>
+                    ) : null}
 
                     {googleConfig.enabled && !isGoogleReady ? (
                       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -517,18 +517,6 @@ export default function Login() {
                         Loading Google sign-in...
                       </div>
                     ) : null}
-
-                    {!googleConfig.enabled && !isCheckingGoogle ? (
-                      <p className="text-center text-xs leading-5 text-muted-foreground">
-                        Google sign-in is waiting for the server client ID.
-                      </p>
-                    ) : null}
-
-                    <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                      <div className="h-px flex-1 bg-border" />
-                      <span>Email</span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
                   </div>
 
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
