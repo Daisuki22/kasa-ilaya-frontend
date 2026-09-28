@@ -873,7 +873,7 @@ export default function AdminReport() {
           <p className="mt-1 text-muted-foreground">Prepare a date-based income and expense statement for the resort.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={() => window.print()}>
+          <Button type="button" variant="outline" className="gap-2" onClick={() => window.print()}>
             <Printer className="h-4 w-4" />
             Print Report
           </Button>
