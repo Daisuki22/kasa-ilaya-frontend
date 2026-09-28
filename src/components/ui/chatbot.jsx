@@ -1107,16 +1107,16 @@ export default function Chatbot() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(70vh,520px)] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[480px] sm:w-[360px] sm:max-w-[calc(100vw-48px)]">
+        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(82dvh,680px)] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[600px] sm:w-[420px] sm:max-w-[calc(100vw-48px)]">
           {/* Header */}
           <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3">
             <TreePalm className="h-5 w-5" />
 
             <div>
-              <p className="font-semibold text-sm">
+              <p className="text-base font-semibold">
                 Kasa Ilaya Assistant
               </p>
-              <p className="text-xs opacity-80">
+              <p className="text-sm opacity-90">
                 {showFaq ? "Frequently Asked Questions" : "Answers & support"}
               </p>
             </div>
@@ -1125,7 +1125,7 @@ export default function Chatbot() {
           {/* Messages */}
           <div
             ref={messagesContainerRef}
-            className="flex-1 space-y-3 overflow-y-auto p-4"
+            className="flex-1 space-y-4 overflow-y-auto p-5"
             role="log"
             aria-live="polite"
             aria-relevant="additions"
@@ -1133,7 +1133,7 @@ export default function Chatbot() {
             {!showFaq && (
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-12 items-center gap-2 rounded-md border border-border bg-background px-4 text-base font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => setShowFaq(true)}
                 disabled={loading}
               >
@@ -1158,7 +1158,7 @@ export default function Chatbot() {
                 }`}
               >
                 <div
-                  className={`min-w-0 max-w-[85%] break-words rounded-lg px-3.5 py-2.5 text-sm leading-relaxed [overflow-wrap:anywhere] ${
+                  className={`min-w-0 max-w-[92%] break-words rounded-lg px-4 py-3 text-base leading-7 [overflow-wrap:anywhere] ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted text-foreground rounded-bl-md"
@@ -1170,7 +1170,7 @@ export default function Chatbot() {
                     </p>
                   ) : (
                     <ReactMarkdown
-                      className="max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_h3]:mb-2 [&_h3]:text-sm [&_h3]:font-semibold [&_li]:my-1 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+                      className="max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_h3]:mb-3 [&_h3]:text-base [&_h3]:font-semibold [&_li]:my-2 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
                     >
                       {msg.content}
                     </ReactMarkdown>
@@ -1192,12 +1192,12 @@ export default function Chatbot() {
             )}
 
             {showFaq && (
-              <section className="space-y-3 pt-2" aria-labelledby="chatbot-faq-title">
+              <section className="space-y-5 pt-2" aria-labelledby="chatbot-faq-title">
                 <div>
-                  <h3 id="chatbot-faq-title" className="text-sm font-semibold text-foreground">
+                  <h3 id="chatbot-faq-title" className="text-lg font-semibold text-foreground">
                     Frequently Asked Questions
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-base leading-6 text-muted-foreground">
                     Search a question or choose a category.
                   </p>
                 </div>
@@ -1213,35 +1213,32 @@ export default function Chatbot() {
                     value={faqSearch}
                     onChange={(event) => setFaqSearch(event.target.value)}
                     placeholder="Search questions"
-                    className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </div>
 
                 {!normalizedFaqSearch && (
-                  <div className="grid grid-cols-2 gap-1.5" role="group" aria-label="FAQ categories">
-                    {FAQ_CATEGORIES.map((category) => {
-                      const isSelected = category.title === selectedFaqCategory;
-                      return (
-                        <button
-                          key={category.title}
-                          type="button"
-                          aria-pressed={isSelected}
-                          className={`min-h-10 rounded-md border px-2.5 py-2 text-left text-xs font-medium leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                            isSelected
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border bg-background text-foreground hover:bg-muted"
-                          }`}
-                          onClick={() => setSelectedFaqCategory(category.title)}
-                        >
+                  <div className="space-y-2">
+                    <label htmlFor="chatbot-faq-category" className="block text-base font-semibold text-foreground">
+                      Choose a category
+                    </label>
+                    <select
+                      id="chatbot-faq-category"
+                      value={selectedFaqCategory}
+                      onChange={(event) => setSelectedFaqCategory(event.target.value)}
+                      className="h-12 w-full rounded-md border border-input bg-background px-3 text-base font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {FAQ_CATEGORIES.map((category) => (
+                        <option key={category.title} value={category.title}>
                           {category.title}
-                        </button>
-                      );
-                    })}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
 
                 {normalizedFaqSearch && (
-                  <p className="text-xs text-muted-foreground" aria-live="polite">
+                  <p className="text-base text-foreground" aria-live="polite">
                     {visibleFaqCount} {visibleFaqCount === 1 ? "question" : "questions"} found
                   </p>
                 )}
@@ -1250,7 +1247,7 @@ export default function Chatbot() {
                   <div className="space-y-3">
                     {visibleFaqCategories.map((category) => (
                       <div key={category.title} className="overflow-hidden rounded-md border border-border bg-background">
-                        <h4 className="border-b border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-foreground">
+                        <h4 className="border-b border-border bg-muted/40 px-4 py-3 text-base font-semibold text-foreground">
                           {category.title}
                         </h4>
                         <div className="divide-y divide-border/70">
@@ -1258,7 +1255,7 @@ export default function Chatbot() {
                             <button
                               key={question}
                               type="button"
-                              className="min-h-11 w-full px-3 py-2.5 text-left text-sm leading-snug text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                              className="min-h-14 w-full px-4 py-3 text-left text-base leading-6 text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                               onClick={() => {
                                 setFaqSearch("");
                                 setShowFaq(false);
@@ -1273,7 +1270,7 @@ export default function Chatbot() {
                     ))}
                   </div>
                 ) : (
-                  <p className="rounded-md border border-dashed border-border px-3 py-5 text-center text-sm text-muted-foreground">
+                  <p className="rounded-md border border-dashed border-border px-4 py-6 text-center text-base leading-6 text-foreground">
                     No matching questions. Try a different search.
                   </p>
                 )}
