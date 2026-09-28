@@ -25,6 +25,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle2, ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
+import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
 
 const paymentColors = {
   unpaid: "bg-destructive/10 text-destructive",
@@ -72,18 +73,8 @@ const tourLabels = {
   "22_hours": "22 Hours",
 };
 
-const moneyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
-const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
-
-const getSubmittedPaymentAmount = (booking) => Number(
-  booking?.payment_amount_due || booking?.reservation_fee_amount || 0
-);
+const formatMoney = formatPHPAmount;
+const getSubmittedPaymentAmount = getSubmittedBookingPayment;
 
 const getPaymentChannel = (booking) => (
   booking?.payment_mode || booking?.payment_qr_code_label || "Not selected"
@@ -189,14 +180,14 @@ export default function AdminPaymentMonitoring() {
       (totals, booking) => {
         const paymentStatus = normalizePaymentStatus(booking.payment_status);
         const submittedAmount = getSubmittedPaymentAmount(booking);
-        const additionalFee = Number(booking.additional_fee_amount || 0);
+        const additionalFee = toFiniteAmount(booking.additional_fee_amount);
 
-        if (paymentStatus === "paid") {
+        if (paymentStatus === "paid" && isRevenueEligibleBooking(booking)) {
           totals.verifiedCount += 1;
           totals.verifiedPayments += submittedAmount;
         }
 
-        if (paymentStatus === "pending_verification") {
+        if (paymentStatus === "pending_verification" && booking.status !== "cancelled") {
           totals.pendingCount += 1;
           totals.pendingPayments += submittedAmount;
         }
@@ -218,7 +209,9 @@ export default function AdminPaymentMonitoring() {
 
   const paymentStatusChart = useMemo(() => {
     return ["paid", "pending_verification", "unpaid"].map((status) => {
-      const rows = paymentBookings.filter((booking) => normalizePaymentStatus(booking.payment_status) === status);
+      const rows = paymentBookings.filter((booking) => (
+        booking.status !== "cancelled" && normalizePaymentStatus(booking.payment_status) === status
+      ));
 
       return {
         status,
@@ -232,7 +225,7 @@ export default function AdminPaymentMonitoring() {
   const additionalFeeChart = useMemo(() => {
     return ["paid", "pending", "unpaid"].map((status) => {
       const rows = paymentBookings.filter((booking) => (
-        Number(booking.additional_fee_amount || 0) > 0 &&
+        toFiniteAmount(booking.additional_fee_amount) > 0 &&
         normalizeAdditionalFeeStatus(booking.additional_fee_status) === status
       ));
 
@@ -240,13 +233,14 @@ export default function AdminPaymentMonitoring() {
         status,
         label: additionalFeeStatusLabels[status],
         count: rows.length,
-        amount: rows.reduce((sum, booking) => sum + Number(booking.additional_fee_amount || 0), 0),
+        amount: rows.reduce((sum, booking) => sum + toFiniteAmount(booking.additional_fee_amount), 0),
       };
     }).filter((item) => item.count > 0 || item.amount > 0);
   }, [paymentBookings]);
 
   const paymentChannelChart = useMemo(() => {
     const byChannel = paymentBookings.reduce((acc, booking) => {
+      if (booking.status === "cancelled") return acc;
       const channel = getPaymentChannel(booking);
       if (!acc[channel]) {
         acc[channel] = { channel, count: 0, amount: 0 };
@@ -344,14 +338,23 @@ export default function AdminPaymentMonitoring() {
 
       const updatedBooking = await baseClient.entities.Booking.update(feeDialogBooking.id, updates);
 
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email,
-        user_name: user?.full_name,
-        action: "Additional fee updated",
-        entity_type: "Booking",
-        entity_id: feeDialogBooking.id,
-        details: `Updated broken-property fee for booking ${feeDialogBooking.booking_reference || feeDialogBooking.id} to ${formatMoney(feeAmount)} (${updates.additional_fee_status}).`,
-      });
+      try {
+        await baseClient.entities.ActivityLog.create({
+          user_email: user?.email,
+          user_name: user?.full_name,
+          action: "Additional fee updated",
+          entity_type: "Booking",
+          entity_id: feeDialogBooking.id,
+          details: `Updated broken-property fee for booking ${feeDialogBooking.booking_reference || feeDialogBooking.id} to ${formatMoney(feeAmount)} (${updates.additional_fee_status}).`,
+        });
+      } catch (activityLogError) {
+        if (import.meta.env.DEV) {
+          console.warn("Fee activity log could not be recorded", {
+            bookingId: feeDialogBooking.id,
+            message: activityLogError?.message,
+          });
+        }
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["admin-payment-monitoring"] });
       await queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
@@ -379,14 +382,23 @@ export default function AdminPaymentMonitoring() {
         status: nextStatus,
       });
 
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email,
-        user_name: user?.full_name,
-        action: "Payment verified",
-        entity_type: "Booking",
-        entity_id: booking.id,
-        details: `Verified payment for booking ${booking.booking_reference || booking.id}`,
-      });
+      try {
+        await baseClient.entities.ActivityLog.create({
+          user_email: user?.email,
+          user_name: user?.full_name,
+          action: "Payment verified",
+          entity_type: "Booking",
+          entity_id: booking.id,
+          details: `Verified payment for booking ${booking.booking_reference || booking.id}`,
+        });
+      } catch (activityLogError) {
+        if (import.meta.env.DEV) {
+          console.warn("Payment activity log could not be recorded", {
+            bookingId: booking.id,
+            message: activityLogError?.message,
+          });
+        }
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["admin-payment-monitoring"] });
       await queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });

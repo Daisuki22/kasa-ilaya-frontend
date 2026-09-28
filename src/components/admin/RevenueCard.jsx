@@ -1,41 +1,31 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, DollarSign, CalendarCheck, Users } from "lucide-react";
+import { calculateDashboardRevenue, formatPHPAmount } from "@/lib/dashboardRevenue";
 
 export default function RevenueCards({ bookings }) {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const paidBookings = bookings.filter((booking) => booking.payment_status === "paid");
-  const totalRevenue = paidBookings.reduce((sum, booking) => sum + (booking.total_amount || 0), 0);
-
-  const monthlyBookings = paidBookings.filter((booking) => {
-    const d = new Date(booking.created_date);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  });
-  const monthlyRevenue = monthlyBookings.reduce((sum, booking) => sum + (booking.total_amount || 0), 0);
-
-  const pendingBookings = bookings.filter(b => b.status === "pending");
+  const revenue = calculateDashboardRevenue(bookings);
+  const visibleBookings = bookings.filter((booking) => booking.status !== "archived");
+  const pendingBookings = visibleBookings.filter((booking) => booking.status === "pending");
 
   const cards = [
     {
       title: "Total Revenue",
-      value: `₱${totalRevenue.toLocaleString()}`,
+      value: formatPHPAmount(revenue.totalRevenue),
       icon: DollarSign,
       color: "bg-primary",
-      desc: `${paidBookings.length} paid bookings`,
+      desc: `${revenue.paidBookingCount} paid bookings`,
     },
     {
       title: "Monthly Revenue",
-      value: `₱${monthlyRevenue.toLocaleString()}`,
+      value: formatPHPAmount(revenue.monthlyRevenue),
       icon: TrendingUp,
       color: "bg-secondary",
-      desc: `${monthlyBookings.length} bookings this month`,
+      desc: `${revenue.monthlyPaidBookingCount} paid bookings this month`,
     },
     {
       title: "Total Bookings",
-      value: bookings.length,
+      value: visibleBookings.length,
       icon: CalendarCheck,
       color: "bg-chart-3",
       desc: `${pendingBookings.length} pending`,
@@ -50,18 +40,18 @@ export default function RevenueCards({ bookings }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((card, i) => (
-        <Card key={i} className="relative overflow-hidden">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {cards.map((card) => (
+        <Card key={card.title} className="relative overflow-hidden">
           <CardContent className="p-5 sm:p-6 sm:pt-6">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{card.title}</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{card.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{card.desc}</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{card.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{card.desc}</p>
               </div>
-              <div className={`${card.color} bg-opacity-10 p-2.5 rounded-xl`}>
-                <card.icon className={`h-5 w-5 text-foreground`} />
+              <div className={`${card.color} rounded-xl bg-opacity-10 p-2.5`}>
+                <card.icon className="h-5 w-5 text-foreground" />
               </div>
             </div>
           </CardContent>

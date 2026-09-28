@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/lib/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { getRecognizedBookingRevenue, toFiniteAmount } from "@/lib/dashboardRevenue";
 import {
   calculateProfitReport,
   filterReportBookings,
@@ -46,7 +47,7 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
   maximumFractionDigits: 2,
 });
 
-const toAmount = (value) => Number(value || 0);
+const toAmount = toFiniteAmount;
 const toDateKey = toReportDateKey;
 
 const formatCurrency = (value) => currencyFormatter.format(toAmount(value));
@@ -78,7 +79,7 @@ const buildTimelineData = (rows, period, selectedRange) => {
         const dayRows = rows.filter((booking) => toDateKey(booking.booking_date) === key);
         return {
           label: format(date, "MMM d"),
-          revenue: dayRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+          revenue: dayRows.reduce((sum, booking) => sum + getRecognizedBookingRevenue(booking), 0),
           bookings: dayRows.length,
         };
       });
@@ -91,7 +92,7 @@ const buildTimelineData = (rows, period, selectedRange) => {
       const monthRows = rows.filter((booking) => toDateKey(booking.booking_date).startsWith(monthKey));
       return {
         label: format(month, "MMM yyyy"),
-        revenue: monthRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+        revenue: monthRows.reduce((sum, booking) => sum + getRecognizedBookingRevenue(booking), 0),
         bookings: monthRows.length,
       };
     });
@@ -105,7 +106,7 @@ const buildTimelineData = (rows, period, selectedRange) => {
 
       return {
         label: format(date, "EEE"),
-        revenue: dayRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+        revenue: dayRows.reduce((sum, booking) => sum + getRecognizedBookingRevenue(booking), 0),
         bookings: dayRows.length,
       };
     });
@@ -121,7 +122,7 @@ const buildTimelineData = (rows, period, selectedRange) => {
 
       return {
         label: format(month, "MMM"),
-        revenue: monthRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+        revenue: monthRows.reduce((sum, booking) => sum + getRecognizedBookingRevenue(booking), 0),
         bookings: monthRows.length,
       };
     });
@@ -140,7 +141,7 @@ const buildTimelineData = (rows, period, selectedRange) => {
 
     return {
       label: `${format(bucketStart, "MMM d")}${index === 5 ? "+" : ""}`,
-      revenue: bucketRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+      revenue: bucketRows.reduce((sum, booking) => sum + getRecognizedBookingRevenue(booking), 0),
       bookings: bucketRows.length,
     };
   });
@@ -813,7 +814,7 @@ export default function AdminReport() {
     return filterReportBookings(bookings, selectedRange.start, selectedRange.end, packageFilter);
   }, [bookings, hasValidDateRange, packageFilter, selectedRange]);
 
-  const totalRevenue = filteredBookings.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0);
+  const totalRevenue = calculateProfitReport(filteredBookings).totalSales;
   const totalBookings = filteredBookings.length;
   const confirmed = filteredBookings.filter((booking) => booking.status === "confirmed").length;
   const pending = filteredBookings.filter((booking) => booking.status === "pending").length;
@@ -838,7 +839,7 @@ export default function AdminReport() {
     count: filteredBookings.filter((booking) => booking.package_name === pkg.name).length,
     revenue: filteredBookings
       .filter((booking) => booking.package_name === pkg.name)
-      .reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+      .reduce((sum, booking) => sum + getRecognizedBookingRevenue(booking), 0),
   }));
   const mostBookedPackage = packageCounts.reduce((best, item) => (item.count > best.count ? item : best), {
     name: "None",
@@ -997,7 +998,7 @@ export default function AdminReport() {
                     event.currentTarget.src = "/img/apple-touch-icon.png";
                   }}
                 />
-                <h2>Kasa Ilaya Resort and Event Place — Private</h2>
+                <h2>Kasa Ilaya Resort and Event Place &mdash; Private</h2>
                 <p>Sitio Pook na Munti, Brgy. Kaong, Silang, Cavite</p>
                 <div className="profit-report-rule" />
               </header>

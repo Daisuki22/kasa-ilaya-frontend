@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, parseISO, subMonths } from "date-fns";
+import { format, subMonths } from "date-fns";
 import { Loader2, TrendingUp, CalendarCheck2, Wallet, Clock3 } from "lucide-react";
 import { baseClient } from "@/api/baseClient";
 import ActivityLogSummaryCards from "@/components/admin/ActivityLogSummaryCards";
@@ -18,11 +18,14 @@ import {
 } from "@/components/ui/table";
 import RevenueCards from "@/components/admin/RevenueCards";
 import RevenueChart from "@/components/admin/RevenueChart";
+import { calculateDashboardRevenue, formatPHPAmount, toFiniteAmount } from "@/lib/dashboardRevenue";
+import { parseSafeDate } from "@/lib/safeDate";
 
 const currency = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 const statusColors = {
@@ -31,8 +34,6 @@ const statusColors = {
   completed: "bg-muted text-muted-foreground border-border",
   cancelled: "bg-destructive/10 text-destructive border-destructive/30",
 };
-
-const safeNumber = (value) => Number(value || 0);
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -56,26 +57,27 @@ export default function AdminDashboard() {
   const isLoading = isLoadingBookings || isLoadingPackages || isLoadingLogs;
 
   const report = useMemo(() => {
-    const activeBookings = bookings.filter((b) => b.status !== "cancelled");
-    const paidBookings = bookings.filter((b) => b.payment_status === "paid");
-    const confirmedOrCompleted = bookings.filter((b) => ["confirmed", "completed"].includes(b.status));
+    const visibleBookings = bookings.filter((booking) => booking.status !== "archived");
+    const activeBookings = visibleBookings.filter((booking) => booking.status !== "cancelled");
+    const revenue = calculateDashboardRevenue(visibleBookings);
+    const confirmedOrCompleted = visibleBookings.filter((booking) => ["confirmed", "completed"].includes(booking.status));
 
-    const totalRevenue = confirmedOrCompleted.reduce((sum, b) => sum + safeNumber(b.total_amount), 0);
-    const totalPaidRevenue = paidBookings.reduce((sum, b) => sum + safeNumber(b.total_amount), 0);
+    const totalRevenue = confirmedOrCompleted.reduce((sum, booking) => sum + toFiniteAmount(booking.total_amount), 0);
+    const totalPaidRevenue = revenue.totalRevenue;
 
     const byStatus = {
-      pending: bookings.filter((b) => b.status === "pending").length,
-      confirmed: bookings.filter((b) => b.status === "confirmed").length,
-      completed: bookings.filter((b) => b.status === "completed").length,
-      cancelled: bookings.filter((b) => b.status === "cancelled").length,
+      pending: visibleBookings.filter((booking) => booking.status === "pending").length,
+      confirmed: visibleBookings.filter((booking) => booking.status === "confirmed").length,
+      completed: visibleBookings.filter((booking) => booking.status === "completed").length,
+      cancelled: visibleBookings.filter((booking) => booking.status === "cancelled").length,
     };
 
     const packageStats = packages
       .map((pkg) => {
-        const pkgBookings = bookings.filter((b) => b.package_name === pkg.name);
+        const pkgBookings = visibleBookings.filter((booking) => booking.package_name === pkg.name);
         const pkgRevenue = pkgBookings
-          .filter((b) => ["confirmed", "completed"].includes(b.status))
-          .reduce((sum, b) => sum + safeNumber(b.total_amount), 0);
+          .filter((booking) => ["confirmed", "completed"].includes(booking.status))
+          .reduce((sum, booking) => sum + toFiniteAmount(booking.total_amount), 0);
         return { id: pkg.id, name: pkg.name, bookingCount: pkgBookings.length, revenue: pkgRevenue };
       })
       .sort((a, b) => b.bookingCount - a.bookingCount)
@@ -85,19 +87,20 @@ export default function AdminDashboard() {
       const monthDate = subMonths(new Date(), 5 - i);
       const key = format(monthDate, "yyyy-MM");
       const label = format(monthDate, "MMM yyyy");
-      const monthBookings = bookings.filter(
-        (b) => b.booking_date && format(parseISO(b.booking_date), "yyyy-MM") === key
-      );
+      const monthBookings = visibleBookings.filter((booking) => {
+        const bookingDate = parseSafeDate(booking.booking_date);
+        return bookingDate && format(bookingDate, "yyyy-MM") === key;
+      });
       const monthRevenue = monthBookings
-        .filter((b) => ["confirmed", "completed"].includes(b.status))
-        .reduce((sum, b) => sum + safeNumber(b.total_amount), 0);
+        .filter((booking) => ["confirmed", "completed"].includes(booking.status))
+        .reduce((sum, booking) => sum + toFiniteAmount(booking.total_amount), 0);
       return { key, label, bookings: monthBookings.length, revenue: monthRevenue };
     });
 
     const maxBookingsPerMonth = Math.max(...monthlySeries.map((m) => m.bookings), 1);
     const pendingCount = byStatus.pending || 0;
-    const paidCount = paidBookings.length;
-    const totalBookingCount = bookings.length;
+    const paidCount = revenue.paidBookingCount;
+    const totalBookingCount = visibleBookings.length;
     const totalRevenueBase = Math.max(totalRevenue, 0);
 
     const revenueCircle = {
@@ -110,7 +113,7 @@ export default function AdminDashboard() {
     };
 
     return {
-      totalBookings: bookings.length,
+      totalBookings: visibleBookings.length,
       activeBookings: activeBookings.length,
       totalRevenue,
       totalPaidRevenue,
@@ -172,8 +175,8 @@ export default function AdminDashboard() {
           <CardContent className="p-5 sm:p-6 sm:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Revenue (Confirmed/Completed)</p>
-                <p className="text-2xl font-bold">{currency.format(report.totalRevenue)}</p>
+                <p className="text-sm text-muted-foreground">Confirmed/Completed Booking Value</p>
+                <p className="text-2xl font-bold">{formatPHPAmount(report.totalRevenue)}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-primary" />
             </div>
@@ -184,7 +187,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Paid Revenue</p>
-                <p className="text-2xl font-bold">{currency.format(report.totalPaidRevenue)}</p>
+                <p className="text-2xl font-bold">{formatPHPAmount(report.totalPaidRevenue)}</p>
               </div>
               <Wallet className="h-8 w-8 text-primary" />
             </div>

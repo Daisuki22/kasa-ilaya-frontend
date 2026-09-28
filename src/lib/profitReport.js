@@ -1,8 +1,4 @@
-const toOptionalAmount = (value) => {
-  if (value === null || value === undefined || value === "") return null;
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount : null;
-};
+import { getSubmittedBookingPayment, toFiniteAmount } from "./dashboardRevenue.js";
 
 export const isValidDateKey = (value) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ""))) return false;
@@ -38,14 +34,15 @@ export const filterReportBookings = (bookings, startDate, endDate, packageFilter
 };
 
 export const calculateProfitReport = (bookings) => {
-  const reportableBookings = bookings.filter((booking) => booking.status !== "cancelled");
+  const reportableBookings = bookings.filter((booking) => !["cancelled", "archived"].includes(booking.status));
   const verifiedBookingPayments = reportableBookings.filter((booking) => booking.payment_status === "paid");
-  const collectedBookingRevenue = verifiedBookingPayments.reduce((sum, booking) => (
-    sum + (toOptionalAmount(booking.payment_amount_due) ?? toOptionalAmount(booking.reservation_fee_amount) ?? 0)
+  const collectedBookingRevenue = verifiedBookingPayments.reduce(
+    (sum, booking) => sum + getSubmittedBookingPayment(booking),
+    0
+  );
+  const paidAdditionalFees = reportableBookings.reduce((sum, booking) => (
+    sum + (booking.additional_fee_status === "paid" ? toFiniteAmount(booking.additional_fee_amount) : 0)
   ), 0);
-  const paidAdditionalFees = reportableBookings
-    .filter((booking) => booking.additional_fee_status === "paid")
-    .reduce((sum, booking) => sum + (toOptionalAmount(booking.additional_fee_amount) ?? 0), 0);
 
   const revenueRows = [
     { label: "Room / Villa Bookings", amount: collectedBookingRevenue },

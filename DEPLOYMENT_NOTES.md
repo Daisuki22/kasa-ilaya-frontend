@@ -1,11 +1,11 @@
 # Kasa Ilaya Frontend – Fixed Version
 
 ## Important Vercel setting
-Set this Environment Variable in Vercel for **Production** (and Preview if needed):
+Production and Preview use the same-origin `/api` path, which `vercel.json` rewrites to the Render backend. Keep this variable as `/api` (the repository `.env.example` already has this value):
 
-`VITE_API_BASE_URL=https://kasa-ilaya-resort-back-end.onrender.com/api`
+`VITE_API_BASE_URL=/api`
 
-After changing it, redeploy the frontend. Vite embeds `VITE_*` variables during build time.
+The frontend intentionally uses `/api` in production so API requests and uploads pass through the Vercel rewrites. For a non-Vercel deployment, configure that platform's proxy or set `VITE_API_BASE_URL` to its reachable backend URL before building.
 
 ## What was fixed
 - Corrected the local Vite `/api` proxy to point to the Node backend on port `10000`.

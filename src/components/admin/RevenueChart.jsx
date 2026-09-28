@@ -1,22 +1,10 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { calculateDashboardRevenue, formatPHPAmount } from "@/lib/dashboardRevenue";
 
 export default function RevenueChart({ bookings }) {
-  const paidBookings = bookings.filter((booking) => booking.payment_status === "paid");
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  const monthlyData = monthNames.map((month, i) => {
-    const monthBookings = paidBookings.filter((booking) => {
-      const d = new Date(booking.created_date);
-      return d.getMonth() === i && d.getFullYear() === new Date().getFullYear();
-    });
-    return {
-      month,
-      revenue: monthBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0),
-      bookings: monthBookings.length,
-    };
-  });
+  const { monthlyData } = calculateDashboardRevenue(bookings);
 
   return (
     <Card>
@@ -37,7 +25,7 @@ export default function RevenueChart({ bookings }) {
                   borderRadius: "8px",
                   fontSize: "13px",
                 }}
-                formatter={(value) => [`₱${value.toLocaleString()}`, "Revenue"]}
+                formatter={(value) => [formatPHPAmount(value), "Revenue"]}
               />
               <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
             </BarChart>

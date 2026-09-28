@@ -547,16 +547,25 @@ export default function MyBookings() {
     setIsCancellingBooking(true);
 
     try {
-      await baseClient.entities.Booking.update(bookingToCancel.id, { status: "cancelled", payment_status: "unpaid" });
+      await baseClient.entities.Booking.update(bookingToCancel.id, { status: "cancelled" });
 
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email,
-        user_name: user?.full_name,
-        action: "User Cancelled Booking",
-        entity_type: "Booking",
-        entity_id: bookingToCancel.id,
-        details: `User cancelled booking ${bookingToCancel.booking_reference}`,
-      });
+      try {
+        await baseClient.entities.ActivityLog.create({
+          user_email: user?.email,
+          user_name: user?.full_name,
+          action: "User Cancelled Booking",
+          entity_type: "Booking",
+          entity_id: bookingToCancel.id,
+          details: `User cancelled booking ${bookingToCancel.booking_reference}`,
+        });
+      } catch (activityLogError) {
+        if (import.meta.env.DEV) {
+          console.warn("Cancellation activity log could not be recorded", {
+            bookingId: bookingToCancel.id,
+            message: activityLogError?.message,
+          });
+        }
+      }
 
       toast.success("Booking cancelled successfully.");
       setBookingToCancel(null);
