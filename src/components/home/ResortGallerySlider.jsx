@@ -16,8 +16,12 @@ const FALLBACK_IMAGES = [
 
 export default function ResortGallerySlider() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeImageFailed, setActiveImageFailed] = useState(false);
   const { settings } = useSiteSettings();
-  const customSlides = Array.isArray(settings?.resort_gallery) ? settings.resort_gallery.filter((slide) => slide?.src) : [];
+  const customSlides = useMemo(
+    () => Array.isArray(settings?.resort_gallery) ? settings.resort_gallery.filter((slide) => slide?.src) : [],
+    [settings?.resort_gallery]
+  );
 
   const { data: packages = [] } = useQuery({
     queryKey: ["home-gallery-packages"],
@@ -80,6 +84,10 @@ export default function ResortGallerySlider() {
   }, [slides]);
 
   useEffect(() => {
+    setActiveImageFailed(false);
+  }, [activeIndex, slides]);
+
+  useEffect(() => {
     if (slides.length <= 1) {
       return undefined;
     }
@@ -138,10 +146,11 @@ export default function ResortGallerySlider() {
             <div className="relative aspect-[16/9] overflow-hidden">
               <img
                 key={activeSlide.src}
-                src={activeSlide.src}
+                src={activeImageFailed ? FALLBACK_IMAGES[activeIndex % FALLBACK_IMAGES.length].src : activeSlide.src}
                 alt={activeSlide.title}
                 loading="lazy"
                 decoding="async"
+                onError={() => setActiveImageFailed(true)}
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />

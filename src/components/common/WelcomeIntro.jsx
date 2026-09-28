@@ -68,7 +68,7 @@ export default function WelcomeIntro() {
       aria-label="Welcome intro"
       aria-modal="true"
     >
-      <img src={heroImage} alt="" loading="eager" decoding="async" fetchPriority="high" className="welcome-intro__image" />
+      <img src={heroImage} alt="" loading="eager" decoding="async" fetchPriority="high" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.jpg"; }} className="welcome-intro__image" />
       <div className="welcome-intro__shade" />
       <div className="welcome-intro__panel welcome-intro__panel--left" />
       <div className="welcome-intro__panel welcome-intro__panel--right" />
@@ -76,7 +76,7 @@ export default function WelcomeIntro() {
       <div className="welcome-intro__content">
         <div className="welcome-intro__mark" aria-hidden="true">
           {logoUrl ? (
-            <img src={logoUrl} alt="" loading="eager" decoding="async" />
+            <img src={logoUrl} alt="" loading="eager" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/apple-touch-icon.png"; }} />
           ) : (
             <TreePalm className="h-10 w-10" />
           )}
