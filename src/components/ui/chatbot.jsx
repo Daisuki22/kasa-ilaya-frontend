@@ -79,13 +79,166 @@ const groupPackagesByName = (packages) => {
 };
 
 const buildLocalResponse = (message, packages, siteSettings) => {
-  const prompt = message.toLowerCase();
+  const prompt = message.toLowerCase().trim();
   const groupedPackages = groupPackagesByName(packages || []);
   const siteName = siteSettings?.site_name?.trim() || "Kasa Ilaya";
 
   const termsSummary =
     siteSettings?.terms_summary?.trim() ||
     "Bookings are subject to availability and admin confirmation.";
+
+  /*
+   * Exact answers for the Quick Questions buttons.
+   * These are checked first so each button always gets its intended answer.
+   */
+  const quickQuestionAnswers = {
+    "how can i make a reservation?": assistantReply({
+      title: "How can I make a reservation?",
+      intro: "You can make a reservation online through the Packages page.",
+      steps: [
+        "Sign in to your account.",
+        "Open Packages and choose your preferred package.",
+        "Select your preferred date and tour type.",
+        "Enter the required guest details and any special requests.",
+        "Follow the payment instructions and upload your payment receipt.",
+        "Wait for the resort team to review and confirm your reservation.",
+      ],
+      important:
+        "Reservations are subject to availability and resort confirmation.",
+      nextStep: "Open the Packages page to start your reservation.",
+    }),
+
+    "how can i reschedule my reservation?": assistantReply({
+      title: "How can I reschedule my reservation?",
+      intro: "Eligible reservations can request a new date through My Booking.",
+      bullets: [
+        "The reservation must be pending or confirmed.",
+        "Only one rebooking can be approved per reservation.",
+        "Submit the request at least 7 days before the reservation date.",
+        "The new date must be available for the same package and tour type.",
+      ],
+      important:
+        "The original reservation date remains active until the resort approves the request.",
+      nextStep:
+        "Open My Booking and check the available actions for your reservation.",
+    }),
+
+    "how can i cancel or modify my reservation?": assistantReply({
+      title: "How can I cancel or modify my reservation?",
+      intro:
+        "Available cancellation or modification actions depend on your reservation status and the resort's booking policy.",
+      steps: [
+        "Open My Booking.",
+        "Select the reservation you want to manage.",
+        "Review the available actions for that reservation.",
+        "Follow the instructions shown for the selected action.",
+      ],
+      nextStep:
+        "If you need additional assistance, send an inquiry through the Contact page.",
+    }),
+
+    "how can i send an inquiry?": assistantReply({
+      title: "How can I send an inquiry?",
+      intro: "You can send an inquiry through the Contact page.",
+      steps: [
+        "Open the Contact page.",
+        "Enter your name and email.",
+        "Add a subject and your message.",
+        "Submit the inquiry.",
+      ],
+      nextStep:
+        "Return to the Contact page if you need to continue the conversation with the resort team.",
+    }),
+
+    "how can i contact kasa ilaya?": assistantReply({
+      title: "How can I contact Kasa Ilaya?",
+      intro:
+        "You can contact Kasa Ilaya through the Contact page or use the resort contact details below.",
+      bullets: [
+        `**Phone:** ${RESORT_CONTACT.phoneDisplay}`,
+        `**Email:** ${RESORT_CONTACT.email}`,
+        `**Address:** ${RESORT_CONTACT.address}`,
+        `**Hours:** ${RESORT_CONTACT.hours}`,
+      ],
+      nextStep: "Open the Contact page for the map and inquiry form.",
+    }),
+
+    "how can i view the schedule and calendar?": assistantReply({
+      title: "How can I view the schedule and calendar?",
+      intro:
+        "The website calendar shows upcoming schedules and reserved dates to help you review availability.",
+      steps: [
+        "Open the Packages page.",
+        "Choose the package you are interested in.",
+        "Open its booking calendar.",
+        "Review the available and reserved dates.",
+      ],
+      nextStep: "Choose a package to check its booking calendar.",
+    }),
+
+    "what are the requirements for booking?": assistantReply({
+      title: "What are the requirements for booking?",
+      intro: "Prepare these details before starting your reservation:",
+      bullets: [
+        "An account",
+        "Your preferred package, date, and tour type",
+        "The number of guests and contact details",
+        "Proof of payment following the instructions shown during booking",
+      ],
+      nextStep:
+        "For special group requests, contact the resort directly through the Contact page.",
+    }),
+
+    "what payment options are available?": assistantReply({
+      title: "What payment options are available?",
+      intro:
+        "The booking flow displays the payment instructions and methods currently available for your reservation.",
+      steps: [
+        "Follow the payment instructions shown during booking.",
+        "Complete the payment using the available method.",
+        "Upload a clear image of your payment proof.",
+        "Wait for the resort team to verify your payment.",
+      ],
+      important:
+        "Your reservation is not confirmed until it has been reviewed by the resort.",
+    }),
+
+    "can i make a group reservation?": assistantReply({
+      title: "Can I make a group reservation?",
+      intro:
+        "Yes. The resort team can assist with availability and details for larger groups or special events.",
+      nextStep:
+        "Send an inquiry through the Contact page with your group size, preferred date, package, and event details.",
+    }),
+
+    "how can i check availability?": assistantReply({
+      title: "How can I check availability?",
+      intro:
+        "The booking calendar displays current reservation availability.",
+      bullets: [
+        "Reserved dates cannot be selected.",
+        "Package cards also show availability information.",
+      ],
+      nextStep:
+        "Choose a package to view its calendar and available dates.",
+    }),
+
+    "how can i get help with my reservation?": assistantReply({
+      title: "How can I get help with my reservation?",
+      intro:
+        "You can manage your reservation through My Booking or contact the resort team for assistance.",
+      steps: [
+        "Open My Booking to review your reservation and available actions.",
+        "Check whether your reservation is pending or confirmed.",
+        "For questions that cannot be resolved through My Booking, send an inquiry through the Contact page.",
+      ],
+      nextStep: "Open My Booking or the Contact page to continue.",
+    }),
+  };
+
+  if (quickQuestionAnswers[prompt]) {
+    return quickQuestionAnswers[prompt];
+  }
 
   if (
     prompt.includes("what is") ||
@@ -454,7 +607,6 @@ const buildLocalResponse = (message, packages, siteSettings) => {
 
   return null;
 };
-
 export default function Chatbot() {
   const { settings: siteSettings } = useSiteSettings();
   const [open, setOpen] = useState(false);
