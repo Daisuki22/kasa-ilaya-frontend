@@ -48,6 +48,7 @@ export default function RotatingBannerBackground({
           loading={activeIndex === 0 ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={activeIndex === 0 ? "high" : "auto"}
+          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/Logo.png"; }}
           className="h-full w-full object-cover"
         />
       </div>

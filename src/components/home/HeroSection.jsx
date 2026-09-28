@@ -71,6 +71,7 @@ export default function HeroSection() {
           loading={activeHeroIndex === 0 ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={activeHeroIndex === 0 ? "high" : "auto"}
+          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/Logo.png"; }}
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-transparent" />

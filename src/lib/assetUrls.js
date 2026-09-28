@@ -45,6 +45,12 @@ export const resolveAssetUrl = (value) => {
 
   const normalized = trimmed.replace(/\\/g, "/");
 
+  // Normalize common relative image paths returned by the API.
+  if (/^(?:\.\/)?img\//i.test(normalized)) {
+    const imagePath = normalized.replace(/^\.\//, "");
+    return `${appBasePath()}${imagePath}`.replace(/\/{2,}/g, "/");
+  }
+
   if (/^img\//i.test(normalized)) {
     return `${appBasePath()}${normalized}`.replace(/\/{2,}/g, "/");
   }

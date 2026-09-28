@@ -100,6 +100,7 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 					loading={index < 2 ? 'eager' : 'lazy'}
 					decoding="async"
 					fetchPriority={index < 2 ? 'high' : 'auto'}
+					onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/img/Logo.png'; }}
 					className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
