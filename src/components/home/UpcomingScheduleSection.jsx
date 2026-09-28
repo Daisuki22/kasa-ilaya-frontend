@@ -13,6 +13,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarCheck, Clock3, Loader2, MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { parseSafeDate, safeFormatDate } from "@/lib/safeDate";
+
+const invalidDateWarnings = new WeakMap();
+
+const getDateField = (record, field) => {
+  const value = record?.[field];
+  const date = parseSafeDate(value);
+
+  if (!date && import.meta.env.DEV && record && typeof record === "object") {
+    const warnedFields = invalidDateWarnings.get(record) || new Set();
+    if (!warnedFields.has(field)) {
+      console.warn("Invalid schedule date", {
+        scheduleId: record.id,
+        field,
+        value,
+      });
+      warnedFields.add(field);
+      invalidDateWarnings.set(record, warnedFields);
+    }
+  }
+
+  return date;
+};
 
 const createEmptyForm = (date) => ({
   title: "",
@@ -49,7 +72,9 @@ const bookingTourLabels = {
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const getBookingDateSpan = (booking) => {
-  const start = new Date(`${booking.booking_date}T00:00:00`);
+  const start = getDateField(booking, "booking_date");
+  if (!start) return [];
+
   if (booking.tour_type === "22_hours") {
     return [start, addDays(start, 1)];
   }
@@ -81,18 +106,19 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
   });
 
   const upcomingSchedules = asArray(schedules).filter((schedule) => {
-    const date = new Date(`${schedule.schedule_date}T00:00:00`);
-    return !isBefore(startOfDay(date), today);
+    const date = getDateField(schedule, "schedule_date");
+    return date && !isBefore(startOfDay(date), today);
   });
 
   const upcomingBookings = asArray(bookings).filter((booking) => {
     const span = getBookingDateSpan(booking);
+    if (span.length === 0) return false;
     const lastDate = span[span.length - 1];
     return !isBefore(startOfDay(lastDate), today);
   });
 
   const selectedDateSchedules = upcomingSchedules.filter((schedule) =>
-    isSameDay(new Date(`${schedule.schedule_date}T00:00:00`), selectedDate)
+    isSameDay(getDateField(schedule, "schedule_date"), selectedDate)
   );
 
   const selectedDateBookings = upcomingBookings.filter((booking) =>
@@ -104,21 +130,21 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       id: `schedule-${schedule.id}`,
       type: "schedule",
       title: schedule.title,
-      date: schedule.schedule_date,
+      date: getDateField(schedule, "schedule_date"),
       timeLabel: schedule.start_time || "All day",
     })),
     ...upcomingBookings.map((booking) => ({
       id: `booking-${booking.id}`,
       type: "booking",
       title: booking.package_name,
-      date: booking.booking_date,
+      date: getDateField(booking, "booking_date"),
       timeLabel: bookingTourLabels[booking.tour_type] || "Reserved",
     })),
   ]
-    .sort((left, right) => new Date(`${left.date}T00:00:00`) - new Date(`${right.date}T00:00:00`))
+    .sort((left, right) => left.date.getTime() - right.date.getTime())
     .slice(0, 5);
 
-  const scheduledDates = upcomingSchedules.map((schedule) => new Date(`${schedule.schedule_date}T00:00:00`));
+  const scheduledDates = upcomingSchedules.map((schedule) => getDateField(schedule, "schedule_date"));
   const bookingDates = upcomingBookings.flatMap((booking) => getBookingDateSpan(booking));
 
   const openCreateDialog = () => {
@@ -135,9 +161,10 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       return;
     }
     setEditingSchedule(schedule);
+    const scheduleDate = getDateField(schedule, "schedule_date");
     setForm({
       title: schedule.title || "",
-      schedule_date: schedule.schedule_date,
+      schedule_date: format(scheduleDate, "yyyy-MM-dd"),
       start_time: schedule.start_time || "",
       end_time: schedule.end_time || "",
       location: schedule.location || "",
@@ -151,7 +178,8 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       return;
     }
 
-    if (!form.title.trim() || !form.schedule_date) {
+    const scheduleDate = parseSafeDate(form.schedule_date);
+    if (!form.title.trim() || !scheduleDate) {
       toast.error("Schedule title and date are required.");
       return;
     }
@@ -195,7 +223,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       }
 
       await queryClient.invalidateQueries({ queryKey: ["upcoming-schedules"] });
-      setSelectedDate(new Date(`${form.schedule_date}T00:00:00`));
+      setSelectedDate(scheduleDate);
       setDialogOpen(false);
     } catch (error) {
       toast.error(error?.message || "Unable to save the schedule.");
@@ -433,11 +461,11 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                       key={schedule.id}
                       type="button"
                       className="flex w-full items-start justify-between rounded-lg border border-border px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/5"
-                      onClick={() => setSelectedDate(new Date(`${schedule.date}T00:00:00`))}
+                      onClick={() => setSelectedDate(schedule.date)}
                     >
                       <div>
                         <p className="font-medium text-foreground">{schedule.title}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{format(new Date(`${schedule.date}T00:00:00`), "EEEE, MMM d")}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{safeFormatDate(schedule.date, "EEEE, MMM d")}</p>
                       </div>
                       <Badge
                         variant="outline"

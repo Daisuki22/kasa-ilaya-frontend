@@ -1,5 +1,6 @@
 import { resolveAssetUrlsDeep } from "@/lib/assetUrls";
 import { API_BASE_URL } from "@/lib/apiUrl";
+import { normalizeDateOnly } from "@/lib/safeDate";
 
 const createId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -222,6 +223,29 @@ const request = async (path, options = {}) => {
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
+const normalizeEntityDates = (entityName, value) => {
+  const dateFields = {
+    Booking: ["booking_date"],
+    UpcomingSchedule: ["schedule_date"],
+  }[entityName];
+
+  if (!dateFields || !value || typeof value !== "object") {
+    return value;
+  }
+
+  const normalizeRecord = (record) => {
+    if (!record || typeof record !== "object") return record;
+    return dateFields.reduce((normalized, field) => {
+      if (normalized[field] !== null && normalized[field] !== undefined) {
+        normalized[field] = normalizeDateOnly(normalized[field]);
+      }
+      return normalized;
+    }, { ...record });
+  };
+
+  return Array.isArray(value) ? value.map(normalizeRecord) : normalizeRecord(value);
+};
+
 const createBookingReference = () => {
   const now = new Date();
 
@@ -272,7 +296,7 @@ const createEntityHandler = (entityName) => ({
     }
 
     return asArray(
-      await request(`/entities.php?${params.toString()}`)
+      normalizeEntityDates(entityName, await request(`/entities.php?${params.toString()}`))
     );
   },
 
@@ -291,12 +315,12 @@ const createEntityHandler = (entityName) => ({
     }
 
     return asArray(
-      await request(`/entities.php?${params.toString()}`)
+      normalizeEntityDates(entityName, await request(`/entities.php?${params.toString()}`))
     );
   },
 
   async create(data) {
-    return request(
+    return normalizeEntityDates(entityName, await request(
       `/entities.php?entity=${encodeURIComponent(entityName)}`,
       {
         method: "POST",
@@ -305,11 +329,11 @@ const createEntityHandler = (entityName) => ({
           ...withEntityDefaults(entityName, data),
         },
       }
-    );
+    ));
   },
 
   async update(id, data) {
-    return request(
+    return normalizeEntityDates(entityName, await request(
       `/entities.php?entity=${encodeURIComponent(
         entityName
       )}&id=${encodeURIComponent(id)}`,
@@ -317,7 +341,7 @@ const createEntityHandler = (entityName) => ({
         method: "PATCH",
         body: data,
       }
-    );
+    ));
   },
 
   async delete(id) {
