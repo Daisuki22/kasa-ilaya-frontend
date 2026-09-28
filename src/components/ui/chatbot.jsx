@@ -24,7 +24,13 @@ const assistantReply = ({
   important,
   nextStep,
 }) => {
-  const sections = [`### ${title}`, intro, ...paragraphs];
+  const sections = [`### ${title}`];
+
+  if (intro) {
+    sections.push(bullets.length || steps.length ? intro : `- ${intro}`);
+  }
+
+  sections.push(...paragraphs);
 
   if (bullets.length) {
     sections.push(bullets.map((item) => `- ${item}`).join("\n"));
