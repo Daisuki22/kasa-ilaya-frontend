@@ -1,9 +1,13 @@
-const PRODUCTION_API_URL = "https://kasa-ilaya-resort-back-end.onrender.com/api";
-
 const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const candidateApiUrl = configuredApiUrl || (import.meta.env.DEV ? "/api" : PRODUCTION_API_URL);
+const candidateApiUrl = import.meta.env.DEV
+  ? configuredApiUrl || "/api"
+  : "/api";
 
 const isLocalApiUrl = (value) => {
+  if (!/^https?:\/\//i.test(value)) {
+    return false;
+  }
+
   try {
     return ["localhost", "127.0.0.1", "::1"].includes(new URL(value, "http://localhost").hostname);
   } catch {
@@ -14,7 +18,7 @@ const isLocalApiUrl = (value) => {
 const normalizedApiUrl = candidateApiUrl.replace(/\/+$/, "");
 
 export const API_BASE_URL = !import.meta.env.DEV && isLocalApiUrl(normalizedApiUrl)
-  ? PRODUCTION_API_URL
+  ? "/api"
   : /\/api$/i.test(normalizedApiUrl)
     ? normalizedApiUrl
     : `${normalizedApiUrl}/api`;
