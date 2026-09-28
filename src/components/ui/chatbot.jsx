@@ -15,6 +15,31 @@ const QUICK_QUESTIONS = [
   "How do I contact the resort?",
 ];
 
+const assistantReply = ({
+  title,
+  intro,
+  paragraphs = [],
+  bullets = [],
+  steps = [],
+  important,
+  nextStep,
+}) => {
+  const sections = [`### ${title}`, intro, ...paragraphs];
+
+  if (bullets.length) {
+    sections.push(bullets.map((item) => `- ${item}`).join("\n"));
+  }
+
+  if (steps.length) {
+    sections.push(steps.map((step, index) => `${index + 1}. ${step}`).join("\n"));
+  }
+
+  if (important) sections.push(`**Important:** ${important}`);
+  if (nextStep) sections.push(`**Next step:** ${nextStep}`);
+
+  return sections.filter(Boolean).join("\n\n");
+};
+
 const groupPackagesByName = (packages) => {
   const grouped = new Map();
 
@@ -42,23 +67,39 @@ const buildLocalResponse = (message, packages, siteSettings) => {
   const termsSummary = siteSettings?.terms_summary?.trim() || "Bookings are subject to availability and admin confirmation.";
 
   if (prompt.includes("what is") || prompt.includes("about") || prompt.includes("who are") || prompt.includes("website")) {
-    return `${siteName} Resort & Event Place is a booking website for resort stays, private gatherings, and event planning. The public site includes Home, About, Contact, Packages, Amenities, upcoming schedules, reviews, and resort rules. Guests can also send inquiries through the Contact page and continue the conversation there.`;
+    return assistantReply({
+      title: `About ${siteName}`,
+      intro: `${siteName} Resort & Event Place helps guests explore resort stays, private gatherings, and event planning.`,
+      bullets: ["Browse packages and amenities.", "Check upcoming schedules and guest reviews.", "Send an inquiry through the Contact page."],
+    });
   }
 
   if (prompt.includes("amenity") || prompt.includes("amenities")) {
     const amenities = Array.isArray(siteSettings?.amenities) ? siteSettings.amenities : [];
 
     if (amenities.length === 0) {
-      return "You can open the Amenities page to view resort facilities and available amenities.";
+      return assistantReply({
+        title: "Resort amenities",
+        intro: "The Amenities page has the latest information about resort facilities.",
+        nextStep: "Open the Amenities page to view the available amenities.",
+      });
     }
 
-    const lines = amenities.slice(0, 6).map((item) => `- ${item.title || "Amenity"}${item.desc ? `: ${item.desc}` : ""}`);
-    return `Here are some resort amenities:\n${lines.join("\n")}\n\nYou can open the Amenities page to see more details.`;
+    return assistantReply({
+      title: "Resort amenities",
+      intro: "Here are some of the available facilities:",
+      bullets: amenities.slice(0, 6).map((item) => `${item.title || "Amenity"}${item.desc ? `: ${item.desc}` : ""}`),
+      nextStep: "Open the Amenities page for more details.",
+    });
   }
 
   if (prompt.includes("package") || prompt.includes("price") || prompt.includes("tour")) {
     if (groupedPackages.length === 0) {
-      return "No packages are available right now. Please check the Packages page again later.";
+      return assistantReply({
+        title: "Resort packages",
+        intro: "No packages are available right now.",
+        nextStep: "Please check the Packages page again later.",
+      });
     }
 
     const lines = groupedPackages.map(({ name, options }) => {
@@ -69,76 +110,166 @@ const buildLocalResponse = (message, packages, siteSettings) => {
         })
         .join(" | ");
 
-      return `- ${name}: ${variants}`;
+      return `**${name}:** ${variants}`;
     });
 
-    return `Here are the available resort packages:\n${lines.join("\n")}\n\nYou can open the Packages page to compare them and proceed to booking.`;
+    return assistantReply({
+      title: "Resort packages",
+      intro: "Available packages and tour options:",
+      bullets: lines,
+      nextStep: "Open the Packages page to compare options and continue to booking.",
+    });
   }
 
   if (prompt.includes("new") || prompt.includes("first time") || prompt.includes("beginner") || prompt.includes("help me")) {
-    return "If you are a new guest, the reservation process is simple: sign in, choose a package, select your preferred date and tour type, enter your details, pay the reservation fee, and upload the proof of payment. After that, the admin will review and confirm your booking.";
+    return assistantReply({
+      title: "Getting started",
+      intro: "New guests can reserve online in a few steps:",
+      steps: ["Sign in to your account.", "Choose a package, date, and tour type.", "Enter your guest details.", "Follow the payment instructions and upload proof of payment."],
+      important: "The resort team reviews your booking and payment before confirming the reservation.",
+    });
   }
 
   if (prompt.includes("how do i reserve") || prompt.includes("how to reserve") || prompt.includes("how to book") || prompt.includes("how do i book") || prompt.includes("reservation process")) {
-    return "To reserve a slot, follow these steps:\n1. Sign in to your account.\n2. Open the Packages page and choose your preferred package.\n3. Select the date and tour type.\n4. Fill in the guest details and any special requests.\n5. Complete the payment and upload your receipt.\n6. Wait for admin review and confirmation.\n\nOnly one active reservation is allowed for the same package, date, and tour type.";
+    return assistantReply({
+      title: "How to reserve",
+      intro: "To request a reservation:",
+      steps: ["Sign in to your account.", "Open Packages and choose your preferred package.", "Select a date and tour type.", "Enter the guest details and any special requests.", "Follow the payment instructions and upload your receipt.", "Wait for the resort team to review your request."],
+      important: "Only one active reservation is allowed for the same package, date, and tour type. Your booking is subject to availability and confirmation.",
+    });
   }
 
   if (prompt.includes("need") || prompt.includes("requirements")) {
     if (prompt.includes("book") || prompt.includes("reservation") || prompt.includes("reserve")) {
-      return "To make a reservation, you usually need an account, a selected package, your preferred date, the number of guests, and proof of payment. For special group requests, it is best to contact the resort directly.";
+      return assistantReply({
+        title: "What you need to book",
+        intro: "Prepare these details before you start:",
+        bullets: ["An account", "Your preferred package, date, and tour type", "The number of guests and contact details", "Proof of payment, following the instructions shown during booking"],
+        nextStep: "For special group requests, contact the resort directly.",
+      });
     }
   }
 
-  if (prompt.includes("book") || prompt.includes("reservation") || prompt.includes("reserve")) {
-    return `To book the resort, sign in first, open the Packages page, choose your preferred package, select the date and tour type, fill in the guest details, and upload your reservation payment receipt. Because this is a private resort, only one active reservation is allowed for a package date and tour type.`;
+  if (
+    (prompt.includes("book") || prompt.includes("reservation") || prompt.includes("reserve")) &&
+    !prompt.includes("group") &&
+    !prompt.includes("event") &&
+    !prompt.includes("large") &&
+    !prompt.includes("payment") &&
+    !prompt.includes("receipt") &&
+    !prompt.includes("pay")
+  ) {
+    return assistantReply({
+      title: "Booking a reservation",
+      intro: "Sign in, choose a package, select a date and tour type, then enter your guest details and follow the payment instructions.",
+      important: "Only one active reservation is allowed for a package date and tour type. All requests are subject to availability and resort confirmation.",
+      nextStep: "Open the Packages page to begin.",
+    });
   }
 
   if (prompt.includes("payment") || prompt.includes("receipt") || prompt.includes("gcash") || prompt.includes("maya") || prompt.includes("pay")) {
-    return `The booking flow includes a payment step where you upload your receipt for verification. Admin reviews the reservation payment before the booking is confirmed, and the payment status changes after verification. Follow the payment instructions shown during booking and upload your proof of payment.`;
+    return assistantReply({
+      title: "Reservation payment",
+      intro: "The booking flow shows the available payment instructions and methods.",
+      steps: ["Follow the payment instructions shown during booking.", "Upload a clear image of your payment proof.", "Wait for the resort team to verify the payment."],
+      important: "Your reservation is not confirmed until it has been reviewed by the resort.",
+    });
   }
 
   if (prompt.includes("available") || prompt.includes("availability") || prompt.includes("date")) {
-    return "The calendar uses live reservation availability. Reserved dates cannot be booked, and the package cards also show whether a package is available or reserved today.";
+    return assistantReply({
+      title: "Check availability",
+      intro: "The booking calendar displays current reservation availability.",
+      bullets: ["Reserved dates cannot be selected.", "Package cards also show availability information."],
+      nextStep: "Choose a package to view its calendar and available dates.",
+    });
   }
 
   if (prompt.includes("group") || prompt.includes("guests") || prompt.includes("event") || prompt.includes("large")) {
-    return "For larger groups or special event requests, please contact the resort through the Contact page so the team can help you with availability and booking details.";
+    return assistantReply({
+      title: "Group bookings and events",
+      intro: "The resort team can help with availability and details for larger groups or special events.",
+      nextStep: "Send an inquiry through the Contact page.",
+    });
   }
 
   if (prompt.includes("rebook") || prompt.includes("reschedule")) {
-    return "You can request rebooking from My Booking when the reservation is pending or confirmed. Policy: one approved rebooking per reservation, request at least 7 days before the reservation date, and choose an available date for the same package and tour type. The original date stays active until admin approval.";
+    return assistantReply({
+      title: "Rebooking",
+      intro: "Eligible reservations can request a new date from My Booking.",
+      bullets: ["The booking must be pending or confirmed.", "Only one rebooking can be approved per reservation.", "Submit the request at least 7 days before the reservation date.", "Choose an available date for the same package and tour type."],
+      important: "The original date remains active until the resort approves the request.",
+      nextStep: "Open My Booking to check the available actions for your reservation.",
+    });
   }
 
   if (prompt.includes("cancel") || prompt.includes("change")) {
-    return "For cancellations, open My Booking to see available actions. Rebooking requests can also be submitted there when the booking is eligible.";
+    return assistantReply({
+      title: "Changes or cancellations",
+      intro: "Available actions depend on your reservation status and resort policy.",
+      nextStep: "Open My Booking to review the actions available for your reservation. Eligible bookings can request rebooking there.",
+    });
   }
 
   if (prompt.includes("inquiry") || prompt.includes("message") || prompt.includes("chat with admin") || prompt.includes("contact form")) {
-    return "You can send an inquiry on the Contact page by filling out your name, email, subject, and message. The site now saves your inquiry in the database, and you can continue the conversation on the same Contact page. Admin and super admin can read and reply to inquiries from their inbox.";
+    return assistantReply({
+      title: "Send an inquiry",
+      intro: "Use the Contact page to send a message to the resort team.",
+      steps: ["Enter your name and email.", "Add a subject and your message.", "Submit the inquiry and return to the Contact page to continue the conversation."],
+    });
   }
 
   if (prompt.includes("contact") || prompt.includes("location") || prompt.includes("where") || prompt.includes("map") || prompt.includes("phone") || prompt.includes("email")) {
-    return `You can contact the resort through the Contact page or directly using these details:\n- Phone: ${RESORT_CONTACT.phoneDisplay}\n- Email: ${RESORT_CONTACT.email}\n- Address: ${RESORT_CONTACT.address}\n- Hours: ${RESORT_CONTACT.hours}\nThe Contact page also includes a Google Map and inquiry messaging.`;
+    return assistantReply({
+      title: "Contact Kasa Ilaya",
+      intro: "You can reach the resort through the Contact page or use these details:",
+      bullets: [
+        `**Phone:** ${RESORT_CONTACT.phoneDisplay}`,
+        `**Email:** ${RESORT_CONTACT.email}`,
+        `**Address:** ${RESORT_CONTACT.address}`,
+        `**Hours:** ${RESORT_CONTACT.hours}`,
+      ],
+      nextStep: "The Contact page also has a map and inquiry form.",
+    });
   }
 
   if (prompt.includes("schedule") || prompt.includes("calendar") || prompt.includes("event")) {
-    return "The website shows upcoming schedules and reserved dates so guests can see planned events and current availability. Admin can also manage schedules from the calendar tools in the admin area.";
+    return assistantReply({
+      title: "Schedules and calendar",
+      intro: "The website calendar shows upcoming schedules and reserved dates to help you review availability.",
+      nextStep: "Choose a package to check its booking calendar.",
+    });
   }
 
   if (prompt.includes("review") || prompt.includes("testimonial") || prompt.includes("feedback")) {
-    return "The home page shows verified guest reviews so visitors can read real feedback from previous stays and resort experiences.";
+    return assistantReply({
+      title: "Guest reviews",
+      intro: "The home page features verified guest reviews and feedback about their resort experiences.",
+    });
   }
 
   if (prompt.includes("rule") || prompt.includes("terms") || prompt.includes("policy")) {
-    return `The website includes resort rules and booking terms. Summary: ${termsSummary}`;
+    return assistantReply({
+      title: "Resort rules and booking terms",
+      intro: termsSummary,
+      nextStep: "Review the full terms during the booking process.",
+    });
   }
 
   if (prompt.includes("admin") || prompt.includes("super admin") || prompt.includes("staff")) {
-    return "Admin tools are separate from the public site. Staff can manage bookings, schedules, and inquiries, while super admin has broader access such as user permissions, system settings, security settings, and activity logs.";
+    return assistantReply({
+      title: "Staff and admin support",
+      intro: "Admin tools are available to authorized staff.",
+      bullets: ["Staff can manage bookings, schedules, and inquiries.", "Super admins can also manage user permissions, system and security settings, and activity logs."],
+    });
   }
 
   if (prompt.includes("lost") || prompt.includes("found")) {
-    return "This website does not currently include a Lost and Found section. I can still help with packages, booking, contact inquiries, schedules, reviews, and resort information.";
+    return assistantReply({
+      title: "Lost and found",
+      intro: "A Lost and Found section is not currently available on this website.",
+      nextStep: "I can still help with packages, bookings, contact inquiries, schedules, reviews, and resort information.",
+    });
   }
 
   return null;
@@ -151,7 +282,11 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Welcome to Kasa Ilaya Resort. Please choose a quick message below."
+      content: assistantReply({
+        title: "Welcome to Kasa Ilaya Resort",
+        intro: "How can I help with your visit?",
+        nextStep: "Choose a quick message below.",
+      })
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -211,12 +346,20 @@ export default function Chatbot() {
 
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Please choose one of the quick messages below."
+        content: assistantReply({
+          title: "How can I help?",
+          intro: "I can help with resort information and booking questions.",
+          nextStep: "Choose one of the quick messages below.",
+        })
       }]);
     } catch {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Please choose one of the quick messages below."
+        content: assistantReply({
+          title: "How can I help?",
+          intro: "I can help with resort information and booking questions.",
+          nextStep: "Choose one of the quick messages below.",
+        })
       }]);
     } finally {
       setLoading(false);
@@ -258,24 +401,35 @@ export default function Chatbot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 space-y-3 overflow-y-auto p-4" role="log" aria-live="polite" aria-relevant="additions">
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                key={i}
+                role="group"
+                aria-label={msg.role === "user" ? "Your message" : "Kasa Ilaya Assistant message"}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
                 <div
-                  className={`max-w-[80%] rounded-lg px-3.5 py-2.5 text-sm ${
+                  className={`min-w-0 max-w-[85%] break-words rounded-lg px-3.5 py-2.5 text-sm leading-relaxed [overflow-wrap:anywhere] ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted text-foreground rounded-bl-md"
                   }`}
                 >
-                  <ReactMarkdown className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                    {msg.content}
-                  </ReactMarkdown>
+                  {msg.role === "user" ? (
+                    <p className="m-0 whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    <ReactMarkdown
+                      className="max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_h3]:mb-2 [&_h3]:text-sm [&_h3]:font-semibold [&_li]:my-1 [&_ol]:my-2 [&_ol]:pl-5 [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-5"
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </div>
             ))}
             {loading && (
-              <div className="flex justify-start">
+              <div className="flex justify-start" role="status" aria-label="Assistant is responding">
                 <div className="rounded-lg rounded-bl-md bg-muted px-4 py-3">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
