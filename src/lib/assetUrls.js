@@ -2,7 +2,7 @@ const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.DEV
-    ? "http://localhost/Kasa-Ilaya-Resort/backend/api"
+    ? "/api"
     : "https://kasa-ilaya-resort-back-end.onrender.com/api");
 
 const isLocalHostname = (hostname) => LOCAL_HOSTNAMES.has(hostname.toLowerCase());

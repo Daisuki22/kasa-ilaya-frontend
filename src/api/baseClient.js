@@ -6,7 +6,7 @@ const createId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 10
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.DEV
-    ? "http://localhost/Kasa-Ilaya-Resort/backend/api"
+    ? "/api"
     : "https://kasa-ilaya-resort-back-end.onrender.com/api");
 
 const WELCOME_INTRO_SESSION_KEY = "ki-welcome-intro-shown";

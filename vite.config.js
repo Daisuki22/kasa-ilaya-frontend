@@ -14,7 +14,11 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost/Kasa-Ilaya-Resort/backend',
+        target: 'http://localhost:10000',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:10000',
         changeOrigin: true,
       },
     },
