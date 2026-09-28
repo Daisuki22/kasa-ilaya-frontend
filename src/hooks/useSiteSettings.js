@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
+import { DATA_PRIVACY_NOTICE } from "@/lib/resortNotices";
 import {
   Waves, Music, Car, Shield, Sun, Play,
   UtensilsCrossed, Wifi, Coffee, TreePalm,
@@ -135,13 +136,15 @@ export const defaultSiteSettings = {
     "1. All bookings are subject to availability and confirmation by Kasa Ilaya Resort.\n\n" +
     "2. Guests must provide accurate personal information and valid contact details during reservation.\n\n" +
     "3. A reservation payment is required to process the booking. Submitted payment proofs are reviewed before final confirmation.\n\n" +
-    "4. Reservation fees and payments made to secure a booking are non-refundable unless Kasa Ilaya Resort approves otherwise in writing.\n\n" +
-    "5. One approved rebooking is allowed per reservation. Rebooking requests must be submitted at least 7 days before the reservation date, the requested date must be available for the same package and tour type, and the original booking date remains active until admin approval.\n\n" +
-    "6. Guests may cancel their own booking while it is still pending, but online cancellation is no longer allowed once the booking is marked paid or approved by the resort.\n\n" +
+    "4. All payments are non-refundable. Cancellation and rescheduling requests must be submitted at least 7 days before the reservation date. Requests made within 7 days are not permitted.\n\n" +
+    "5. Approved rebookings carry over prior payments to the new reservation date. Rebooking requests must be submitted at least 7 days before the reservation date, the requested date must be available for the same package and tour type, and the original booking date remains active until resort approval.\n\n" +
+    "6. Cancellation requests must be submitted at least 7 days before the reservation date. Payments remain non-refundable regardless of cancellation.\n\n" +
     "7. Guests must follow resort rules, safety guidelines, staff instructions, and capacity limits throughout their stay.\n\n" +
-    "8. Damages to resort property, missing items, or violations of house rules may result in additional charges or cancellation of the reservation.\n\n" +
+    "8. Additional charges apply for exceeding package guest limits, overstaying the reserved schedule, or damaging resort property.\n\n" +
     "9. Kasa Ilaya Resort may decline or cancel a booking for policy violations, fraudulent transactions, safety concerns, or force majeure events.\n\n" +
-    "10. By proceeding with a reservation, the guest confirms that they have read and accepted these terms and conditions.",
+    "10. By proceeding with a reservation, the guest confirms that they have read and accepted these terms and conditions.\n\n" +
+    "11. Data Privacy Notice\n\n" +
+    DATA_PRIVACY_NOTICE,
   amenities: DEFAULT_AMENITIES,
   require_strong_password: true,
   min_password_length: 8,

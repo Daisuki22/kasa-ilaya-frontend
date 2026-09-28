@@ -155,11 +155,11 @@ const canLeaveReview = (booking) => {
 const getDismissedReviewStorageKey = (email) => `kasa-ilaya-dismissed-reviews:${email || "guest"}`;
 
 const canCancelBooking = (booking) => {
-  if (!booking || booking.status !== "pending") {
-    return false;
-  }
-
-  return (booking.payment_status || "unpaid") !== "paid";
+  return (
+    booking?.status === "pending" &&
+    (booking.payment_status || "unpaid") !== "paid" &&
+    getCancellationLockedReason(booking) === ""
+  );
 };
 
 const getCancellationLockedReason = (booking) => {
@@ -175,6 +175,20 @@ const getCancellationLockedReason = (booking) => {
 
   if (booking.status === "confirmed") {
     return "Accepted bookings can no longer be cancelled online because the reservation has already been approved by the resort.";
+  }
+
+  if (booking.status !== "pending") {
+    return "Only pending bookings can be cancelled online.";
+  }
+
+  const startTime = getBookingStartTime(booking);
+  if (!startTime || Number.isNaN(startTime.getTime())) {
+    return "This booking date cannot be checked for cancellation.";
+  }
+
+  const cutoff = new Date(startTime.getTime() - REBOOKING_NOTICE_DAYS * 24 * 60 * 60 * 1000);
+  if (Date.now() > cutoff.getTime()) {
+    return "Cancellation requests must be submitted at least 7 days before the reservation date. Requests within 7 days are not permitted.";
   }
 
   return "";

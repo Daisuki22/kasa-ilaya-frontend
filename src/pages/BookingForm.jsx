@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useResortRules } from "@/hooks/useResortRules";
 import { handleImageFallback } from "@/lib/imageFallback";
+import { CANCELLATION_REBOOKING_NOTICE, normalizeTermsContent } from "@/lib/resortNotices";
 
 const MAX_BOOKINGS_PER_SLOT = 1;
 
@@ -53,7 +54,7 @@ const getPackagePriceByTourType = (pkg, tourType) => {
 
 const FALLBACK_PACKAGE_IMAGE = "/img/room_Resort%20View.jpg";
 const defaultTour = { label: "Choose a tour type", time: "Select inside the booking modal" };
-const PAYMENT_POLICY_NOTICE = "Reservation fees are non-refundable. Guests may cancel while the booking is still pending, but cancellation is no longer allowed once the booking is marked paid or approved by the resort. Approved rebooking keeps the same payment on the new reservation date.";
+const PAYMENT_POLICY_NOTICE = CANCELLATION_REBOOKING_NOTICE;
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
 const RECEIPT_MIN_BYTES = 12 * 1024;
@@ -205,7 +206,7 @@ export default function BookingForm() {
   const termsSections = useMemo(() => {
     const content = siteSettings?.terms_content?.trim() || "";
 
-    return content
+    return normalizeTermsContent(content)
       .split(/\n\s*\n/)
       .map((section) => section.trim())
       .filter(Boolean);

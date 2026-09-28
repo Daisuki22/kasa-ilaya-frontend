@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useResortRules } from "@/hooks/useResortRules";
+import { CANCELLATION_REBOOKING_NOTICE, DATA_PRIVACY_NOTICE } from "@/lib/resortNotices";
 
 const FAQ_CATEGORIES = [
   {
@@ -55,6 +56,14 @@ const FAQ_CATEGORIES = [
       "What is the cancellation policy?",
       "Can I cancel my reservation?",
       "Can I get a refund after cancelling a paid reservation?",
+      "What happens to my payment if a rebooking is approved?",
+    ],
+  },
+  {
+    title: "Privacy & Personal Data",
+    questions: [
+      "How is my personal information used?",
+      "How is my personal information protected?",
     ],
   },
   {
@@ -79,6 +88,7 @@ const FAQ_CATEGORIES = [
       "What are the resort rules?",
       "Are outside food and drinks allowed?",
       "What are the policies for guests?",
+      "What extra charges may apply?",
     ],
   },
 ];
@@ -254,7 +264,7 @@ const buildLocalResponse = (
         "The new date must be available for the same package and tour type.",
       ],
       important:
-        "The original reservation date remains active until the resort approves the request.",
+        "The original reservation date remains active until approval. If approved, the prior payment carries over to the new date.",
       nextStep:
         "Open My Booking and check the available actions for your reservation.",
     }),
@@ -467,7 +477,7 @@ const buildLocalResponse = (
       title: "Required reservation payment",
       intro: "The booking flow offers a reservation downpayment or full payment.",
       bullets: ["Downpayment: 15% of the booking total.", "Full payment: the full booking amount."],
-      important: "The exact amount is calculated and shown after you choose a package and guest count.",
+      important: `The exact amount is calculated and shown after you choose a package and guest count. ${CANCELLATION_REBOOKING_NOTICE}`,
     }),
 
     "how can i confirm my payment?": assistantReply({
@@ -478,20 +488,42 @@ const buildLocalResponse = (
 
     "what is the cancellation policy?": assistantReply({
       title: "Cancellation policy",
-      bullets: ["Guests may cancel online while a booking is pending.", "Online cancellation is not available once a booking is marked paid or approved by the resort.", "Reservation payments are non-refundable unless the resort approves otherwise in writing."],
+      intro: CANCELLATION_REBOOKING_NOTICE,
+      bullets: ["Submit cancellation or rebooking requests through My Booking or contact the resort team.", "Requests made within 7 days of the reservation date are not permitted."],
       nextStep: "Review the full current terms during booking or contact the resort about your reservation.",
     }),
 
     "can i cancel my reservation?": assistantReply({
       title: "Cancel a reservation",
-      intro: "Online cancellation is available while your booking is still pending.",
-      nextStep: "Open My Booking and check the actions available for your reservation. Contact the resort if it is already paid or approved.",
+      intro: "Cancellation requests must be submitted at least 7 days before the reservation date. Requests within 7 days are not permitted, and payments are non-refundable.",
+      nextStep: "Open My Booking to review available actions or contact the resort team for help.",
     }),
 
     "can i get a refund after cancelling a paid reservation?": assistantReply({
       title: "Refunds for cancelled bookings",
-      intro: "Reservation fees and payments are non-refundable under the published booking terms unless Kasa Ilaya Resort approves an exception in writing.",
-      nextStep: "Contact the resort directly to discuss a specific payment or cancellation.",
+      intro: "All payments are non-refundable, including payments for cancelled reservations.",
+      nextStep: "If your request is to change your date, submit a rebooking request at least 7 days before your reservation.",
+    }),
+
+    "what happens to my payment if a rebooking is approved?": assistantReply({
+      title: "Payment after an approved rebooking",
+      intro: "If the resort approves your rebooking, your prior payment carries over to the new reservation date.",
+      important: "Rebooking requests must be submitted at least 7 days before the reservation date. Payments remain non-refundable.",
+      nextStep: "Submit your request through My Booking and wait for the resort's decision.",
+    }),
+
+    "how is my personal information used?": assistantReply({
+      title: "How your personal information is used",
+      intro: "Kasa Ilaya Resort & Events Place is committed to protecting your personal information. Personal details and proofs of payment are collected for:",
+      bullets: ["Reservation processing.", "Identity verification.", "Guest management."],
+      important: "By proceeding with your booking, you consent to the collection and processing of your information for these purposes. The resort notice states that personal details are not sold or shared with unauthorized third parties.",
+      nextStep: "Read the Data Privacy Notice in the booking terms for the full statement.",
+    }),
+
+    "how is my personal information protected?": assistantReply({
+      title: "Data Privacy Notice",
+      intro: DATA_PRIVACY_NOTICE,
+      nextStep: "Review the full Data Privacy Notice in the booking terms before proceeding.",
     }),
 
     "what time is check-in?": assistantReply({
@@ -551,8 +583,15 @@ const buildLocalResponse = (
     "what are the policies for guests?": assistantReply({
       title: "Guest policies",
       intro: activeRules.length ? "Current guest rules and policies:" : "Review the current terms and policies during booking.",
-      bullets: activeRules.map((rule) => `**${rule.title}:** ${rule.description}`),
+      bullets: [...activeRules.map((rule) => `**${rule.title}:** ${rule.description}`), "Additional charges may apply for exceeding package guest limits, overstaying, or property damage."],
       nextStep: "Read the booking terms before submitting a reservation.",
+    }),
+
+    "what extra charges may apply?": assistantReply({
+      title: "Additional charges",
+      intro: "Additional charges may apply for:",
+      bullets: ["Exceeding the guest limit included in your package.", "Staying beyond your reserved schedule.", "Damage to resort property."],
+      nextStep: "Check your selected package's guest limit and tour schedule before booking.",
     }),
   };
 

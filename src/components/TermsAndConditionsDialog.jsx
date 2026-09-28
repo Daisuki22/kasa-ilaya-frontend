@@ -9,13 +9,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { defaultSiteSettings, useSiteSettings } from "@/hooks/useSiteSettings";
+import { normalizeTermsContent } from "@/lib/resortNotices";
 
 export default function TermsAndConditionsDialog({ trigger }) {
   const { settings } = useSiteSettings();
 
   const title = settings?.terms_title?.trim() || defaultSiteSettings.terms_title;
   const summary = settings?.terms_summary?.trim() || defaultSiteSettings.terms_summary;
-  const content = settings?.terms_content?.trim() || defaultSiteSettings.terms_content;
+  const content = normalizeTermsContent(
+    settings?.terms_content?.trim() || defaultSiteSettings.terms_content
+  );
 
   return (
     <Dialog>

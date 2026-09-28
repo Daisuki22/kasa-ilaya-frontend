@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 import { isSuperAdmin } from "@/lib/adminAccess";
 import { defaultSiteSettings, FONT_STYLE_OPTIONS, AMENITY_ICON_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
+import { normalizeTermsContent } from "@/lib/resortNotices";
 
 const buildForm = (settings) => ({
   site_name: settings?.site_name || defaultSiteSettings.site_name,
@@ -49,7 +50,7 @@ const buildForm = (settings) => ({
   amenities_section_description: settings?.amenities_section_description || defaultSiteSettings.amenities_section_description,
   terms_title: settings?.terms_title || defaultSiteSettings.terms_title,
   terms_summary: settings?.terms_summary || defaultSiteSettings.terms_summary,
-  terms_content: settings?.terms_content || defaultSiteSettings.terms_content,
+  terms_content: normalizeTermsContent(settings?.terms_content || defaultSiteSettings.terms_content),
 });
 
 export default function SystemSettingsManager({ embedded = false, actorUser = null, section = null }) {
