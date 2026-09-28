@@ -25,10 +25,20 @@ const rebookingBadgeClasses = {
 
 const formatStatusLabel = (value) => (value || "none").replace(/_/g, " ");
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
+const tourTimeLabels = {
+  day_tour: "8:00 AM - 6:00 PM",
+  night_tour: "6:00 PM - 6:00 AM next day",
+  "22_hours": "6:00 PM - 4:00 PM next day",
+};
 const canAdminReschedule = (booking) => ["pending", "confirmed"].includes(booking?.status || "");
 const todayInputValue = () => {
   const now = new Date();
   return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+};
+const tomorrowInputValue = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return new Date(tomorrow.getTime() - tomorrow.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 };
 
 export default function AdminReservationManagement() {
@@ -97,18 +107,7 @@ export default function AdminReservationManagement() {
     setRescheduling(true);
 
     try {
-      await baseClient.entities.Booking.update(rescheduleBooking.id, {
-        booking_date: newDate,
-      });
-
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email || null,
-        user_name: user?.full_name || user?.name || "Admin",
-        action: "Rescheduled Booking",
-        entity_type: "Booking",
-        entity_id: rescheduleBooking.id,
-        details: `Rescheduled ${rescheduleBooking.booking_reference} from ${rescheduleBooking.booking_date} to ${newDate}${note ? ` - ${note}` : ""}`,
-      });
+      await baseClient.entities.Booking.reschedule(rescheduleBooking.id, newDate, note);
 
       toast.success("Booking rescheduled.");
       setRescheduleBooking(null);
@@ -131,21 +130,29 @@ export default function AdminReservationManagement() {
     setResolvingRebooking(decision);
 
     try {
-      await baseClient.entities.Booking.update(rebookingBooking.id, {
-        rebooking_status: decision,
-        rebooking_resolution_note: rebookingNote.trim() || (decision === "approved" ? "Approved by resort admin." : "Declined by resort admin."),
-      });
+      if (decision === "approved") {
+        await baseClient.entities.Booking.reschedule(
+          rebookingBooking.id,
+          rebookingBooking.rebooking_requested_date,
+          rebookingNote.trim()
+        );
+      } else {
+        await baseClient.entities.Booking.update(rebookingBooking.id, {
+          rebooking_status: decision,
+          rebooking_resolution_note: rebookingNote.trim() || "Declined by resort admin.",
+        });
 
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email || null,
-        user_name: user?.full_name || user?.name || "Admin",
-        action: decision === "approved" ? "Approved Rebooking" : "Declined Rebooking",
-        entity_type: "Booking",
-        entity_id: rebookingBooking.id,
-        details: `${decision === "approved" ? "Approved" : "Declined"} rebooking ${rebookingBooking.booking_reference} from ${rebookingBooking.booking_date} to ${rebookingBooking.rebooking_requested_date}`,
-      });
+        await baseClient.entities.ActivityLog.create({
+          user_email: user?.email || null,
+          user_name: user?.full_name || user?.name || "Admin",
+          action: "Declined Rebooking",
+          entity_type: "Booking",
+          entity_id: rebookingBooking.id,
+          details: `Declined rebooking ${rebookingBooking.booking_reference} from ${rebookingBooking.booking_date} to ${rebookingBooking.rebooking_requested_date}`,
+        });
+      }
 
-      toast.success(decision === "approved" ? "Rebooking approved and booking date updated." : "Rebooking request declined.");
+      toast.success(decision === "approved" ? "Rebooking approved and reservation date updated." : "Rebooking request declined.");
       setRebookingBooking(null);
       queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
@@ -184,7 +191,7 @@ export default function AdminReservationManagement() {
                   <TableHead>Reference</TableHead>
                   <TableHead>Guest</TableHead>
                   <TableHead>Package</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Date / time</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Rebooking</TableHead>
@@ -207,7 +214,10 @@ export default function AdminReservationManagement() {
                           </div>
                         </TableCell>
                         <TableCell className="truncate">{booking.package_name}</TableCell>
-                        <TableCell>{booking.booking_date}</TableCell>
+                        <TableCell>
+                          <p className="font-medium">{booking.booking_date}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{tourTimeLabels[booking.tour_type] || booking.tour_type || "Time unavailable"}</p>
+                        </TableCell>
                         <TableCell className="font-semibold text-secondary">{formatMoney(booking.total_amount)}</TableCell>
                         <TableCell className="capitalize">{formatStatusLabel(booking.status)}</TableCell>
                         <TableCell>
@@ -217,7 +227,11 @@ export default function AdminReservationManagement() {
                                 {formatStatusLabel(rebookingStatus)}
                               </Badge>
                               {booking.rebooking_requested_date ? (
-                                <p className="text-xs text-muted-foreground">To {booking.rebooking_requested_date}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {rebookingStatus === "approved"
+                                    ? `From ${booking.rebooking_original_date || "previous date"} to ${booking.booking_date}`
+                                    : `To ${booking.rebooking_requested_date}`}
+                                </p>
                               ) : null}
                             </div>
                           ) : (
@@ -306,7 +320,7 @@ export default function AdminReservationManagement() {
                 <Input
                   id="admin-reschedule-date"
                   type="date"
-                  min={todayInputValue()}
+                  min={tomorrowInputValue()}
                   value={rescheduleForm.booking_date}
                   onChange={(event) => setRescheduleForm((current) => ({ ...current, booking_date: event.target.value }))}
                   className="h-12 min-h-12 text-base font-semibold"

@@ -291,6 +291,16 @@ const withEntityDefaults = (entityName, payload) => {
 };
 
 const createEntityHandler = (entityName) => ({
+  async availability(excludeBookingId) {
+    if (entityName !== "Booking") {
+      throw new Error("Availability is only available for bookings.");
+    }
+
+    const params = new URLSearchParams({ entity: "Booking", action: "availability" });
+    if (excludeBookingId) params.set("exclude_id", excludeBookingId);
+    return request(`/entities.php?${params.toString()}`);
+  },
+
   async list(sortField, limit) {
     const params = new URLSearchParams({
       entity: entityName,
@@ -351,6 +361,22 @@ const createEntityHandler = (entityName) => ({
         body: data,
       }
     ));
+  },
+
+  async reschedule(id, bookingDate, note = "") {
+    if (entityName !== "Booking") {
+      throw new Error("Rescheduling is only available for bookings.");
+    }
+
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=reschedule`,
+      {
+        method: "PATCH",
+        body: note ? { booking_date: bookingDate, note } : { booking_date: bookingDate },
+      }
+    );
+
+    return normalizeEntityDates("Booking", result?.data || result);
   },
 
   async delete(id) {

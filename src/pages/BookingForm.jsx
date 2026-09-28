@@ -248,13 +248,16 @@ export default function BookingForm() {
     }));
   }, [pkg?.max_guests]);
 
-  const { data: existingBookings = [], isLoading: isLoadingAvailability } = useQuery({
+  const {
+    data: bookingAvailability = { booking_dates: [] },
+    isLoading: isLoadingAvailability,
+    isError: isAvailabilityError,
+  } = useQuery({
     queryKey: ["booking-availability"],
-    queryFn: () => baseClient.entities.Booking.filter({
-      status: ["pending", "confirmed", "completed"],
-    }),
+    queryFn: () => baseClient.entities.Booking.availability(),
     refetchInterval: 15000,
   });
+  const existingBookings = bookingAvailability.booking_dates || [];
 
   const { data: manualSchedules = [] } = useQuery({
     queryKey: ["upcoming-schedules"],
@@ -348,6 +351,7 @@ export default function BookingForm() {
     : null;
 
   const isDateDisabled = (date) => {
+    if (isAvailabilityError) return true;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (date < today) return true;
@@ -422,6 +426,11 @@ export default function BookingForm() {
 
     if (!selectedTour) {
       toast.error("Please select a tour type.");
+      return;
+    }
+
+    if (isAvailabilityError || isLoadingAvailability) {
+      toast.error("Unable to confirm availability right now. Please try again shortly.");
       return;
     }
 
@@ -936,7 +945,9 @@ export default function BookingForm() {
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {selectedTour
-                      ? isLoadingAvailability
+                      ? isAvailabilityError
+                        ? "Unable to check availability right now. Please try again."
+                        : isLoadingAvailability
                         ? "Checking live availability..."
                         : isSelectedDateManuallyBlocked
                           ? "Blocked by a manual resort event or admin schedule — please choose another date"
@@ -1062,7 +1073,9 @@ export default function BookingForm() {
                             <p className="mt-3 text-muted-foreground">
                               {!selectedTour
                                 ? "Select a tour type to confirm live availability for this date."
-                                : isLoadingAvailability
+                                : isAvailabilityError
+                                  ? "Unable to check availability right now. Please try again before continuing."
+                                  : isLoadingAvailability
                                   ? "Checking live availability..."
                                   : isSelectedDateFull
                                     ? "This date is already booked for another package or tour type. Please close the modal and choose another date."
@@ -1190,7 +1203,7 @@ export default function BookingForm() {
                       <Button variant="outline" onClick={() => handleBookingModalChange(false)}>
                         Back
                       </Button>
-                      <Button className="flex-1" disabled={!selectedTour || isSelectedDateFull || !isCustomerInfoComplete} onClick={() => setModalStep(2)}>
+                      <Button className="flex-1" disabled={!selectedTour || isAvailabilityError || isLoadingAvailability || isSelectedDateFull || !isCustomerInfoComplete} onClick={() => setModalStep(2)}>
                         Next: Review
                       </Button>
                     </div>

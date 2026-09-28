@@ -45,7 +45,6 @@ import LeaveReviewDialog from "@/components/mybookings/LeaveReviewDialog.jsx";
 import { addDays, format } from "date-fns";
 import { createPageUrl } from "@/utils";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 const statusColors = {
   pending: "border-amber-200 bg-amber-50 text-amber-700",
@@ -77,6 +76,12 @@ const tourLabels = {
   day_tour: "Day Tour",
   night_tour: "Night Tour",
   "22_hours": "22 Hours",
+};
+
+const tourTimeLabels = {
+  day_tour: { start: "8:00 AM", end: "6:00 PM" },
+  night_tour: { start: "6:00 PM", end: "6:00 AM (next day)" },
+  "22_hours": { start: "6:00 PM", end: "4:00 PM (next day)" },
 };
 
 const paymentTypeLabels = {
@@ -235,9 +240,10 @@ export default function MyBookings() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [bookingToRebook, setBookingToRebook] = useState(null);
-  const [rebookingForm, setRebookingForm] = useState({ requested_date: "", reason: "" });
+  const [rebookingForm, setRebookingForm] = useState({ requested_date: "" });
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [isRequestingRebooking, setIsRequestingRebooking] = useState(false);
+  const [rescheduleSuccess, setRescheduleSuccess] = useState(null);
   const [reviewBooking, setReviewBooking] = useState(null);
   const [dismissedReviewBookingIds, setDismissedReviewBookingIds] = useState([]);
   const [submittedReviewBookingIds, setSubmittedReviewBookingIds] = useState([]);
@@ -292,19 +298,14 @@ export default function MyBookings() {
     enabled: !!user?.email,
   });
 
-  const { data: rebookingAvailabilityBookings = [], isLoading: isLoadingRebookingAvailability } = useQuery({
-    queryKey: ["rebooking-availability"],
-    queryFn: () => baseClient.entities.Booking.filter({ status: ["pending", "confirmed", "completed"] }),
+  const { data: rebookingAvailability = { booking_dates: [], manual_schedule_dates: [] }, isLoading: isLoadingRebookingAvailability, isError: isRebookingAvailabilityError } = useQuery({
+    queryKey: ["rebooking-availability", bookingToRebook?.id],
+    queryFn: () => baseClient.entities.Booking.availability(bookingToRebook.id),
     enabled: !!bookingToRebook,
     refetchInterval: 15000,
   });
 
-  const { data: rebookingManualSchedules = [], isLoading: isLoadingRebookingSchedules } = useQuery({
-    queryKey: ["rebooking-manual-schedules"],
-    queryFn: () => baseClient.entities.UpcomingSchedule.list("schedule_date", 500),
-    enabled: !!bookingToRebook,
-    refetchInterval: 30000,
-  });
+  const rebookingAvailabilityBookings = rebookingAvailability.booking_dates || [];
 
   const reviewedBookingIds = new Set(reviews.map((review) => review.booking_id));
   const blockedReviewBookingIds = new Set([...submittedReviewBookingIds, ...reviews.map((review) => review.booking_id)]);
@@ -353,25 +354,31 @@ export default function MyBookings() {
   }, [bookings]);
 
   const rebookingManualScheduleDates = useMemo(
-    () => new Set(rebookingManualSchedules.map((schedule) => schedule.schedule_date).filter(Boolean)),
-    [rebookingManualSchedules]
+    () => new Set(rebookingAvailability.manual_schedule_dates || []),
+    [rebookingAvailability.manual_schedule_dates]
   );
+
+  const rebookingOccupiedDates = useMemo(() => {
+    const occupied = new Set(rebookingManualScheduleDates);
+    rebookingAvailabilityBookings.forEach((booking) => {
+      if (!booking.booking_date) return;
+      occupied.add(booking.booking_date);
+      if (booking.tour_type === "22_hours") {
+        occupied.add(format(addDays(createDateFromKey(booking.booking_date), 1), "yyyy-MM-dd"));
+      }
+    });
+    return occupied;
+  }, [rebookingAvailabilityBookings, rebookingManualScheduleDates]);
 
   const rebookingReservedDates = useMemo(() => {
     if (!bookingToRebook) {
       return [];
     }
 
-    return rebookingAvailabilityBookings
-      .filter((booking) =>
-        booking.id !== bookingToRebook.id &&
-        booking.package_id === bookingToRebook.package_id &&
-        booking.tour_type === bookingToRebook.tour_type &&
-        booking.booking_date
-      )
-      .map((booking) => createDateFromKey(booking.booking_date))
+    return [...rebookingOccupiedDates]
+      .map((date) => createDateFromKey(date))
       .filter(Boolean);
-  }, [bookingToRebook, rebookingAvailabilityBookings]);
+  }, [bookingToRebook, rebookingOccupiedDates]);
 
   const rebookingManualDates = useMemo(
     () => [...rebookingManualScheduleDates].map(createDateFromKey).filter(Boolean),
@@ -379,7 +386,7 @@ export default function MyBookings() {
   );
 
   const selectedRebookingDate = createDateFromKey(rebookingForm.requested_date);
-  const isCheckingRebookingDate = isLoadingRebookingAvailability || isLoadingRebookingSchedules;
+  const isCheckingRebookingDate = isLoadingRebookingAvailability;
 
   const getRebookingDateIssue = (date, booking = bookingToRebook) => {
     if (!date || !booking) {
@@ -404,16 +411,9 @@ export default function MyBookings() {
       return "This date is blocked by a resort schedule or event.";
     }
 
-    const reservedBooking = rebookingAvailabilityBookings.find((entry) =>
-      entry.id !== booking.id &&
-      entry.package_id === booking.package_id &&
-      entry.tour_type === booking.tour_type &&
-      entry.booking_date === dateKey &&
-      ["pending", "confirmed", "completed"].includes(entry.status)
-    );
-
-    if (reservedBooking) {
-      return `This date is already reserved for ${booking.package_name} (${tourLabels[booking.tour_type] || booking.tour_type}).`;
+    const nextDateKey = format(addDays(date, 1), "yyyy-MM-dd");
+    if (rebookingOccupiedDates.has(dateKey) || (booking.tour_type === "22_hours" && rebookingOccupiedDates.has(nextDateKey))) {
+      return "The selected schedule is unavailable. Please choose another date or time.";
     }
 
     return "";
@@ -436,6 +436,13 @@ export default function MyBookings() {
       };
     }
 
+    if (isRebookingAvailabilityError) {
+      return {
+        tone: "blocked",
+        message: "Unable to load schedule availability. Please try again.",
+      };
+    }
+
     const issue = getRebookingDateIssue(selectedRebookingDate, bookingToRebook);
 
     if (issue) {
@@ -447,9 +454,9 @@ export default function MyBookings() {
 
     return {
       tone: "available",
-      message: "Available for rebooking. This date can be submitted for admin approval.",
+      message: "This schedule is available. Confirm to move your reservation to this date.",
     };
-  }, [bookingToRebook, isCheckingRebookingDate, rebookingForm.requested_date, selectedRebookingDate, rebookingAvailabilityBookings, rebookingManualScheduleDates]);
+  }, [bookingToRebook, isCheckingRebookingDate, isRebookingAvailabilityError, rebookingForm.requested_date, selectedRebookingDate, rebookingAvailabilityBookings, rebookingManualScheduleDates, rebookingOccupiedDates]);
 
   useEffect(() => {
     if (isLoadingReviews || !hasLoadedDismissedReviewState || !eligibleReviewBookings.length || reviewBooking) {
@@ -572,7 +579,7 @@ export default function MyBookings() {
     }
 
     setBookingToRebook(booking);
-    setRebookingForm({ requested_date: "", reason: "" });
+    setRebookingForm({ requested_date: "" });
   };
 
   const handleRebookingRequest = async () => {
@@ -588,10 +595,8 @@ export default function MyBookings() {
     }
 
     const requestedDate = rebookingForm.requested_date;
-    const reason = rebookingForm.reason.trim();
-
     if (!requestedDate) {
-      toast.error("Please choose your preferred new date.");
+      toast.error("Please choose your new reservation date.");
       return;
     }
 
@@ -611,38 +616,27 @@ export default function MyBookings() {
       return;
     }
 
-    if (reason.length < 10) {
-      toast.error("Please include a short reason for the rebooking request.");
-      return;
-    }
-
     setIsRequestingRebooking(true);
 
     try {
-      await baseClient.entities.Booking.update(bookingToRebook.id, {
-        rebooking_status: "pending",
-        rebooking_requested_date: requestedDate,
-        rebooking_reason: reason,
-      });
+      const updatedBooking = await baseClient.entities.Booking.reschedule(
+        bookingToRebook.id,
+        requestedDate
+      );
 
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email,
-        user_name: user?.full_name,
-        action: "User Requested Rebooking",
-        entity_type: "Booking",
-        entity_id: bookingToRebook.id,
-        details: `User requested rebooking ${bookingToRebook.booking_reference} from ${bookingToRebook.booking_date} to ${requestedDate}`,
-      });
-
-      toast.success("Rebooking request submitted for admin approval.");
+      toast.success("Reservation successfully rescheduled.");
       setBookingToRebook(null);
       setSelectedBooking(null);
-      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
+      setRescheduleSuccess(updatedBooking);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["my-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["rebooking-availability"] }),
+      ]);
     } catch (error) {
-      toast.error(error?.message || "Unable to submit rebooking request.");
+      toast.error(error?.message || "Something went wrong while rescheduling. Your existing reservation was not changed.");
     } finally {
       setIsRequestingRebooking(false);
     }
@@ -803,7 +797,7 @@ export default function MyBookings() {
                       </Badge>
                       {(booking.rebooking_status || "none") !== "none" ? (
                         <Badge variant="outline" className="justify-center py-1.5">
-                          Rebooking {formatStatusLabel(booking.rebooking_status)}
+                          Reschedule {formatStatusLabel(booking.rebooking_status)}
                         </Badge>
                       ) : null}
                       <Button variant="outline" className="gap-2" onClick={() => setSelectedBooking(booking)}>
@@ -813,7 +807,7 @@ export default function MyBookings() {
                       {canRequestRebooking(booking) ? (
                         <Button variant="outline" className="gap-2" onClick={() => requestRebooking(booking)}>
                           <CalendarPlus className="h-4 w-4" />
-                          Request Rebooking
+                          Reschedule Reservation
                         </Button>
                       ) : null}
                       {canCancelBooking(booking) ? (
@@ -881,10 +875,10 @@ export default function MyBookings() {
                 <Detail label="Mode of Payment">{selectedBooking.payment_mode || selectedBooking.payment_qr_code_label || "Not selected"}</Detail>
                 {(selectedBooking.rebooking_status || "none") !== "none" ? (
                   <>
-                    <Detail label="Rebooking Status">{formatStatusLabel(selectedBooking.rebooking_status)}</Detail>
-                    <Detail label="Original Date">{formatDate(selectedBooking.rebooking_original_date || selectedBooking.booking_date)}</Detail>
-                    <Detail label="Requested Date">{formatDate(selectedBooking.rebooking_requested_date)}</Detail>
-                    <Detail label="Rebooking Count">{selectedBooking.rebooking_count || 0}</Detail>
+                    <Detail label="Reschedule Status">{formatStatusLabel(selectedBooking.rebooking_status)}</Detail>
+                    <Detail label="Previous Date">{formatDate(selectedBooking.rebooking_original_date || selectedBooking.booking_date)}</Detail>
+                    <Detail label="New Date">{formatDate(selectedBooking.rebooking_requested_date)}</Detail>
+                    <Detail label="Reschedule Count">{selectedBooking.rebooking_count || 0}</Detail>
                   </>
                 ) : null}
               </div>
@@ -934,7 +928,7 @@ export default function MyBookings() {
                       onClick={() => requestRebooking(selectedBooking)}
                     >
                       <CalendarPlus className="h-4 w-4" />
-                      Request Rebooking
+                      Reschedule Reservation
                     </Button>
                   ) : null}
                   {canCancelBooking(selectedBooking) ? (
@@ -964,30 +958,36 @@ export default function MyBookings() {
       >
         <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto pb-0 sm:max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Request Rebooking</DialogTitle>
+            <DialogTitle className="font-display text-2xl">Reschedule Reservation</DialogTitle>
           </DialogHeader>
           {bookingToRebook ? (
             <div className="space-y-5">
               <div className="rounded-lg border border-border bg-muted/25 p-4">
-                <p className="font-semibold text-foreground">{bookingToRebook.package_name}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {bookingToRebook.booking_reference} - Current date: {formatDate(bookingToRebook.booking_date)}
-                </p>
+                <p className="text-sm font-semibold text-muted-foreground">Current Reservation</p>
+                <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                  <Detail label="Booking ID"><span className="break-all font-mono">{bookingToRebook.id}</span></Detail>
+                  <Detail label="Booking reference"><span className="break-all font-mono">{bookingToRebook.booking_reference || "Not available"}</span></Detail>
+                  <Detail label="Package / venue">{bookingToRebook.package_name || "Resort reservation"}</Detail>
+                  <Detail label="Current date">{formatDate(bookingToRebook.booking_date)}</Detail>
+                  <Detail label="Start time">{tourTimeLabels[bookingToRebook.tour_type]?.start || "Not available"}</Detail>
+                  <Detail label="End time">{tourTimeLabels[bookingToRebook.tour_type]?.end || "Not available"}</Detail>
+                  <Detail label="Guests">{bookingToRebook.guest_count || 0}</Detail>
+                  <Detail label="Payment status">{formatStatusLabel(getDisplayPaymentStatus(bookingToRebook))}</Detail>
+                  <Detail label="Reservation status">{formatStatusLabel(bookingToRebook.status)}</Detail>
+                </div>
               </div>
 
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                <p className="font-semibold">Rebooking Policy</p>
+                <p className="font-semibold">Reschedule Policy</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
-                  <li>One approved rebooking is allowed per reservation.</li>
-                  <li>Requests must be submitted at least 7 days before the reservation date.</li>
-                  <li>The new date must be available for the same package and tour type.</li>
-                  <li>Reservation payments are non-refundable and transfer to the approved new date.</li>
-                  <li>The original booking date stays active until admin approval.</li>
+                  <li>One reschedule is allowed per reservation, at least 7 days before the current date.</li>
+                  <li>The package and tour time stay the same. Only the date can be changed.</li>
+                  <li>Existing payment details are preserved; rescheduling does not create a refund.</li>
                 </ul>
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="rebooking-date">Preferred new date</Label>
+                <Label htmlFor="rebooking-date">New date</Label>
                 <div className="overflow-hidden rounded-lg border border-border bg-background p-2 sm:p-4">
                   <Calendar
                     id="rebooking-date"
@@ -1059,16 +1059,19 @@ export default function MyBookings() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="rebooking-reason">Reason</Label>
-                <Textarea
-                  id="rebooking-reason"
-                  rows={4}
-                  value={rebookingForm.reason}
-                  onChange={(event) => setRebookingForm((current) => ({ ...current, reason: event.target.value }))}
-                  placeholder="Tell us why you need to move this reservation."
-                />
-              </div>
+              {selectedRebookingDate ? (
+                <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <p className="font-semibold text-foreground">Current schedule</p>
+                    <p className="mt-1 text-muted-foreground">{formatDate(bookingToRebook.booking_date)} · {tourTimeLabels[bookingToRebook.tour_type]?.start} - {tourTimeLabels[bookingToRebook.tour_type]?.end}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">New schedule</p>
+                    <p className="mt-1 text-muted-foreground">{format(selectedRebookingDate, "MMM d, yyyy")} · {tourTimeLabels[bookingToRebook.tour_type]?.start} - {tourTimeLabels[bookingToRebook.tour_type]?.end}</p>
+                  </div>
+                  <p className="text-muted-foreground sm:col-span-2">Payment status stays {formatStatusLabel(getDisplayPaymentStatus(bookingToRebook))}.</p>
+                </div>
+              ) : null}
 
               <DialogFooter className="sticky bottom-0 -mx-6 border-t border-border bg-background px-6 py-4">
                 <Button variant="outline" onClick={() => setBookingToRebook(null)} disabled={isRequestingRebooking}>
@@ -1080,11 +1083,32 @@ export default function MyBookings() {
                   className="gap-2"
                 >
                   {isRequestingRebooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
-                  Submit Request
+                  {isRequestingRebooking ? "Rescheduling..." : "Confirm Reschedule"}
                 </Button>
               </DialogFooter>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!rescheduleSuccess} onOpenChange={(open) => !open && setRescheduleSuccess(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Reservation successfully rescheduled</DialogTitle>
+          </DialogHeader>
+          {rescheduleSuccess ? (
+            <div className="grid gap-3 rounded-lg border border-border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+              <Detail label="Booking ID"><span className="break-all font-mono">{rescheduleSuccess.id}</span></Detail>
+              <Detail label="Booking reference"><span className="break-all font-mono">{rescheduleSuccess.booking_reference || "Not available"}</span></Detail>
+              <Detail label="New date">{formatDate(rescheduleSuccess.booking_date)}</Detail>
+              <Detail label="New start time">{tourTimeLabels[rescheduleSuccess.tour_type]?.start || "Not available"}</Detail>
+              <Detail label="New end time">{tourTimeLabels[rescheduleSuccess.tour_type]?.end || "Not available"}</Detail>
+              <Detail label="Payment status">{formatStatusLabel(getDisplayPaymentStatus(rescheduleSuccess))}</Detail>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button className="w-full sm:w-auto" onClick={() => setRescheduleSuccess(null)}>Done</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

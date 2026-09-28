@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { addDays, addMonths, format, endOfMonth, endOfWeek, endOfYear, startOfMonth, startOfWeek, startOfYear, subMonths, subWeeks, subYears } from "date-fns";
+import { addDays, addMonths, differenceInCalendarDays, format, endOfMonth, endOfWeek, endOfYear, startOfMonth, startOfWeek, startOfYear, subMonths, subWeeks, subYears } from "date-fns";
 import { Download, Loader2, Printer } from "lucide-react";
 import {
   Bar,
@@ -16,6 +16,7 @@ import {
   YAxis,
 } from "recharts";
 import { baseClient } from "@/api/baseClient";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,23 +28,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuth } from "@/lib/AuthContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import {
+  calculateProfitReport,
+  filterReportBookings,
+  isValidDateKey,
+  toReportDateKey,
+} from "@/lib/profitReport";
 
 const PERIODS = ["Weekly", "Monthly", "Annually"];
 
 const currencyFormatter = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 const toAmount = (value) => Number(value || 0);
-
-const toDateKey = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
-  return format(date, "yyyy-MM-dd");
-};
+const toDateKey = toReportDateKey;
 
 const formatCurrency = (value) => currencyFormatter.format(toAmount(value));
 
@@ -56,11 +60,41 @@ const chartColors = [
   "hsl(var(--muted-foreground))",
 ];
 
-const parseDateKey = (value) => new Date(`${value}T00:00:00`);
+const parseDateKey = (value) => new Date(`${value}T12:00:00`);
 
 const buildTimelineData = (rows, period, selectedRange) => {
-  if (!selectedRange?.start || !selectedRange?.end) {
+  if (!isValidDateKey(selectedRange?.start) || !isValidDateKey(selectedRange?.end) || selectedRange.start > selectedRange.end) {
     return [];
+  }
+
+  if (selectedRange.isCustom) {
+    const start = parseDateKey(selectedRange.start);
+    const end = parseDateKey(selectedRange.end);
+    const dayCount = differenceInCalendarDays(end, start) + 1;
+    if (dayCount <= 31) {
+      return Array.from({ length: dayCount }, (_, index) => {
+        const date = addDays(start, index);
+        const key = toDateKey(date);
+        const dayRows = rows.filter((booking) => toDateKey(booking.booking_date) === key);
+        return {
+          label: format(date, "MMM d"),
+          revenue: dayRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+          bookings: dayRows.length,
+        };
+      });
+    }
+
+    const monthCount = (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth() + 1;
+    return Array.from({ length: monthCount }, (_, index) => {
+      const month = addMonths(startOfMonth(start), index);
+      const monthKey = format(month, "yyyy-MM");
+      const monthRows = rows.filter((booking) => toDateKey(booking.booking_date).startsWith(monthKey));
+      return {
+        label: format(month, "MMM yyyy"),
+        revenue: monthRows.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0),
+        bookings: monthRows.length,
+      };
+    });
   }
 
   if (period === "Weekly") {
@@ -707,8 +741,11 @@ const downloadExcelReport = ({
 };
 
 export default function AdminReport() {
+  const { user } = useAuth();
+  const { settings: siteSettings } = useSiteSettings();
   const [period, setPeriod] = useState("Weekly");
   const [rangeIndex, setRangeIndex] = useState(0);
+  const [customRange, setCustomRange] = useState(null);
   const [packageFilter, setPackageFilter] = useState("All");
   const [bookings, setBookings] = useState([]);
   const [packages, setPackages] = useState([]);
@@ -716,11 +753,34 @@ export default function AdminReport() {
   const [error, setError] = useState(null);
 
   const dateRanges = useMemo(() => getPeriodOptions(period), [period]);
-  const selectedRange = dateRanges[rangeIndex] || dateRanges[0];
+  const selectedPresetRange = dateRanges[rangeIndex] || dateRanges[0];
+  const selectedRange = customRange
+    ? {
+        ...customRange,
+        label: isValidDateKey(customRange.start) && isValidDateKey(customRange.end)
+          ? `${format(parseDateKey(customRange.start), "MMM d, yyyy")} - ${format(parseDateKey(customRange.end), "MMM d, yyyy")}`
+          : "Custom date range",
+      }
+    : selectedPresetRange;
+  const hasValidDateRange = Boolean(
+    isValidDateKey(selectedRange?.start) &&
+    isValidDateKey(selectedRange?.end) &&
+    selectedRange.start <= selectedRange.end
+  );
 
   useEffect(() => {
     setRangeIndex(0);
+    setCustomRange(null);
   }, [period]);
+
+  const updateCustomRange = (field, value) => {
+    setCustomRange((current) => ({
+      start: current?.start || selectedRange?.start || "",
+      end: current?.end || selectedRange?.end || "",
+      isCustom: true,
+      [field]: value,
+    }));
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -749,13 +809,9 @@ export default function AdminReport() {
   }, []);
 
   const filteredBookings = useMemo(() => {
-    return bookings.filter((booking) => {
-      const bookingDate = toDateKey(booking.booking_date);
-      const matchesDate = selectedRange && bookingDate >= selectedRange.start && bookingDate <= selectedRange.end;
-      const matchesPackage = packageFilter === "All" || booking.package_name === packageFilter;
-      return matchesDate && matchesPackage;
-    });
-  }, [bookings, packageFilter, selectedRange]);
+    if (!hasValidDateRange) return [];
+    return filterReportBookings(bookings, selectedRange.start, selectedRange.end, packageFilter);
+  }, [bookings, hasValidDateRange, packageFilter, selectedRange]);
 
   const totalRevenue = filteredBookings.reduce((sum, booking) => sum + toAmount(booking.total_amount), 0);
   const totalBookings = filteredBookings.length;
@@ -765,31 +821,17 @@ export default function AdminReport() {
   const reportPeriodLabel = getReportPeriodLabel(period);
   const generatedAt = format(new Date(), "MMM d, yyyy h:mm a");
   const preparedDate = format(new Date(), "MMM d, yyyy");
-  const revenueRows = [
-    { label: "Room / Villa Bookings", amount: totalRevenue },
-    { label: "Event / Venue Rentals", amount: 0 },
-    { label: "Food & Beverage Sales", amount: 0 },
-    { label: "Other Income (Amenities, Add-ons, etc.)", amount: 0 },
-  ];
-  const directCostRows = [
-    { label: "Food & Beverage Cost", amount: 0 },
-    { label: "Event Supplies & Materials", amount: 0 },
-    { label: "Housekeeping / Amenities Supplies", amount: 0 },
-  ];
-  const operatingExpenseRows = [
-    { label: "Salaries & Wages", amount: 0 },
-    { label: "Utilities (Electricity, Water, Internet)", amount: 0 },
-    { label: "Maintenance & Repairs", amount: 0 },
-    { label: "Marketing & Advertising", amount: 0 },
-    { label: "Permits, Licenses & Insurance", amount: 0 },
-    { label: "Depreciation", amount: 0 },
-    { label: "Miscellaneous Expenses", amount: 0 },
-  ];
-  const totalSales = revenueRows.reduce((sum, row) => sum + row.amount, 0);
-  const totalDirectCosts = directCostRows.reduce((sum, row) => sum + row.amount, 0);
-  const grossProfit = totalSales - totalDirectCosts;
-  const totalOperatingExpenses = operatingExpenseRows.reduce((sum, row) => sum + row.amount, 0);
-  const netProfit = grossProfit - totalOperatingExpenses;
+  const {
+    revenueRows,
+    directCostRows,
+    operatingExpenseRows,
+    totalSales,
+    totalDirectCosts,
+    grossProfit,
+    totalOperatingExpenses,
+    netProfit,
+  } = calculateProfitReport(filteredBookings);
+  const formatReportAmount = (amount) => amount === null ? "Not recorded" : formatCurrency(amount);
 
   const packageCounts = packages.map((pkg) => ({
     name: pkg.name,
@@ -827,13 +869,13 @@ export default function AdminReport() {
 
       <div className="report-screen-header flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Sales Reports</h1>
-          <p className="mt-1 text-muted-foreground">View reservation revenue, booking volume, and package performance.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground">Profit Report</h1>
+          <p className="mt-1 text-muted-foreground">Prepare a date-based income and expense statement for the resort.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="gap-2" onClick={() => window.print()}>
             <Printer className="h-4 w-4" />
-            Print
+            Print Report
           </Button>
           <Button
             className="gap-2"
@@ -875,18 +917,43 @@ export default function AdminReport() {
             </Button>
           ))}
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <select
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            value={rangeIndex}
-            onChange={(event) => setRangeIndex(Number(event.target.value))}
+            value={customRange ? "custom" : rangeIndex}
+            onChange={(event) => {
+              if (event.target.value === "custom") return;
+              setRangeIndex(Number(event.target.value));
+              setCustomRange(null);
+            }}
           >
+            {customRange ? <option value="custom">Custom date range</option> : null}
             {dateRanges.map((range, index) => (
               <option key={range.label} value={index}>
                 {range.label}
               </option>
             ))}
           </select>
+          <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+            From date
+            <Input
+              type="date"
+              value={selectedRange?.start || ""}
+              max={selectedRange?.end || undefined}
+              onChange={(event) => updateCustomRange("start", event.target.value)}
+              aria-label="Report start date"
+            />
+          </label>
+          <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+            To date
+            <Input
+              type="date"
+              value={selectedRange?.end || ""}
+              min={selectedRange?.start || undefined}
+              onChange={(event) => updateCustomRange("end", event.target.value)}
+              aria-label="Report end date"
+            />
+          </label>
           <select
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             value={packageFilter}
@@ -902,6 +969,12 @@ export default function AdminReport() {
         </div>
       </div>
 
+      {!hasValidDateRange ? (
+        <p role="alert" className="text-sm font-medium text-destructive">
+          Choose a valid date range. The start date must not be after the end date.
+        </p>
+      ) : null}
+
       {loading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -912,13 +985,20 @@ export default function AdminReport() {
         </Card>
       ) : (
         <>
-          <section className="print-only profit-report-print">
+          <section className="profit-report-print">
             <div className="profit-report-page">
               <header className="profit-report-letterhead">
                 <div className="profit-report-rule" />
-                <img src="/img/Logo.png" alt="Kasa Ilaya Resort and Event Place" />
-                <p>Sitio Pook ng Munting Ilog, Ulat, Silang, Cavite</p>
-                <p>Resort and Event Place - Private</p>
+                <img
+                  src={siteSettings?.logo_url || "/img/apple-touch-icon.png"}
+                  alt="Kasa Ilaya Resort and Event Place logo"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = "/img/apple-touch-icon.png";
+                  }}
+                />
+                <h2>Kasa Ilaya Resort and Event Place — Private</h2>
+                <p>Sitio Pook na Munti, Brgy. Kaong, Silang, Cavite</p>
                 <div className="profit-report-rule" />
               </header>
 
@@ -930,11 +1010,15 @@ export default function AdminReport() {
               <div className="profit-report-meta">
                 <div>
                   <strong>REPORTING PERIOD</strong>
-                  <span>From: {selectedRange?.start || "__________"} To: {selectedRange?.end || "__________"}</span>
+                  <span>
+                    From: {hasValidDateRange ? format(parseDateKey(selectedRange.start), "MMM d, yyyy") : "__________"}
+                    {"  "}
+                    To: {hasValidDateRange ? format(parseDateKey(selectedRange.end), "MMM d, yyyy") : "__________"}
+                  </span>
                 </div>
                 <div>
                   <strong>PREPARED BY</strong>
-                  <span>Resort Admin</span>
+                  <span>{user?.full_name || user?.name || "Resort Admin"}</span>
                 </div>
                 <div>
                   <strong>DATE PREPARED</strong>
@@ -946,39 +1030,40 @@ export default function AdminReport() {
                 <tbody>
                   <tr className="profit-section"><td colSpan={2}>REVENUE / SALES</td></tr>
                   {revenueRows.map((row) => (
-                    <tr key={row.label}><td>{row.label}</td><td>{formatCurrency(row.amount)}</td></tr>
+                    <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
                   ))}
                   <tr className="profit-total"><td>TOTAL REVENUE (A)</td><td>{formatCurrency(totalSales)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>COST OF SALES / DIRECT COSTS</td></tr>
                   {directCostRows.map((row) => (
-                    <tr key={row.label}><td>{row.label}</td><td>{formatCurrency(row.amount)}</td></tr>
+                    <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
                   ))}
-                  <tr className="profit-total"><td>TOTAL COST OF SALES (B)</td><td>{formatCurrency(totalDirectCosts)}</td></tr>
-                  <tr className="profit-highlight"><td>GROSS PROFIT (A - B)</td><td>{formatCurrency(grossProfit)}</td></tr>
+                  <tr className="profit-total"><td>TOTAL COST OF SALES (B)</td><td>{formatReportAmount(totalDirectCosts)}</td></tr>
+                  <tr className="profit-highlight"><td>GROSS PROFIT (A - B)</td><td>{formatReportAmount(grossProfit)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>OPERATING EXPENSES</td></tr>
                   {operatingExpenseRows.map((row) => (
-                    <tr key={row.label}><td>{row.label}</td><td>{formatCurrency(row.amount)}</td></tr>
+                    <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
                   ))}
-                  <tr className="profit-total"><td>TOTAL OPERATING EXPENSES (C)</td><td>{formatCurrency(totalOperatingExpenses)}</td></tr>
-                  <tr className="profit-section"><td>NET PROFIT / (LOSS) (Gross Profit - C)</td><td>{formatCurrency(netProfit)}</td></tr>
+                  <tr className="profit-total"><td>TOTAL OPERATING EXPENSES (C)</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
+                  <tr className="profit-highlight"><td>NET PROFIT / (LOSS) (Gross Profit - C)</td><td>{formatReportAmount(netProfit)}</td></tr>
                 </tbody>
               </table>
 
               <div className="profit-report-notes">
                 <strong>Remarks / Notes:</strong>
+                <p>Booking income includes verified payments only and is grouped by reservation date because payment dates are not stored. Paid additional fees are included under Other Income.</p>
+                <p>Separate event and food sales, direct costs, and operating expenses are not recorded in the system; gross and net profit are unavailable.</p>
+              </div>
+
+              <div className="profit-report-signatures">
+                <div>
+                  <span>Prepared by / Signature over Printed Name</span>
+                  <span>Approved by / Signature over Printed Name</span>
+                </div>
               </div>
 
               <footer className="profit-report-footer">
                 <span>Kasa Ilaya Resort and Event Place</span>
-                <span>Page 1</span>
               </footer>
-            </div>
-
-            <div className="profit-report-page profit-report-signatures">
-              <div>
-                <span>Prepared by / Signature over Printed Name</span>
-                <span>Approved by / Signature over Printed Name</span>
-              </div>
             </div>
           </section>
 
