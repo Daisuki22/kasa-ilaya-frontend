@@ -5,19 +5,83 @@ import { MessageCircle, X, Loader2, TreePalm } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useResortRules } from "@/hooks/useResortRules";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 
-const QUICK_QUESTIONS = [
-  "How can I make a reservation?",
-  "How can I reschedule my reservation?",
-  "How can I cancel or modify my reservation?",
-  "How can I send an inquiry?",
-  "How can I contact Kasa Ilaya?",
-  "How can I view the schedule and calendar?",
-  "What are the requirements for booking?",
-  "What payment options are available?",
-  "Can I make a group reservation?",
-  "How can I check availability?",
-  "How can I get help with my reservation?",
+const FAQ_CATEGORIES = [
+  {
+    title: "Reservations & Booking",
+    questions: [
+      "How can I make a reservation?",
+      "How can I check my reservation status?",
+      "Can I modify my reservation?",
+      "What information do I need to make a reservation?",
+    ],
+  },
+  {
+    title: "Rates & Packages",
+    questions: [
+      "What are your rates?",
+      "What packages are available?",
+      "What is included in the package?",
+    ],
+  },
+  {
+    title: "Resort Facilities",
+    questions: [
+      "What facilities are available?",
+      "Is swimming available?",
+      "What amenities are included?",
+    ],
+  },
+  {
+    title: "Events & Venue",
+    questions: [
+      "Can I book the resort for an event?",
+      "What events can be hosted?",
+      "What event packages are available?",
+    ],
+  },
+  {
+    title: "Payment",
+    questions: [
+      "What payment methods are accepted?",
+      "How much is the required payment?",
+      "How can I confirm my payment?",
+    ],
+  },
+  {
+    title: "Cancellation & Refund",
+    questions: [
+      "What is the cancellation policy?",
+      "Can I cancel my reservation?",
+      "Can I get a refund after cancelling a paid reservation?",
+    ],
+  },
+  {
+    title: "Check-in & Check-out",
+    questions: [
+      "What time is check-in?",
+      "What time is check-out?",
+      "What should I bring during check-in?",
+    ],
+  },
+  {
+    title: "Location & Contact",
+    questions: [
+      "Where is Kasa Ilaya Resort located?",
+      "How can I contact the resort?",
+      "What are your contact details?",
+    ],
+  },
+  {
+    title: "Rules & Policies",
+    questions: [
+      "What are the resort rules?",
+      "Are outside food and drinks allowed?",
+      "What are the policies for guests?",
+    ],
+  },
 ];
 
 const assistantReply = ({
@@ -78,10 +142,64 @@ const groupPackagesByName = (packages) => {
   }));
 };
 
-const buildLocalResponse = (message, packages, siteSettings) => {
+const buildLocalResponse = (
+  message,
+  packages,
+  siteSettings,
+  resortRules = [],
+  paymentQrCodes = []
+) => {
   const prompt = message.toLowerCase().trim();
   const groupedPackages = groupPackagesByName(packages || []);
   const siteName = siteSettings?.site_name?.trim() || "Kasa Ilaya";
+  const amenities = Array.isArray(siteSettings?.amenities)
+    ? siteSettings.amenities
+    : [];
+  const packageBullets = (includeInclusions = false) =>
+    groupedPackages.map(({ name, options }) => {
+      const variants = options
+        .map((pkg) => {
+          const label =
+            pkg.tour_type === "day_tour"
+              ? "Day Tour"
+              : pkg.tour_type === "night_tour"
+              ? "Night Tour"
+              : "22 Hours";
+          const priceField = {
+            day_tour: "day_tour_price",
+            night_tour: "night_tour_price",
+            "22_hours": "twenty_two_hour_price",
+          }[pkg.tour_type];
+          const price = Number(
+            pkg[priceField] ?? pkg.price ?? 0
+          ).toLocaleString();
+          const capacity = pkg.max_guests
+            ? `, up to ${pkg.max_guests} guests`
+            : "";
+          const inclusions = Array.isArray(pkg.inclusions)
+            ? pkg.inclusions.filter(Boolean)
+            : [];
+          const includedText =
+            includeInclusions && inclusions.length
+              ? `; includes ${inclusions.join(", ")}`
+              : "";
+
+          return `${label}: PHP ${price}${capacity}${includedText}`;
+        })
+        .join("; ");
+
+      return `**${name}:** ${variants}`;
+    });
+  const paymentMethodLabels = [
+    ...new Set(
+      (Array.isArray(paymentQrCodes) ? paymentQrCodes : [])
+        .map((item) => item?.label?.trim())
+        .filter(Boolean)
+    ),
+  ];
+  const activeRules = (Array.isArray(resortRules) ? resortRules : []).filter(
+    (rule) => rule?.title && rule?.description
+  );
 
   const termsSummary =
     siteSettings?.terms_summary?.trim() ||
@@ -233,6 +351,190 @@ const buildLocalResponse = (message, packages, siteSettings) => {
         "For questions that cannot be resolved through My Booking, send an inquiry through the Contact page.",
       ],
       nextStep: "Open My Booking or the Contact page to continue.",
+    }),
+
+    "how can i check my reservation status?": assistantReply({
+      title: "Check your reservation status",
+      intro: "Your booking status is available in your account.",
+      steps: ["Sign in using the account used for the booking.", "Open My Booking.", "Select the reservation to view its current status and details."],
+    }),
+
+    "can i modify my reservation?": assistantReply({
+      title: "Modify a reservation",
+      intro: "Available changes depend on the reservation status and resort policy.",
+      nextStep: "Open My Booking to see available actions, or contact the resort for help.",
+    }),
+
+    "what information do i need to make a reservation?": assistantReply({
+      title: "Information needed to book",
+      intro: "Have these details ready:",
+      bullets: ["A guest account", "Package, date, and tour type", "Guest count and contact information", "Payment proof after following the booking instructions"],
+    }),
+
+    "what are your rates?": assistantReply({
+      title: "Rates and packages",
+      intro: groupedPackages.length ? "Current listed package rates:" : "Package rates are not available right now.",
+      bullets: packageBullets(),
+      nextStep: "Open Packages to review current options and availability.",
+    }),
+
+    "what packages are available?": assistantReply({
+      title: "Available packages",
+      intro: groupedPackages.length ? "These packages are currently listed:" : "No packages are available right now.",
+      bullets: packageBullets(),
+      nextStep: "Open Packages to compare tour options and dates.",
+    }),
+
+    "what is included in the package?": assistantReply({
+      title: "Package inclusions",
+      intro: groupedPackages.length ? "Package details and listed inclusions:" : "Package details are not available right now.",
+      bullets: packageBullets(true),
+      nextStep: "Open a package card for its full details.",
+    }),
+
+    "what facilities are available?": assistantReply({
+      title: "Resort facilities",
+      intro: amenities.length ? "Facilities listed by the resort:" : "Please check the Amenities page for the latest facility information.",
+      bullets: amenities.slice(0, 10).map((item) => `${item.title || "Facility"}${item.desc ? `: ${item.desc}` : ""}`),
+      nextStep: "Open Amenities to view the full list.",
+    }),
+
+    "is swimming available?": (() => {
+      const pool = amenities.find((item) => /swim|pool/i.test(`${item.title || ""} ${item.desc || ""}`));
+      return assistantReply({
+        title: "Swimming facilities",
+        intro: pool
+          ? `${pool.title}${pool.desc ? `: ${pool.desc}` : " is listed among the resort amenities."}`
+          : "Swimming availability is not specified in the current amenity information.",
+        nextStep: pool ? "Check the Amenities page for current details." : "Contact the resort to confirm before your visit.",
+      });
+    })(),
+
+    "what amenities are included?": assistantReply({
+      title: "Resort amenities",
+      intro: amenities.length ? "Amenities currently listed by the resort:" : "Amenity details are not available right now.",
+      bullets: amenities.slice(0, 10).map((item) => `${item.title || "Amenity"}${item.desc ? `: ${item.desc}` : ""}`),
+      nextStep: "Open Amenities for the full list and details.",
+    }),
+
+    "can i book the resort for an event?": assistantReply({
+      title: "Events and venue bookings",
+      intro: "The resort has an event venue. Availability and arrangements depend on your event details and preferred date.",
+      nextStep: "Send an inquiry with your event type, group size, and preferred date so the resort team can confirm options.",
+    }),
+
+    "what events can be hosted?": assistantReply({
+      title: "Events at Kasa Ilaya",
+      intro: "The resort website presents its venue for celebrations, reunions, and special occasions.",
+      nextStep: "Contact the resort with your event details to confirm suitability and availability.",
+    }),
+
+    "what event packages are available?": assistantReply({
+      title: "Event packages",
+      intro: groupedPackages.length ? "Current resort packages are listed below; event-specific arrangements should be confirmed with the team." : "Event package details are not listed right now.",
+      bullets: packageBullets(),
+      nextStep: "Send an inquiry through Contact with your event type, group size, and date.",
+    }),
+
+    "what payment methods are accepted?": assistantReply({
+      title: "Accepted payment methods",
+      intro: paymentMethodLabels.length
+        ? "Payment methods currently configured for booking:"
+        : "Available payment instructions are shown during booking.",
+      bullets: paymentMethodLabels,
+      nextStep: "Check the Payment step for the current instructions before submitting proof.",
+    }),
+
+    "how much is the required payment?": assistantReply({
+      title: "Required reservation payment",
+      intro: "The booking flow offers a reservation downpayment or full payment.",
+      bullets: ["Downpayment: 15% of the booking total.", "Full payment: the full booking amount."],
+      important: "The exact amount is calculated and shown after you choose a package and guest count.",
+    }),
+
+    "how can i confirm my payment?": assistantReply({
+      title: "Confirm a payment",
+      steps: ["Follow the payment instructions shown in your booking.", "Upload a clear payment receipt.", "Wait for the resort team to verify it."],
+      important: "The booking remains subject to resort review and confirmation.",
+    }),
+
+    "what is the cancellation policy?": assistantReply({
+      title: "Cancellation policy",
+      bullets: ["Guests may cancel online while a booking is pending.", "Online cancellation is not available once a booking is marked paid or approved by the resort.", "Reservation payments are non-refundable unless the resort approves otherwise in writing."],
+      nextStep: "Review the full current terms during booking or contact the resort about your reservation.",
+    }),
+
+    "can i cancel my reservation?": assistantReply({
+      title: "Cancel a reservation",
+      intro: "Online cancellation is available while your booking is still pending.",
+      nextStep: "Open My Booking and check the actions available for your reservation. Contact the resort if it is already paid or approved.",
+    }),
+
+    "can i get a refund after cancelling a paid reservation?": assistantReply({
+      title: "Refunds for cancelled bookings",
+      intro: "Reservation fees and payments are non-refundable under the published booking terms unless Kasa Ilaya Resort approves an exception in writing.",
+      nextStep: "Contact the resort directly to discuss a specific payment or cancellation.",
+    }),
+
+    "what time is check-in?": assistantReply({
+      title: "Check-in time",
+      intro: "Check-in follows the tour time selected for your reservation:",
+      bullets: ["Day Tour: 8 AM.", "Night Tour: 6 PM.", "22 Hours: 6 PM."],
+      important: "Arrive within your reserved tour schedule.",
+    }),
+
+    "what time is check-out?": assistantReply({
+      title: "Check-out time",
+      intro: "Check-out depends on the selected tour:",
+      bullets: ["Day Tour: 6 PM.", "Night Tour: 6 AM.", "22 Hours: 4 PM the following day."],
+      important: "Follow the schedule shown on your reservation confirmation.",
+    }),
+
+    "what should i bring during check-in?": assistantReply({
+      title: "Check-in essentials",
+      bullets: ["Your booking reference code.", "Your reservation confirmation and any instructions sent by the resort."],
+      important: "Guests must arrive within their reserved tour schedule.",
+    }),
+
+    "where is kasa ilaya resort located?": assistantReply({
+      title: "Resort location",
+      intro: RESORT_CONTACT.address,
+      nextStep: "Use the map on the Contact page for directions.",
+    }),
+
+    "how can i contact the resort?": assistantReply({
+      title: "Contact Kasa Ilaya",
+      bullets: [`**Phone:** ${RESORT_CONTACT.phoneDisplay}`, `**Email:** ${RESORT_CONTACT.email}`],
+      nextStep: "Open Contact for the map and inquiry form.",
+    }),
+
+    "what are your contact details?": assistantReply({
+      title: "Contact details",
+      bullets: [`**Phone:** ${RESORT_CONTACT.phoneDisplay}`, `**Email:** ${RESORT_CONTACT.email}`, `**Address:** ${RESORT_CONTACT.address}`, `**Hours:** ${RESORT_CONTACT.hours}`],
+    }),
+
+    "what are the resort rules?": assistantReply({
+      title: "Resort rules",
+      intro: activeRules.length ? "Please follow the current rules published by the resort:" : "Please review the rules shown during booking.",
+      bullets: activeRules.map((rule) => `**${rule.title}:** ${rule.description}`),
+    }),
+
+    "are outside food and drinks allowed?": (() => {
+      const outsideFoodRule = activeRules.find((rule) => /outside|food|drink/i.test(`${rule.title} ${rule.description}`));
+      return assistantReply({
+        title: "Outside food and drinks",
+        intro: outsideFoodRule
+          ? `${outsideFoodRule.title}: ${outsideFoodRule.description}`
+          : "The published resort rules do not specify whether outside food or drinks are allowed.",
+        nextStep: outsideFoodRule ? undefined : "Contact the resort before bringing outside food or drinks.",
+      });
+    })(),
+
+    "what are the policies for guests?": assistantReply({
+      title: "Guest policies",
+      intro: activeRules.length ? "Current guest rules and policies:" : "Review the current terms and policies during booking.",
+      bullets: activeRules.map((rule) => `**${rule.title}:** ${rule.description}`),
+      nextStep: "Read the booking terms before submitting a reservation.",
     }),
   };
 
@@ -609,8 +911,10 @@ const buildLocalResponse = (message, packages, siteSettings) => {
 };
 export default function Chatbot() {
   const { settings: siteSettings } = useSiteSettings();
+  const { rules: resortRules } = useResortRules();
   const [open, setOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  const [showFaq, setShowFaq] = useState(true);
 
   const [messages, setMessages] = useState([
     {
@@ -625,6 +929,7 @@ export default function Chatbot() {
 
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const { data: packages = [] } = useQuery({
     queryKey: ["chatbot-packages"],
@@ -633,11 +938,22 @@ export default function Chatbot() {
     staleTime: 60000,
   });
 
+  const { data: paymentQrCodes = [] } = useQuery({
+    queryKey: ["chatbot-payment-methods"],
+    queryFn: () => baseClient.entities.PaymentQrCode.list("display_order", 10),
+    staleTime: 60000,
+  });
+
   useEffect(() => {
+    if (showFaq) {
+      messagesContainerRef.current?.scrollTo({ top: 0 });
+      return;
+    }
+
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, showFaq]);
 
   useEffect(() => {
     if (open) {
@@ -683,7 +999,9 @@ export default function Chatbot() {
       const localResponse = buildLocalResponse(
         rawMessage,
         packages,
-        siteSettings
+        siteSettings,
+        resortRules,
+        paymentQrCodes
       );
 
       if (localResponse) {
@@ -739,9 +1057,7 @@ export default function Chatbot() {
           }`}
           aria-hidden={!showHint}
         >
-          Kasa Ilaya Will
-          <br />
-          Assist You
+          Kasa Ilaya Assistant
         </div>
 
         <button
@@ -769,18 +1085,31 @@ export default function Chatbot() {
                 Kasa Ilaya Assistant
               </p>
               <p className="text-xs opacity-80">
-                Quick messages only
+                {showFaq ? "Frequently Asked Questions" : "Answers & support"}
               </p>
             </div>
           </div>
 
           {/* Messages */}
           <div
+            ref={messagesContainerRef}
             className="flex-1 space-y-3 overflow-y-auto p-4"
             role="log"
             aria-live="polite"
             aria-relevant="additions"
           >
+            {!showFaq && (
+              <button
+                type="button"
+                className="inline-flex min-h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => setShowFaq(true)}
+                disabled={loading}
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Back to FAQ
+              </button>
+            )}
+
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -830,19 +1159,41 @@ export default function Chatbot() {
               </div>
             )}
 
-            {!loading && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                {QUICK_QUESTIONS.map((question) => (
-                  <button
-                    key={question}
-                    type="button"
-                    className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
-                    onClick={() => processMessage(question)}
-                  >
-                    {question}
-                  </button>
+            {showFaq && (
+              <section className="space-y-3 pt-2" aria-labelledby="chatbot-faq-title">
+                <div>
+                  <h3 id="chatbot-faq-title" className="text-sm font-semibold text-foreground">
+                    Frequently Asked Questions
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Choose a topic, then tap a question.
+                  </p>
+                </div>
+
+                {FAQ_CATEGORIES.map((category) => (
+                  <details key={category.title} className="overflow-hidden rounded-md border border-border bg-background">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+                      <span>{category.title}</span>
+                      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </summary>
+                    <div className="space-y-1 border-t border-border p-2">
+                      {category.questions.map((question) => (
+                        <button
+                          key={question}
+                          type="button"
+                          className="min-h-10 w-full rounded-sm px-2.5 py-2 text-left text-sm leading-snug text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={() => {
+                            setShowFaq(false);
+                            processMessage(question);
+                          }}
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
                 ))}
-              </div>
+              </section>
             )}
 
             <div ref={messagesEndRef} />
