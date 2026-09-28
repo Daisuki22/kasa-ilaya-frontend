@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useResortRules } from "@/hooks/useResortRules";
+import { handleImageFallback } from "@/lib/imageFallback";
 
 const MAX_BOOKINGS_PER_SLOT = 1;
 
@@ -50,7 +51,7 @@ const getPackagePriceByTourType = (pkg, tourType) => {
   return Number(pkg.price || 0);
 };
 
-const FALLBACK_PACKAGE_IMAGE = "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&q=80";
+const FALLBACK_PACKAGE_IMAGE = "/img/room_Resort%20View.jpg";
 const defaultTour = { label: "Choose a tour type", time: "Select inside the booking modal" };
 const PAYMENT_POLICY_NOTICE = "Reservation fees are non-refundable. Guests may cancel while the booking is still pending, but cancellation is no longer allowed once the booking is marked paid or approved by the resort. Approved rebooking keeps the same payment on the new reservation date.";
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -841,6 +842,7 @@ export default function BookingForm() {
               <div className="h-64 sm:h-72 xl:h-96">
                 <img
                   src={selectedPackageImage || packageGalleryImages[0] || FALLBACK_PACKAGE_IMAGE}
+                  onError={handleImageFallback}
                   alt={pkg.name}
                   loading="eager"
                   decoding="async"
@@ -861,6 +863,7 @@ export default function BookingForm() {
                       >
                         <img
                           src={imageUrl}
+                          onError={handleImageFallback}
                           alt={`${pkg.name} thumbnail ${index + 1}`}
                           loading="lazy"
                           decoding="async"

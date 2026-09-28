@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { AMENITY_ICON_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPageBannerImages } from "@/lib/pageBannerImages";
 import RotatingBannerBackground from "@/components/common/RotatingBannerBackground";
+import { handleImageFallback } from "@/lib/imageFallback";
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='%23eef2f7'/%3E%3Cpath d='M225 380l112-138 82 96 52-62 104 104H225z' fill='%23cbd5e1'/%3E%3Ccircle cx='545' cy='205' r='44' fill='%23d8dee8'/%3E%3Ctext x='50%25' y='500' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='28' fill='%2394a3b8'%3EKasa Ilaya%3C/text%3E%3C/svg%3E";
@@ -237,6 +238,7 @@ export default function Amenities() {
                 alt={featuredImages[0]?.title || "Featured resort space"}
                 loading="lazy"
                 decoding="async"
+                onError={handleImageFallback}
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-5 text-white sm:p-6">
@@ -265,7 +267,7 @@ export default function Amenities() {
               {featuredImages.slice(1, 4).map((slide) => (
                 <div key={slide.src} className="overflow-hidden rounded-lg border border-border bg-card">
                   <div className="aspect-[4/3] overflow-hidden">
-                    <img src={slide.src} alt={slide.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    <img src={slide.src} alt={slide.title} loading="lazy" decoding="async" onError={handleImageFallback} className="h-full w-full object-cover" />
                   </div>
                   <div className="p-4">
                     <p className="font-semibold text-foreground">{slide.title}</p>

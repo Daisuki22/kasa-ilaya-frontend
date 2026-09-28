@@ -1,13 +1,7 @@
 import { resolveAssetUrlsDeep } from "@/lib/assetUrls";
+import { API_BASE_URL } from "@/lib/apiUrl";
 
 const createId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-
-// Render backend URL
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV
-    ? "/api"
-    : "https://kasa-ilaya-resort-back-end.onrender.com/api");
 
 const WELCOME_INTRO_SESSION_KEY = "ki-welcome-intro-shown";
 const THEME_STORAGE_KEY = "kasa-ilaya-theme";
@@ -133,16 +127,44 @@ const request = async (path, options = {}) => {
     body = JSON.stringify(body);
   }
 
-  const response = await fetch(buildApiUrl(path), {
-    credentials: "include",
-    cache: "no-store",
-    ...fetchOptions,
-    headers,
-    body,
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+  let response;
+
+  try {
+    response = await fetch(buildApiUrl(path), {
+      credentials: "include",
+      cache: "no-store",
+      ...fetchOptions,
+      signal: fetchOptions.signal || controller.signal,
+      headers,
+      body,
+    });
+  } catch (error) {
+    window.clearTimeout(timeoutId);
+    if (import.meta.env.DEV) {
+      console.warn("Kasa Ilaya API request failed", path, error);
+    }
+
+    if (error?.name === "AbortError") {
+      throw new Error("The server took too long to respond. Please try again.");
+    }
+
+    throw new Error("Unable to connect to the resort service. Please try again shortly.");
+  }
 
   const contentType = response.headers.get("content-type") || "";
-  const responseText = await response.text();
+  let responseText;
+  try {
+    responseText = await response.text();
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("The server took too long to respond. Please try again.");
+    }
+    throw new Error("The resort service returned an incomplete response. Please try again.");
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   let payload = responseText;
 

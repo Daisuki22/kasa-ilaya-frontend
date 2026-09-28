@@ -1,23 +1,7 @@
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV
-    ? "/api"
-    : "https://kasa-ilaya-resort-back-end.onrender.com/api");
+import { getApiAssetBaseUrl } from "@/lib/apiUrl";
 
 const isLocalHostname = (hostname) => LOCAL_HOSTNAMES.has(hostname.toLowerCase());
-
-const apiAssetBaseUrl = () => {
-  try {
-    const apiUrl = new URL(API_BASE_URL, typeof window === "undefined" ? "http://localhost" : window.location.href);
-    apiUrl.pathname = apiUrl.pathname.replace(/\/api\/?$/i, "").replace(/\/$/, "");
-    apiUrl.search = "";
-    apiUrl.hash = "";
-    return apiUrl.toString().replace(/\/$/, "");
-  } catch {
-    return "";
-  }
-};
 
 const appBasePath = () => {
   const viteBase = import.meta.env.BASE_URL || "/";
@@ -60,12 +44,12 @@ export const resolveAssetUrl = (value) => {
   }
 
   if (/^\/uploads\//i.test(normalized)) {
-    const assetBase = apiAssetBaseUrl();
+    const assetBase = getApiAssetBaseUrl();
     return assetBase ? `${assetBase}${normalized}` : normalized;
   }
 
   if (/^\/api\/uploads\//i.test(normalized)) {
-    const assetBase = apiAssetBaseUrl();
+    const assetBase = getApiAssetBaseUrl();
     return assetBase ? `${assetBase}${normalized.replace(/^\/api/i, "")}` : normalized;
   }
 
@@ -79,7 +63,7 @@ export const resolveAssetUrl = (value) => {
 
     const uploadMatch = url.pathname.match(/(?:^|\/)api\/(uploads\/.*)$/i) || url.pathname.match(/(?:^|\/)(uploads\/.*)$/i);
     if (uploadMatch) {
-      const assetBase = apiAssetBaseUrl();
+      const assetBase = getApiAssetBaseUrl();
       return assetBase ? `${assetBase}/${uploadMatch[1]}${url.search}${url.hash}` : normalized;
     }
 

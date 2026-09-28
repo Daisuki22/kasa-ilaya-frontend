@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { baseClient } from "@/api/baseClient";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { handleImageFallback } from "@/lib/imageFallback";
 
 const FALLBACK_IMAGES = [
   { src: "/img/room_Resort%20View.jpg", title: "Resort View", subtitle: "Wide-open leisure spaces and refreshing scenery." },
@@ -219,6 +220,7 @@ export default function ResortGallerySlider() {
                       alt={slide.title}
                       loading="lazy"
                       decoding="async"
+                      onError={handleImageFallback}
                       className={`h-full w-full object-cover transition duration-500 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />

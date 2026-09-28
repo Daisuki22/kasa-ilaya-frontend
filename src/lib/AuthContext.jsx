@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { baseClient } from '@/api/baseClient';
 
 const AuthContext = createContext(null);
@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
     const [authError, setAuthError] = useState(null);
     const [appPublicSettings, setAppPublicSettings] = useState(null);
+    const authCheckRef = useRef(null);
 
     const navigateToLogin = () => {
         baseClient.auth.redirectToLogin(window.location.href);
@@ -21,20 +22,35 @@ export const AuthProvider = ({ children }) => {
     };
 
     const checkUserAuth = async () => {
+        if (authCheckRef.current) {
+            return authCheckRef.current;
+        }
+
         setIsLoadingAuth(true);
 
+        const check = (async () => {
+            try {
+                const currentUser = await baseClient.auth.me();
+                setUser(currentUser);
+                setIsAuthenticated(true);
+                setAuthError(null);
+                return currentUser;
+            } catch {
+                resetAuthState();
+                setAuthError(null);
+                return null;
+            } finally {
+                setIsLoadingAuth(false);
+            }
+        })();
+
+        authCheckRef.current = check;
         try {
-            const currentUser = await baseClient.auth.me();
-            setUser(currentUser);
-            setIsAuthenticated(true);
-            setAuthError(null);
-            return currentUser;
-        } catch {
-            resetAuthState();
-            setAuthError(null);
-            return null;
+            return await check;
         } finally {
-            setIsLoadingAuth(false);
+            if (authCheckRef.current === check) {
+                authCheckRef.current = null;
+            }
         }
     };
 
@@ -68,12 +84,10 @@ export const AuthProvider = ({ children }) => {
         };
 
         window.addEventListener('auth-changed', syncAuthState);
-        window.addEventListener('local-auth-changed', syncAuthState);
         window.addEventListener('storage', syncAuthState);
 
         return () => {
             window.removeEventListener('auth-changed', syncAuthState);
-            window.removeEventListener('local-auth-changed', syncAuthState);
             window.removeEventListener('storage', syncAuthState);
         };
     }, []);

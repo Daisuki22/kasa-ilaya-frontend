@@ -17,6 +17,8 @@ import {
 import { FONT_STYLE_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
 import { canAccessAdminPage } from "@/lib/adminAccess";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/lib/AuthContext";
+import { handleImageFallback, LOGO_IMAGE_FALLBACK } from "@/lib/imageFallback";
 
 const safeLocalStorageGet = (key, fallback = "") => {
   try {
@@ -64,8 +66,7 @@ const adminNav = [
 ];
 
 export default function Layout({ children, currentPageName }) {
-  const [user, setUser] = useState(null);
-  const [authLoaded, setAuthLoaded] = useState(false);
+  const { user, isLoadingAuth } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
@@ -83,24 +84,6 @@ export default function Layout({ children, currentPageName }) {
     currentPageName?.startsWith("Admin") ||
     ((currentPageName === "ForgotPassword" || currentPageName === "ResetPassword") && isAdmin)
   );
-
-  useEffect(() => {
-    const syncUser = () => {
-      // attempt to load current user; mark auth as loaded after attempt
-      baseClient.auth.me().then(setUser).catch(() => setUser(null)).finally(() => setAuthLoaded(true));
-    };
-
-    syncUser();
-    window.addEventListener('auth-changed', syncUser);
-    window.addEventListener('local-auth-changed', syncUser);
-    window.addEventListener('storage', syncUser);
-
-    return () => {
-      window.removeEventListener('auth-changed', syncUser);
-      window.removeEventListener('local-auth-changed', syncUser);
-      window.removeEventListener('storage', syncUser);
-    };
-  }, []);
 
   const isAdminMode = Boolean(isAdmin && isAdminPage);
   const allowedAdminNav = adminNav.filter((item) => canAccessAdminPage(user, item.page));
@@ -157,11 +140,6 @@ export default function Layout({ children, currentPageName }) {
     const stored = Number(safeLocalStorageGet(key, "0"));
     setNotificationSeenAt(Number.isFinite(stored) ? stored : 0);
   }, [user]);
-
-  useEffect(() => {
-    // Previously: auto-redirect unverified guest users to verification page.
-    // Removed to avoid forcing the verification UI to show automatically.
-  }, [authLoaded, user, currentPageName]);
 
   const { data: notificationBookings = [] } = useQuery({
     queryKey: ["user-notification-bookings", user?.email, isRegularAdmin, isSuperAdminUser],
@@ -513,7 +491,6 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const handleLogout = () => {
-    setUser(null);
     setMobileOpen(false);
     setNotificationOpen(false);
     void baseClient.auth.logout("/");
@@ -527,7 +504,7 @@ export default function Layout({ children, currentPageName }) {
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full p-0" aria-label="Open user menu">
               <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                 {user.profile_image_url ? (
-                  <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                  <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-xs font-semibold text-primary">
                     {user.full_name?.[0]?.toUpperCase() || "U"}
@@ -566,7 +543,7 @@ export default function Layout({ children, currentPageName }) {
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 sm:h-11 sm:w-11">
         {siteSettings?.logo_url ? (
-          <img src={siteSettings.logo_url} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/apple-touch-icon.png"; }} className="h-full w-full object-contain" />
+          <img src={siteSettings.logo_url} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
         ) : (
           <TreePalm className="h-6 w-6 text-primary" />
         )}
@@ -588,7 +565,7 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  if (!authLoaded) {
+  if (isLoadingAuth) {
     return (
       <div className="min-h-screen bg-background">
         <div className="flex h-full w-full items-center justify-center">
@@ -634,7 +611,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="flex items-center gap-3 px-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                   {user.profile_image_url ? (
-                    <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-sm font-semibold text-primary">
                       {user.full_name?.[0]?.toUpperCase() || "U"}
@@ -783,7 +760,7 @@ export default function Layout({ children, currentPageName }) {
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                     {user.profile_image_url ? (
-                      <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                      <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                     ) : (
                       <span className="text-sm font-semibold text-primary">
                         {user.full_name?.[0]?.toUpperCase() || "U"}

@@ -16,6 +16,7 @@ import { createPageUrl } from "@/utils";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPageBannerImages } from "@/lib/pageBannerImages";
 import RotatingBannerBackground from "@/components/common/RotatingBannerBackground";
+import { handleImageFallback } from "@/lib/imageFallback";
 
 const fallbackGallery = [
   {
@@ -90,7 +91,7 @@ export default function AboutSection({ standalone = false }) {
       <section id="about-us" className="bg-background py-20 sm:py-24 lg:py-28">
         <div className="grid w-full max-w-none gap-10 px-2 sm:px-3 lg:grid-cols-[0.95fr_1.05fr] lg:px-4">
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-            <img src={heroImage} alt={`${siteName} resort view`} loading="lazy" decoding="async" className="aspect-[4/3] h-full w-full object-cover" />
+            <img src={heroImage} alt={`${siteName} resort view`} loading="lazy" decoding="async" onError={handleImageFallback} className="aspect-[4/3] h-full w-full object-cover" />
           </div>
           <div className="flex flex-col justify-center">
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">About Us</span>
@@ -197,11 +198,11 @@ export default function AboutSection({ standalone = false }) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm sm:row-span-2">
-              <img src={gallery[1]?.src || heroImage} alt={gallery[1]?.title || "Resort event space"} loading="lazy" decoding="async" className="h-full min-h-80 w-full object-cover" />
+              <img src={gallery[1]?.src || heroImage} alt={gallery[1]?.title || "Resort event space"} loading="lazy" decoding="async" onError={handleImageFallback} className="h-full min-h-80 w-full object-cover" />
             </div>
             {gallery.slice(2, 4).map((slide) => (
               <div key={slide.src} className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-                <img src={slide.src} alt={slide.title} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
+                <img src={slide.src} alt={slide.title} loading="lazy" decoding="async" onError={handleImageFallback} className="aspect-[4/3] w-full object-cover" />
                 <div className="p-4">
                   <p className="font-semibold text-foreground">{slide.title}</p>
                   <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{slide.subtitle}</p>
@@ -238,7 +239,7 @@ export default function AboutSection({ standalone = false }) {
       <section className="bg-background py-16 sm:py-20 lg:py-24">
         <div className="grid w-full max-w-none gap-10 px-2 sm:px-3 lg:grid-cols-[1.05fr_0.95fr] lg:px-4">
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-            <img src={gallery[0]?.src || heroImage} alt="Kasa Ilaya resort grounds" loading="lazy" decoding="async" className="aspect-[16/11] w-full object-cover" />
+            <img src={gallery[0]?.src || heroImage} alt="Kasa Ilaya resort grounds" loading="lazy" decoding="async" onError={handleImageFallback} className="aspect-[16/11] w-full object-cover" />
           </div>
 
           <div className="flex flex-col justify-center">
@@ -259,7 +260,7 @@ export default function AboutSection({ standalone = false }) {
       </section>
 
       <section className="relative overflow-hidden bg-foreground text-white">
-        <img src={gallery[1]?.src || heroImage} alt="Plan a Kasa Ilaya visit" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-35" />
+        <img src={gallery[1]?.src || heroImage} alt="Plan a Kasa Ilaya visit" loading="lazy" decoding="async" onError={handleImageFallback} className="absolute inset-0 h-full w-full object-cover opacity-35" />
         <div className="absolute inset-0 bg-black/65" />
         <div className="relative grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[1fr_auto] lg:items-center lg:px-4 lg:py-10">
           <div>
