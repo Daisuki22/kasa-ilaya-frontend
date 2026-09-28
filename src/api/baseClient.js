@@ -193,6 +193,15 @@ const request = async (path, options = {}) => {
         ? payload
         : payload?.error || "Request failed.";
 
+    if (import.meta.env.DEV) {
+      console.warn("Kasa Ilaya API response failed", {
+        method: fetchOptions.method || "GET",
+        path,
+        status: response.status,
+        requestId: payload?.request_id,
+      });
+    }
+
     const message =
       /SQLSTATE\[HY000\]\s*\[2002\]|target machine actively refused/i.test(
         rawMessage
