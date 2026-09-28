@@ -636,7 +636,9 @@ export default function MyBookings() {
         queryClient.invalidateQueries({ queryKey: ["rebooking-availability"] }),
       ]);
     } catch (error) {
-      toast.error(error?.message || "Something went wrong while rescheduling. Your existing reservation was not changed.");
+      const message = error?.message || "Something went wrong while rescheduling. Your existing reservation was not changed.";
+      const requestReference = error?.request_id ? ` (Reference: ${error.request_id})` : "";
+      toast.error(`${message}${requestReference}`);
     } finally {
       setIsRequestingRebooking(false);
     }
