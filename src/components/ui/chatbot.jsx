@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { baseClient } from "@/api/baseClient";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircle, X, Loader2, TreePalm } from "lucide-react";
+import { MessageCircle, X, Loader2, TreePalm, ArrowLeft, Search } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useResortRules } from "@/hooks/useResortRules";
-import { ArrowLeft, ChevronDown } from "lucide-react";
 
 const FAQ_CATEGORIES = [
   {
@@ -83,6 +82,25 @@ const FAQ_CATEGORIES = [
     ],
   },
 ];
+
+const getVisibleFaqCategories = (search, selectedCategory) => {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  if (!normalizedSearch) {
+    return FAQ_CATEGORIES.filter(
+      (category) => category.title === selectedCategory
+    );
+  }
+
+  return FAQ_CATEGORIES.map((category) => ({
+    ...category,
+    questions: category.title.toLowerCase().includes(normalizedSearch)
+      ? category.questions
+      : category.questions.filter((question) =>
+          question.toLowerCase().includes(normalizedSearch)
+        ),
+  })).filter((category) => category.questions.length > 0);
+};
 
 const assistantReply = ({
   title,
@@ -915,6 +933,10 @@ export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [showFaq, setShowFaq] = useState(true);
+  const [selectedFaqCategory, setSelectedFaqCategory] = useState(
+    FAQ_CATEGORIES[0].title
+  );
+  const [faqSearch, setFaqSearch] = useState("");
 
   const [messages, setMessages] = useState([
     {
@@ -943,6 +965,16 @@ export default function Chatbot() {
     queryFn: () => baseClient.entities.PaymentQrCode.list("display_order", 10),
     staleTime: 60000,
   });
+
+  const normalizedFaqSearch = faqSearch.trim().toLowerCase();
+  const visibleFaqCategories = getVisibleFaqCategories(
+    faqSearch,
+    selectedFaqCategory
+  );
+  const visibleFaqCount = visibleFaqCategories.reduce(
+    (count, category) => count + category.questions.length,
+    0
+  );
 
   useEffect(() => {
     if (showFaq) {
@@ -1166,33 +1198,85 @@ export default function Chatbot() {
                     Frequently Asked Questions
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Choose a topic, then tap a question.
+                    Search a question or choose a category.
                   </p>
                 </div>
 
-                {FAQ_CATEGORIES.map((category) => (
-                  <details key={category.title} className="overflow-hidden rounded-md border border-border bg-background">
-                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-                      <span>{category.title}</span>
-                      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    </summary>
-                    <div className="space-y-1 border-t border-border p-2">
-                      {category.questions.map((question) => (
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                  <label className="sr-only" htmlFor="chatbot-faq-search">
+                    Search frequently asked questions
+                  </label>
+                  <input
+                    id="chatbot-faq-search"
+                    type="search"
+                    value={faqSearch}
+                    onChange={(event) => setFaqSearch(event.target.value)}
+                    placeholder="Search questions"
+                    className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+
+                {!normalizedFaqSearch && (
+                  <div className="grid grid-cols-2 gap-1.5" role="group" aria-label="FAQ categories">
+                    {FAQ_CATEGORIES.map((category) => {
+                      const isSelected = category.title === selectedFaqCategory;
+                      return (
                         <button
-                          key={question}
+                          key={category.title}
                           type="button"
-                          className="min-h-10 w-full rounded-sm px-2.5 py-2 text-left text-sm leading-snug text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          onClick={() => {
-                            setShowFaq(false);
-                            processMessage(question);
-                          }}
+                          aria-pressed={isSelected}
+                          className={`min-h-10 rounded-md border px-2.5 py-2 text-left text-xs font-medium leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                            isSelected
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border bg-background text-foreground hover:bg-muted"
+                          }`}
+                          onClick={() => setSelectedFaqCategory(category.title)}
                         >
-                          {question}
+                          {category.title}
                         </button>
-                      ))}
-                    </div>
-                  </details>
-                ))}
+                      );
+                    })}
+                  </div>
+                )}
+
+                {normalizedFaqSearch && (
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
+                    {visibleFaqCount} {visibleFaqCount === 1 ? "question" : "questions"} found
+                  </p>
+                )}
+
+                {visibleFaqCategories.length > 0 ? (
+                  <div className="space-y-3">
+                    {visibleFaqCategories.map((category) => (
+                      <div key={category.title} className="overflow-hidden rounded-md border border-border bg-background">
+                        <h4 className="border-b border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-foreground">
+                          {category.title}
+                        </h4>
+                        <div className="divide-y divide-border/70">
+                          {category.questions.map((question) => (
+                            <button
+                              key={question}
+                              type="button"
+                              className="min-h-11 w-full px-3 py-2.5 text-left text-sm leading-snug text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                              onClick={() => {
+                                setFaqSearch("");
+                                setShowFaq(false);
+                                processMessage(question);
+                              }}
+                            >
+                              {question}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-md border border-dashed border-border px-3 py-5 text-center text-sm text-muted-foreground">
+                    No matching questions. Try a different search.
+                  </p>
+                )}
               </section>
             )}
 
