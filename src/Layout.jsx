@@ -8,7 +8,7 @@ import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
   Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
-  ChartBarIcon, CreditCard
+  ChartBarIcon, CreditCard, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +59,7 @@ const adminNav = [
   { name: "Payment QR Codes", icon: QrCode, page: "AdminPaymentQRCodes" },
   { name: "User Permissions", icon: ShieldCheck, page: "AdminUserPermissions" },
   { name: "Security Settings", icon: Shield, page: "AdminSecuritySettings" },
+  { name: "Legal & Privacy Settings", icon: FileText, page: "AdminLegalSettings" },
   { name: "System Settings", icon: SlidersHorizontal, page: "AdminSystemSettings" },
   { name: "Archive", icon: Archive, page: "AdminPackageArchive" },
   { name: "Activity Logs", icon: User, page: "AdminActivityLogs" },

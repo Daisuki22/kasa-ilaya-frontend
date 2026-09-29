@@ -8,6 +8,7 @@ export const PAGES = {
     "Contact": lazy(() => import('./pages/Contact.jsx')),
     "AdminDashboard": lazy(() => import('./pages/AdminDashboard.jsx')),
     "AdminInquiries": lazy(() => import('./pages/AdminInquiries.jsx')),
+    "AdminLegalSettings": lazy(() => import('./pages/AdminLegalSettings.jsx')),
     "AdminPackages": lazy(() => import('./pages/AdminPackage.jsx')),
     "AdminPackageArchive": lazy(() => import('./pages/AdminPackageArchive.jsx')),
     "AdminPaymentQRCodes": lazy(() => import('./pages/AdminPaymentQRCodes.jsx')),

@@ -301,6 +301,17 @@ const createEntityHandler = (entityName) => ({
     return request("/entities.php?entity=Notification&action=mark-all-read", { method: "PATCH" });
   },
 
+  async publish(id) {
+    if (entityName !== "LegalDocument") {
+      throw new Error("Only legal documents can be published.");
+    }
+    const result = await request(
+      `/entities.php?entity=LegalDocument&id=${encodeURIComponent(id)}&action=publish`,
+      { method: "PATCH", body: {} }
+    );
+    return result?.data || result;
+  },
+
   async availability(excludeBookingId) {
     if (entityName !== "Booking") {
       throw new Error("Availability is only available for bookings.");
@@ -757,6 +768,7 @@ export const baseClient = {
   entities: {
     ActivityLog: createEntityHandler("ActivityLog"),
     Booking: createEntityHandler("Booking"),
+    LegalDocument: createEntityHandler("LegalDocument"),
     FoundItem: createEntityHandler("FoundItem"),
     LostItemReport: createEntityHandler("LostItemReport"),
     Package: createEntityHandler("Package"),

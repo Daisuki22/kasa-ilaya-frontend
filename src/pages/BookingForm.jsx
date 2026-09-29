@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { baseClient } from "@/api/baseClient";
 import PaymentMethodImage from "@/components/PaymentMethodImage";
 import { useQuery } from "@tanstack/react-query";
@@ -20,10 +20,8 @@ import {
 import { format, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useResortRules } from "@/hooks/useResortRules";
 import { handleImageFallback } from "@/lib/imageFallback";
-import { CANCELLATION_REBOOKING_NOTICE, normalizeTermsContent } from "@/lib/resortNotices";
+import { CANCELLATION_REBOOKING_NOTICE } from "@/lib/resortNotices";
 
 const MAX_BOOKINGS_PER_SLOT = 1;
 
@@ -124,7 +122,7 @@ export default function BookingForm() {
   const packageId = urlParams.get("packageId");
 
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [isPolicyDialogOpen, setIsPolicyDialogOpen] = useState(false);
+  const [policyDialogType, setPolicyDialogType] = useState(null);
   const [modalStep, setModalStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTour, setSelectedTour] = useState("");
@@ -144,20 +142,11 @@ export default function BookingForm() {
   const [receiptUrl, setReceiptUrl] = useState("");
   const [receiptValidation, setReceiptValidation] = useState(null);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
-  const [agreedToRules, setAgreedToRules] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const bookingSubmissionLock = useRef(false);
   const [selectedPackageImage, setSelectedPackageImage] = useState("");
-  const { rules } = useResortRules();
-  const { settings: siteSettings } = useSiteSettings();
-  const termsTitle = siteSettings?.terms_title?.trim() || "Terms and Conditions";
-  const termsSummary = siteSettings?.terms_summary?.trim() || "Review the full booking terms before you continue.";
-  const termsSections = useMemo(() => {
-    const content = siteSettings?.terms_content?.trim() || "";
-
-    return normalizeTermsContent(content)
-      .split(/\n\s*\n/)
-      .map((section) => section.trim())
-      .filter(Boolean);
-  }, [siteSettings?.terms_content]);
 
   useEffect(() => {
     baseClient.auth.me().then(u => {
@@ -216,6 +205,21 @@ export default function BookingForm() {
     queryKey: ["booking-payment-qr-codes"],
     queryFn: () => baseClient.entities.PaymentQrCode.list("display_order", 10),
   });
+
+  const { data: legalDocuments = [], isLoading: isLoadingLegalDocuments, isError: isLegalDocumentsError } = useQuery({
+    queryKey: ["published-legal-documents"],
+    queryFn: () => baseClient.entities.LegalDocument.list("-published_at", 10),
+    refetchInterval: 30000,
+  });
+  const termsDocument = legalDocuments.find((document) => document.document_type === "terms" && document.status === "published");
+  const privacyDocument = legalDocuments.find((document) => document.document_type === "privacy" && document.status === "published");
+  const hasPublishedLegalDocuments = Boolean(termsDocument && privacyDocument);
+
+  useEffect(() => {
+    setTermsAccepted(false);
+    setPrivacyAcknowledged(false);
+    setPrivacyConsent(false);
+  }, [termsDocument?.id, termsDocument?.version, privacyDocument?.id, privacyDocument?.version]);
 
   const activeQrCodes = qrCodeRecords
     .filter((entry) => entry.is_active !== false && entry.is_active !== 0 && entry.is_active !== "0")
@@ -362,10 +366,10 @@ export default function BookingForm() {
   const clearReceiptUpload = () => {
     setReceiptUrl("");
     setReceiptValidation(null);
-    setAgreedToRules(false);
   };
 
   const handleSubmit = async () => {
+    if (bookingSubmissionLock.current || submitting) return;
     if (!user) {
       baseClient.auth.redirectToLogin(window.location.href);
       return;
@@ -406,11 +410,17 @@ export default function BookingForm() {
       return;
     }
 
-    if (!agreedToRules) {
-      toast.error("Please agree to the resort rules and terms before submitting your booking.");
+    if (!hasPublishedLegalDocuments) {
+      toast.error("The current terms and privacy notice are unavailable. Please try again later.");
       return;
     }
 
+    if (!termsAccepted || !privacyAcknowledged || !privacyConsent) {
+      toast.error("Review and accept the Terms and Conditions, acknowledge the Privacy Notice, and provide privacy consent before submitting.");
+      return;
+    }
+
+    bookingSubmissionLock.current = true;
     setSubmitting(true);
 
     try {
@@ -445,6 +455,13 @@ export default function BookingForm() {
         payment_qr_code_id: selectedQrCode?.id,
         payment_qr_code_label: selectedQrCode?.label,
         receipt_url: receiptUrl,
+        terms_document_id: termsDocument.id,
+        terms_version: termsDocument.version,
+        terms_accepted: termsAccepted,
+        privacy_document_id: privacyDocument.id,
+        privacy_version: privacyDocument.version,
+        privacy_acknowledged: privacyAcknowledged,
+        privacy_consent: privacyConsent,
       });
 
       try {
@@ -616,8 +633,19 @@ export default function BookingForm() {
         toast.warning(emailResult?.error || "Booking submitted, but the email notification was not delivered.");
       }
     } catch (error) {
-      toast.error(error?.message || "Booking failed. Please try again.");
+      if (error?.status === 401) {
+        toast.error("Your session expired. Sign in again to submit your booking.");
+      } else if (error?.status === 409) {
+        toast.error(/terms|privacy|legal|document|polic(?:y|ies)/i.test(error?.message || "")
+          ? "The legal documents changed. Review the latest versions and submit again."
+          : "That date is no longer available. Please choose another date.");
+      } else if (error?.status === 422 || error?.status === 400) {
+        toast.error(error?.message || "Some booking details need to be corrected.");
+      } else {
+        toast.error("Booking could not be submitted. Please try again shortly.");
+      }
     } finally {
+      bookingSubmissionLock.current = false;
       setSubmitting(false);
     }
   };
@@ -683,7 +711,6 @@ export default function BookingForm() {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
-    setAgreedToRules(false);
 
     if (!date || isDateDisabled(date)) {
       return;
@@ -693,14 +720,11 @@ export default function BookingForm() {
     setIsBookingModalOpen(true);
   };
 
-  const handleAcceptPolicy = () => {
-    setAgreedToRules(true);
-    setIsPolicyDialogOpen(false);
-  };
-
-  const handleDeclinePolicy = () => {
-    setAgreedToRules(false);
-    setIsPolicyDialogOpen(false);
+  const viewedDocument = policyDialogType === "terms" ? termsDocument : privacyDocument;
+  const acceptViewedDocument = () => {
+    if (policyDialogType === "terms") setTermsAccepted(true);
+    if (policyDialogType === "privacy") setPrivacyAcknowledged(true);
+    setPolicyDialogType(null);
   };
 
   if (bookingComplete) {
@@ -1396,76 +1420,45 @@ export default function BookingForm() {
                       <p className="mt-1">{PAYMENT_POLICY_NOTICE}</p>
                     </div>
 
-                    <div className="rounded-lg border border-border bg-card p-5">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <h3 className="font-display text-lg font-semibold text-foreground">{termsTitle}</h3>
-                          <p className="mt-1 text-sm leading-6 text-muted-foreground">{termsSummary}</p>
-                        </div>
-                        <Button type="button" variant="outline" size="sm" onClick={() => setIsPolicyDialogOpen(true)}>
-                          Read Full Terms
-                        </Button>
-                      </div>
-
-                      <div className="mt-5 max-h-[36vh] space-y-5 overflow-y-auto rounded-lg border border-border bg-muted/20 p-4 text-sm leading-7 text-muted-foreground">
-                        {termsSections.length ? (
-                          termsSections.map((section, index) => {
-                            const [heading, ...bodyLines] = section.split("\n");
-                            const hasBody = bodyLines.some((line) => line.trim());
-
-                            return (
-                              <div key={`${heading}-${index}`} className="space-y-2">
-                                <p className="font-semibold uppercase tracking-[0.08em] text-foreground">
-                                  {heading}
-                                </p>
-                                {hasBody ? (
-                                  <div className="space-y-2">
-                                    {bodyLines.filter((line) => line.trim()).map((line, lineIndex) => (
-                                      <p key={`${heading}-${lineIndex}`}>{line}</p>
-                                    ))}
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <p>No terms and conditions are configured yet.</p>
-                        )}
-
-                        <div className="border-t border-border pt-5">
-                          <p className="font-semibold uppercase tracking-[0.08em] text-foreground">Resort Rules</p>
-                          <div className="mt-3 space-y-4">
-                            {rules.map((rule, index) => (
-                              <div key={rule.title}>
-                                <p className="font-medium text-foreground">{index + 1}. {rule.title}</p>
-                                <p className="mt-1">{rule.description}</p>
-                              </div>
-                            ))}
+                    {isLoadingLegalDocuments ? (
+                      <div className="flex items-center justify-center gap-2 rounded-lg border p-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading current legal documents…</div>
+                    ) : isLegalDocumentsError || !hasPublishedLegalDocuments ? (
+                      <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">The current Terms and Conditions and Privacy Notice are not available. Booking submission is disabled until both documents are published.</div>
+                    ) : (
+                      <div className="space-y-4">
+                        <section className="rounded-lg border border-border bg-card p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div><h3 className="font-semibold text-foreground">{termsDocument.title} <span className="text-sm font-normal text-muted-foreground">v{termsDocument.version}</span></h3><p className="mt-1 text-sm text-muted-foreground">Review the terms that apply to this booking.</p></div>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setPolicyDialogType("terms")}>Read terms</Button>
                           </div>
-                        </div>
+                          <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
+                            <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                            <span>I have read and agree to the Terms and Conditions, version {termsDocument.version}.</span>
+                          </label>
+                        </section>
+                        <section className="rounded-lg border border-border bg-card p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div><h3 className="font-semibold text-foreground">{privacyDocument.title} <span className="text-sm font-normal text-muted-foreground">v{privacyDocument.version}</span></h3><p className="mt-1 text-sm text-muted-foreground">Read how information for this reservation is handled.</p></div>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setPolicyDialogType("privacy")}>Read privacy notice</Button>
+                          </div>
+                          <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
+                            <input type="checkbox" checked={privacyAcknowledged} onChange={(event) => setPrivacyAcknowledged(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                            <span>I acknowledge that I have read the Privacy Notice, version {privacyDocument.version}.</span>
+                          </label>
+                          <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
+                            <input type="checkbox" checked={privacyConsent} onChange={(event) => setPrivacyConsent(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                            <span>I consent to the processing of my information as described in the Privacy Notice for handling this reservation.</span>
+                          </label>
+                        </section>
                       </div>
-                    </div>
+                    )}
 
                     <div className="sticky bottom-0 mt-6 border-t border-border bg-background/95 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-                      <div className="mb-4 rounded-lg border border-border bg-muted/20 p-4">
-                        <label className="flex items-start gap-3 text-sm text-muted-foreground">
-                          <input
-                            type="checkbox"
-                            checked={agreedToRules}
-                            onChange={(event) => setAgreedToRules(event.target.checked)}
-                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                          />
-                          <span>
-                            I have read and agree to the terms and conditions, payment policy, and resort rules.
-                          </span>
-                        </label>
-                      </div>
-
                       <div className="flex flex-col gap-3 sm:flex-row">
                         <Button variant="outline" onClick={() => setModalStep(3)} disabled={submitting}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "manual_review" || !agreedToRules}>
+                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "manual_review" || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
                           {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                           {submitting ? "Processing Booking..." : "Submit Booking"}
                         </Button>
@@ -1479,62 +1472,16 @@ export default function BookingForm() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isPolicyDialogOpen} onOpenChange={setIsPolicyDialogOpen}>
-        <DialogContent className="flex w-[calc(100vw-1rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 max-h-[85vh] sm:w-full">
-          <DialogHeader className="border-b border-border px-6 py-5 text-left">
-            <DialogTitle className="font-display text-2xl text-foreground">{termsTitle}</DialogTitle>
-            <DialogDescription className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {termsSummary}
-            </DialogDescription>
+      <Dialog open={Boolean(policyDialogType)} onOpenChange={(open) => { if (!open) setPolicyDialogType(null); }}>
+        <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="border-b border-border px-6 py-5 pr-12 text-left">
+            <DialogTitle className="font-display text-2xl text-foreground">{viewedDocument?.title || "Legal document"}</DialogTitle>
+            <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">Version {viewedDocument?.version || ""}. This is the document version associated with your booking submission.</DialogDescription>
           </DialogHeader>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-            <div className="space-y-5 text-sm leading-7 text-muted-foreground">
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-900">
-                {PAYMENT_POLICY_NOTICE}
-              </div>
-
-              {termsSections.map((section, index) => {
-                const [heading, ...bodyLines] = section.split("\n");
-                const hasBody = bodyLines.some((line) => line.trim());
-
-                return (
-                  <div key={`${heading}-${index}`} className="space-y-2">
-                    <p className="font-semibold uppercase tracking-[0.08em] text-foreground">
-                      {heading}
-                    </p>
-                    {hasBody ? (
-                      <div className="space-y-2">
-                        {bodyLines.filter((line) => line.trim()).map((line, lineIndex) => (
-                          <p key={`${heading}-${lineIndex}`}>{line}</p>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-
-              <div className="border-t border-border pt-5">
-                <p className="font-semibold uppercase tracking-[0.08em] text-foreground">Resort Rules</p>
-                <div className="mt-3 space-y-4">
-                  {rules.map((rule, index) => (
-                    <div key={rule.title}>
-                      <p className="font-medium text-foreground">{index + 1}. {rule.title}</p>
-                      <p className="mt-1">{rule.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 flex flex-col gap-3 border-t border-border bg-background px-6 py-4 sm:flex-row">
-            <Button className="flex-1" onClick={handleAcceptPolicy}>
-              I Agree
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={handleDeclinePolicy}>
-              Close
-            </Button>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{viewedDocument?.content || "Document unavailable."}</div></div>
+          <div className="flex flex-col gap-3 border-t border-border bg-background px-6 py-4 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setPolicyDialogType(null)}>Close</Button>
+            <Button onClick={acceptViewedDocument}>{policyDialogType === "terms" ? "I Agree to Terms" : "I Acknowledge Notice"}</Button>
           </div>
         </DialogContent>
       </Dialog>

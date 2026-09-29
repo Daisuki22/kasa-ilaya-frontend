@@ -1,0 +1,1 @@
+import{j as l,p as i}from"./index-BSLMF1vh.js";function c({src:e,alt:r,className:t,loading:s="lazy"}){const n=o=>{const a=o.currentTarget;a.dataset.fallbackApplied||(a.dataset.fallbackApplied="true",a.src="/Kasa-Ilaya-Resort/frontend/dist/img/payment-method-unavailable.svg")};return l.jsx("img",{src:i(e),alt:r,loading:s,decoding:"async",className:t,onError:n})}export{c as P};
