@@ -994,7 +994,7 @@ export default function MyBookings() {
                       month: "w-full max-w-[22rem] space-y-4",
                       caption: "relative flex h-9 items-center justify-center px-10",
                       caption_label: "text-base font-semibold",
-                      nav: "absolute inset-x-0 top-0 flex items-center justify-center gap-8",
+                      nav: "absolute inset-x-0 top-0 flex items-center justify-between",
                       nav_button: "flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-muted-foreground opacity-80 hover:bg-muted hover:text-foreground hover:opacity-100",
                       table: "w-full table-fixed border-collapse",
                       head_row: "grid grid-cols-7",
