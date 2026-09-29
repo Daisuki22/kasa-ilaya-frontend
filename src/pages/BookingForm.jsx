@@ -1304,7 +1304,7 @@ export default function BookingForm() {
                       <div>
                         <h4 className="font-semibold text-foreground">Reservation Payment</h4>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Choose whether to pay the downpayment or full amount, then select your payment mode and upload proof.
+                          Choose your payment amount, enter your payment details, then send your receipt. An admin will manually check the payment before approving your booking.
                         </p>
                       </div>
 
@@ -1427,15 +1427,15 @@ export default function BookingForm() {
                       </div>
 
                       <div>
-                        <Label>Payment Proof *</Label>
+                        <Label>Send Payment Receipt or Screenshot *</Label>
                         <div className="mt-2 space-y-3">
                           <label className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
                             {isUploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                            <span>{isUploadingReceipt ? "Scanning receipt..." : "Upload payment proof"}</span>
+                            <span>{isUploadingReceipt ? "Checking receipt..." : "Choose receipt or screenshot"}</span>
                             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
                           </label>
                           <p className="text-xs text-muted-foreground">
-                            JPG, PNG, or WebP images up to 8 MB. Proof details and authenticity are checked by an authorized resort admin.
+                            JPG, PNG, or WebP images up to 8 MB. Your booking stays Pending until an authorized admin manually checks your receipt, payment number, amount, and reference number.
                           </p>
                           {receiptValidation?.status === "checking" ? (
                             <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
@@ -1450,7 +1450,7 @@ export default function BookingForm() {
                           {receiptUrl ? (
                             <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
                               <div className="flex items-center gap-2 text-amber-700">
-                                  <ShieldCheck className="h-4 w-4" /> Pending Admin Review
+                                  <ShieldCheck className="h-4 w-4" /> Sent — Pending Manual Admin Check
                               </div>
                               {receiptFileName ? <p className="mt-2 break-all text-xs font-medium text-foreground">Uploaded: {receiptFileName}</p> : null}
                               {receiptValidation?.message ? (
@@ -1471,7 +1471,7 @@ export default function BookingForm() {
                         <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                           <span>
                             {receiptValidation?.status === "manual_review"
-                              ? "Payment proof uploaded. An authorized admin will verify the details."
+                              ? "Receipt sent. The admin will manually check your payment before approval."
                               : "Upload a readable payment proof before continuing."}
                           </span>
                           <span className="flex items-center gap-2">
