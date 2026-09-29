@@ -86,8 +86,7 @@ export default function FullCalendarView({ embedded = false }) {
     }
 
     const booking = viewingBooking;
-    const nextPaymentStatus =
-      newStatus === "confirmed" || newStatus === "completed" ? "paid" : booking?.payment_status || "unpaid";
+    const nextPaymentStatus = booking?.payment_status || "unpaid";
 
     try {
       await baseClient.entities.Booking.update(bookingId, { status: newStatus, payment_status: nextPaymentStatus });
@@ -356,23 +355,6 @@ export default function FullCalendarView({ embedded = false }) {
                 dayMaxEvents={3}
                 height="auto"
                 eventDisplay="block"
-                dayCellContent={function(arg) {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const cellDate = new Date(arg.date);
-                  cellDate.setHours(0, 0, 0, 0);
-
-                  if (cellDate < today) {
-                    return (
-                      <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                        <span style={{ color: "#ef4444", fontWeight: "bold", position: "absolute", top: 2, right: 4, fontSize: "1.2em", pointerEvents: "none" }}>x</span>
-                        <span>{arg.dayNumberText}</span>
-                      </div>
-                    );
-                  }
-
-                  return arg.dayNumberText;
-                }}
               />
             </div>
           </div>

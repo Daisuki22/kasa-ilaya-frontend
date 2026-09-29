@@ -393,6 +393,34 @@ const createEntityHandler = (entityName) => ({
     return normalizeEntityDates("Booking", result?.data || result);
   },
 
+  async requestReschedule(id, bookingDate, note = "") {
+    if (entityName !== "Booking") {
+      throw new Error("Rescheduling is only available for bookings.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=request-reschedule`,
+      {
+        method: "PATCH",
+        body: { booking_date: bookingDate, note },
+      }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
+  async rejectReschedule(id, note = "") {
+    if (entityName !== "Booking") {
+      throw new Error("Reschedule decisions are only available for bookings.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=resolve-reschedule`,
+      {
+        method: "PATCH",
+        body: { note },
+      }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
   async delete(id) {
     return request(
       `/entities.php?entity=${encodeURIComponent(
@@ -505,7 +533,7 @@ export const baseClient = {
       const user = await request(
         "/auth.php?action=update-me",
         {
-          method: "PATCH",
+          method: "POST",
           body: data,
         }
       );

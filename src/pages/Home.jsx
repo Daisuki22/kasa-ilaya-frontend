@@ -3,7 +3,6 @@ import HeroSection from "@/components/home/HeroSection";
 
 const VideoPresentationSection = lazy(() => import("@/components/home/VideoPresentationSection"));
 const UpcomingScheduleSection = lazy(() => import("@/components/home/UpcomingScheduleSection"));
-const FeaturesSection = lazy(() => import("@/components/home/FeaturesSection"));
 const ResortRulesSection = lazy(() => import("@/components/home/ResortRulesSection"));
 const ReviewsSection = lazy(() => import("@/components/home/ReviewSection.jsx"));
 const CTASection = lazy(() => import("@/components/home/CTASection"));
@@ -59,9 +58,6 @@ export default function Home() {
       </LazyHomeSection>
       <LazyHomeSection minHeight="32rem">
         <UpcomingScheduleSection allowAdminActions={false} />
-      </LazyHomeSection>
-      <LazyHomeSection>
-        <FeaturesSection />
       </LazyHomeSection>
       <LazyHomeSection>
         <ResortRulesSection />

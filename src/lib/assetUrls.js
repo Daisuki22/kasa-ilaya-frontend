@@ -29,6 +29,15 @@ export const resolveAssetUrl = (value) => {
 
   const normalized = trimmed.replace(/\\/g, "/");
 
+  const relativeUpload = normalized.match(/^(?:\.\/)?(?:(?:api)\/)?(uploads|payment_proofs|profile_images|package_images)\/(.+)$/i);
+  if (relativeUpload) {
+    const assetBase = getApiAssetBaseUrl();
+    const relativePath = relativeUpload[1].toLowerCase() === "uploads"
+      ? `uploads/${relativeUpload[2]}`
+      : `uploads/${relativeUpload[1]}/${relativeUpload[2]}`;
+    return assetBase ? `${assetBase}/${relativePath}` : `/${relativePath}`;
+  }
+
   // Normalize common relative image paths returned by the API.
   if (/^(?:\.\/)?img\//i.test(normalized)) {
     const imagePath = normalized.replace(/^\.\//, "");

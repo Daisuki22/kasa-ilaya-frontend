@@ -89,7 +89,6 @@ export default function Contact() {
 
   const packagesUrl = createPageUrl("Packages");
   const aboutUrl = createPageUrl("About");
-  const amenitiesUrl = createPageUrl("Amenities");
   const selectedInquiryToken = useMemo(
     () => guestInquiryAccess.find((entry) => entry.id === selectedInquiryId)?.token,
     [guestInquiryAccess, selectedInquiryId]
@@ -348,7 +347,6 @@ export default function Contact() {
               {[
                 { label: "View Packages", url: packagesUrl },
                 { label: "About the Resort", url: aboutUrl },
-                { label: "Amenities", url: amenitiesUrl },
               ].map((item) => (
                 <Button key={item.label} asChild variant="outline" className="justify-between gap-2">
                   <Link to={item.url}>

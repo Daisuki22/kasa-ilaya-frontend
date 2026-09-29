@@ -137,10 +137,10 @@ export default function AdminReservationManagement() {
           rebookingNote.trim()
         );
       } else {
-        await baseClient.entities.Booking.update(rebookingBooking.id, {
-          rebooking_status: decision,
-          rebooking_resolution_note: rebookingNote.trim() || "Declined by resort admin.",
-        });
+        await baseClient.entities.Booking.rejectReschedule(
+          rebookingBooking.id,
+          rebookingNote.trim() || "Declined by resort admin."
+        );
 
         await baseClient.entities.ActivityLog.create({
           user_email: user?.email || null,

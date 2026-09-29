@@ -5,18 +5,18 @@ const sizes = [
 ];
 const mainRoutes = [
   ["guest", "/"], ["guest", "/About"], ["guest", "/Contact"], ["guest", "/Packages"],
-  ["guest", "/Amenities"], ["guest", "/BookingForm"], ["guest", "/MyBookings"],
+  ["guest", "/BookingForm"], ["guest", "/MyBookings"],
   ["guest", "/ProfileSettings"], ["guest", "/Login"], ["guest", "/ForgotPassword"],
   ["guest", "/VerifyRegistrationOtp"], ["guest", "/ResetPassword"],
   ["super_admin", "/AdminDashboard"], ["super_admin", "/AdminCalendar"],
-  ["super_admin", "/AdminPackages"], ["super_admin", "/AdminBookings"],
+  ["super_admin", "/AdminPackages"],
   ["super_admin", "/AdminReport"], ["super_admin", "/AdminInquiries"],
   ["super_admin", "/AdminPaymentMonitoring"], ["super_admin", "/AdminPaymentQRCodes"],
   ["super_admin", "/AdminUserPermissions"], ["super_admin", "/AdminSecuritySettings"],
   ["super_admin", "/AdminSystemSettings"], ["super_admin", "/AdminPackageArchive"],
   ["super_admin", "/AdminActivityLogs"],
 ];
-const focusedRoutes = new Set(["/", "/Packages", "/BookingForm", "/AdminDashboard", "/AdminReport"]);
+const focusedRoutes = new Set(["/", "/Packages", "/BookingForm", "/MyBookings", "/ProfileSettings", "/AdminDashboard", "/AdminCalendar", "/AdminReport"]);
 const targets = await fetch("http://127.0.0.1:9225/json/list").then((response) => response.json());
 const page = targets.find((target) => target.type === "page" && target.url.includes("127.0.0.1:5175"));
 if (!page) throw new Error("Responsive audit Chrome tab was not found.");

@@ -4,8 +4,6 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AdminActivityLogs": lazy(() => import('./pages/AdminActivityLogs.jsx')),
     "About": lazy(() => import('./pages/About.jsx')),
-    "Amenities": lazy(() => import('./pages/Amenities.jsx')),
-    "AdminBookings": lazy(() => import('./pages/AdminBooking.jsx')),
     "AdminCalendar": lazy(() => import('./pages/AdminCalendar.jsx')),
     "Contact": lazy(() => import('./pages/Contact.jsx')),
     "AdminDashboard": lazy(() => import('./pages/AdminDashboard.jsx')),

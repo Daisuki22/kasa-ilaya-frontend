@@ -2,20 +2,24 @@ import React, { useEffect, useMemo, useState } from "react";
 import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Archive,
   CalendarCheck,
+  CalendarPlus,
   CheckCircle2,
   CheckCheck,
   Clock3,
@@ -106,12 +110,35 @@ function DetailItem({ label, children }) {
   );
 }
 
+function PaymentProof({ src }) {
+  const [unavailable, setUnavailable] = useState(false);
+  useEffect(() => setUnavailable(false), [src]);
+  const imageUrl = resolveAssetUrl(src);
+  if (!imageUrl || unavailable) {
+    return <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">Payment proof unavailable.</p>;
+  }
+  return (
+    <div className="space-y-2">
+      <span className="text-sm font-medium text-muted-foreground">Payment Proof</span>
+      <a href={imageUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-white">
+        <img src={imageUrl} alt="Payment proof" onError={() => setUnavailable(true)} className="max-h-[42vh] w-full object-contain sm:max-h-72" />
+      </a>
+      <a href={imageUrl} target="_blank" rel="noreferrer" className="inline-flex max-w-full break-words text-sm text-primary underline-offset-4 hover:underline">
+        Open uploaded payment proof
+      </a>
+    </div>
+  );
+}
+
 export default function AdminCalendar() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [user, setUser] = useState(null);
+  const [selectedRescheduleRequest, setSelectedRescheduleRequest] = useState(null);
+  const [rescheduleDecisionNote, setRescheduleDecisionNote] = useState("");
+  const [rescheduleDecision, setRescheduleDecision] = useState("");
 
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => {});
@@ -125,6 +152,10 @@ export default function AdminCalendar() {
   const activeBookings = useMemo(
     () => bookings.filter((booking) => booking.status !== "archived"),
     [bookings]
+  );
+  const pendingRescheduleRequests = useMemo(
+    () => activeBookings.filter((booking) => booking.rebooking_status === "pending"),
+    [activeBookings]
   );
 
   const filteredBookings = useMemo(() => {
@@ -196,17 +227,7 @@ export default function AdminCalendar() {
     }
   };
 
-  const getNextPaymentStatus = (booking, newStatus) => {
-    if (newStatus === "confirmed" || newStatus === "completed") {
-      return "paid";
-    }
-
-    if (newStatus === "cancelled") {
-      return booking.payment_status || "unpaid";
-    }
-
-    return booking.payment_status || "unpaid";
-  };
+  const getNextPaymentStatus = (booking) => booking?.payment_status || "unpaid";
 
   const updateStatus = async (bookingId, newStatus) => {
     if (newStatus === "cancelled") {
@@ -215,7 +236,7 @@ export default function AdminCalendar() {
     }
 
     const booking = bookings.find((item) => item.id === bookingId);
-    const nextPaymentStatus = getNextPaymentStatus(booking, newStatus);
+    const nextPaymentStatus = getNextPaymentStatus(booking);
 
     try {
       await baseClient.entities.Booking.update(bookingId, {
@@ -233,7 +254,7 @@ export default function AdminCalendar() {
       });
 
       if (newStatus === "confirmed") {
-        toast.success("Reservation approved and guest notification processed.");
+        toast.success("Reservation confirmed.");
       } else if (newStatus === "completed") {
         toast.success("Reservation marked as completed.");
       }
@@ -245,6 +266,38 @@ export default function AdminCalendar() {
       setSelectedBooking(null);
     } catch (error) {
       toast.error(error?.message || "Unable to update reservation.");
+    }
+  };
+
+  const resolveRescheduleRequest = async (decision) => {
+    if (!selectedRescheduleRequest) return;
+    setRescheduleDecision(decision);
+    try {
+      if (decision === "approved") {
+        await baseClient.entities.Booking.reschedule(
+          selectedRescheduleRequest.id,
+          selectedRescheduleRequest.rebooking_requested_date,
+          rescheduleDecisionNote.trim()
+        );
+      } else {
+        await baseClient.entities.Booking.rejectReschedule(
+          selectedRescheduleRequest.id,
+          rescheduleDecisionNote.trim()
+        );
+      }
+      toast.success(decision === "approved" ? "Reschedule request approved." : "Reschedule request declined.");
+      setSelectedRescheduleRequest(null);
+      setRescheduleDecisionNote("");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["my-bookings"] }),
+      ]);
+    } catch (error) {
+      toast.error(error?.message || "Unable to resolve this reschedule request.");
+    } finally {
+      setRescheduleDecision("");
     }
   };
 
@@ -317,6 +370,37 @@ export default function AdminCalendar() {
             helper="Excludes cancelled bookings"
             tone="text-primary"
           />
+        </section>
+
+        <section className="rounded-lg border border-border bg-card shadow-sm">
+          <div className="flex flex-col gap-2 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-xl font-bold text-foreground">Reschedule Requests</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Customer requests wait for approval; the existing reservation stays active until then.</p>
+            </div>
+            <Badge variant="outline" className={pendingRescheduleRequests.length ? "border-amber-200 bg-amber-50 text-amber-700" : "border-border bg-muted text-muted-foreground"}>
+              {pendingRescheduleRequests.length} pending
+            </Badge>
+          </div>
+          {pendingRescheduleRequests.length ? (
+            <div className="divide-y divide-border">
+              {pendingRescheduleRequests.map((booking) => (
+                <div key={booking.id} className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5">
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm font-semibold text-foreground">{booking.booking_reference || booking.id}</p>
+                    <p className="mt-1 truncate text-sm font-medium text-foreground">{booking.customer_name || "Guest"} · {booking.package_name || "Package"}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{tourLabels[booking.tour_type] || booking.tour_type || "Tour"}: {formatDate(booking.booking_date)} → {formatDate(booking.rebooking_requested_date)}</p>
+                    {booking.rebooking_reason ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Note: {booking.rebooking_reason}</p> : null}
+                  </div>
+                  <Button variant="outline" className="gap-2 sm:justify-self-end" onClick={() => { setSelectedRescheduleRequest(booking); setRescheduleDecisionNote(""); }}>
+                    <CalendarPlus className="h-4 w-4" /> Review Request
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="p-5 text-sm text-muted-foreground">There are no reschedule requests awaiting review.</p>
+          )}
         </section>
 
         <FullCalendarView embedded />
@@ -512,16 +596,12 @@ export default function AdminCalendar() {
                   <DetailItem label="Stay Date">{formatDate(selectedBooking.booking_date)}</DetailItem>
                 </div>
 
-                {selectedBooking.receipt_url && (
-                  <div className="space-y-2">
-                    <span className="text-sm font-medium text-muted-foreground">Payment Proof</span>
-                    <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-white">
-                      <img src={selectedBooking.receipt_url} alt="Payment proof" className="max-h-[42vh] w-full object-contain sm:max-h-72" />
-                    </a>
-                    <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="inline-flex max-w-full break-words text-sm text-primary underline-offset-4 hover:underline">
-                      Open uploaded payment proof
-                    </a>
-                  </div>
+                {selectedBooking.receipt_url ? (
+                  <PaymentProof src={selectedBooking.receipt_url} />
+                ) : (
+                  <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+                    {selectedBooking.payment_status === "unpaid" ? "No payment proof submitted." : "Payment proof unavailable."}
+                  </p>
                 )}
 
                 {selectedBooking.special_requests && (
@@ -552,6 +632,46 @@ export default function AdminCalendar() {
                 )}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!selectedRescheduleRequest} onOpenChange={(open) => { if (!open && !rescheduleDecision) setSelectedRescheduleRequest(null); }}>
+          <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display text-2xl">Review Reschedule Request</DialogTitle>
+            </DialogHeader>
+            {selectedRescheduleRequest ? (
+              <div className="space-y-4">
+                <div className="grid gap-3 rounded-lg border border-border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+                  <DetailItem label="Customer">{selectedRescheduleRequest.customer_name || "Guest"}</DetailItem>
+                  <DetailItem label="Booking ID"><span className="break-all font-mono">{selectedRescheduleRequest.id}</span></DetailItem>
+                  <DetailItem label="Current date">{formatDate(selectedRescheduleRequest.booking_date)}</DetailItem>
+                  <DetailItem label="Requested date">{formatDate(selectedRescheduleRequest.rebooking_requested_date)}</DetailItem>
+                  <DetailItem label="Current package / tour">{selectedRescheduleRequest.package_name} · {tourLabels[selectedRescheduleRequest.tour_type] || selectedRescheduleRequest.tour_type}</DetailItem>
+                  <DetailItem label="Requested package / tour">Same package and tour</DetailItem>
+                  <DetailItem label="Request received">{formatDate(selectedRescheduleRequest.rebooking_requested_at, "MMM d, yyyy h:mm a")}</DetailItem>
+                </div>
+                {selectedRescheduleRequest.rebooking_reason ? (
+                  <div className="rounded-lg border border-border p-3 text-sm"><p className="font-medium">Customer note</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{selectedRescheduleRequest.rebooking_reason}</p></div>
+                ) : null}
+                <div className="space-y-2">
+                  <Label htmlFor="reschedule-decision-note">Decision note (optional)</Label>
+                  <Textarea id="reschedule-decision-note" value={rescheduleDecisionNote} onChange={(event) => setRescheduleDecisionNote(event.target.value)} maxLength={500} rows={3} />
+                </div>
+                <p className="text-xs text-muted-foreground">Availability is checked again when approving. The current date remains active unless approval succeeds.</p>
+              </div>
+            ) : null}
+            <DialogFooter className="gap-2 sm:justify-between">
+              <Button variant="outline" onClick={() => setSelectedRescheduleRequest(null)} disabled={!!rescheduleDecision}>Close</Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="destructive" onClick={() => resolveRescheduleRequest("declined")} disabled={!!rescheduleDecision}>
+                  {rescheduleDecision === "declined" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Decline"}
+                </Button>
+                <Button onClick={() => resolveRescheduleRequest("approved")} disabled={!!rescheduleDecision}>
+                  {rescheduleDecision === "approved" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve Request"}
+                </Button>
+              </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

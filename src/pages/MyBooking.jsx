@@ -45,6 +45,7 @@ import LeaveReviewDialog from "@/components/mybookings/LeaveReviewDialog.jsx";
 import { addDays, format } from "date-fns";
 import { createPageUrl } from "@/utils";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const statusColors = {
   pending: "border-amber-200 bg-amber-50 text-amber-700",
@@ -240,7 +241,7 @@ export default function MyBookings() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [bookingToRebook, setBookingToRebook] = useState(null);
-  const [rebookingForm, setRebookingForm] = useState({ requested_date: "" });
+  const [rebookingForm, setRebookingForm] = useState({ requested_date: "", note: "" });
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [isRequestingRebooking, setIsRequestingRebooking] = useState(false);
   const [rescheduleSuccess, setRescheduleSuccess] = useState(null);
@@ -454,7 +455,7 @@ export default function MyBookings() {
 
     return {
       tone: "available",
-      message: "This schedule is available. Confirm to move your reservation to this date.",
+      message: "This schedule is available. Submit it for resort approval.",
     };
   }, [bookingToRebook, isCheckingRebookingDate, isRebookingAvailabilityError, rebookingForm.requested_date, selectedRebookingDate, rebookingAvailabilityBookings, rebookingManualScheduleDates, rebookingOccupiedDates]);
 
@@ -588,7 +589,7 @@ export default function MyBookings() {
     }
 
     setBookingToRebook(booking);
-    setRebookingForm({ requested_date: "" });
+    setRebookingForm({ requested_date: "", note: "" });
   };
 
   const handleRebookingRequest = async () => {
@@ -628,12 +629,13 @@ export default function MyBookings() {
     setIsRequestingRebooking(true);
 
     try {
-      const updatedBooking = await baseClient.entities.Booking.reschedule(
+      const updatedBooking = await baseClient.entities.Booking.requestReschedule(
         bookingToRebook.id,
-        requestedDate
+        requestedDate,
+        rebookingForm.note
       );
 
-      toast.success("Reservation successfully rescheduled.");
+      toast.success("Reschedule request sent to the resort for review.");
       setBookingToRebook(null);
       setSelectedBooking(null);
       setRescheduleSuccess(updatedBooking);
@@ -818,7 +820,7 @@ export default function MyBookings() {
                       {canRequestRebooking(booking) ? (
                         <Button variant="outline" className="gap-2" onClick={() => requestRebooking(booking)}>
                           <CalendarPlus className="h-4 w-4" />
-                          Reschedule Reservation
+                          Request Reschedule
                         </Button>
                       ) : null}
                       {canCancelBooking(booking) ? (
@@ -939,7 +941,7 @@ export default function MyBookings() {
                       onClick={() => requestRebooking(selectedBooking)}
                     >
                       <CalendarPlus className="h-4 w-4" />
-                      Reschedule Reservation
+                      Request Reschedule
                     </Button>
                   ) : null}
                   {canCancelBooking(selectedBooking) ? (
@@ -1068,6 +1070,17 @@ export default function MyBookings() {
                 >
                   {rebookingDateStatus.message}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reschedule-request-note">Reason or note (optional)</Label>
+                  <Textarea
+                    id="reschedule-request-note"
+                    value={rebookingForm.note}
+                    onChange={(event) => setRebookingForm((current) => ({ ...current, note: event.target.value }))}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Add context for the resort team"
+                  />
+                </div>
               </div>
 
               {selectedRebookingDate ? (
@@ -1094,7 +1107,7 @@ export default function MyBookings() {
                   className="gap-2"
                 >
                   {isRequestingRebooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
-                  {isRequestingRebooking ? "Rescheduling..." : "Confirm Reschedule"}
+                  {isRequestingRebooking ? "Sending request..." : "Send Reschedule Request"}
                 </Button>
               </DialogFooter>
             </div>
@@ -1105,15 +1118,15 @@ export default function MyBookings() {
       <Dialog open={!!rescheduleSuccess} onOpenChange={(open) => !open && setRescheduleSuccess(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Reservation successfully rescheduled</DialogTitle>
+            <DialogTitle className="font-display text-2xl">Reschedule request submitted</DialogTitle>
           </DialogHeader>
           {rescheduleSuccess ? (
             <div className="grid gap-3 rounded-lg border border-border bg-muted/30 p-4 text-sm sm:grid-cols-2">
               <Detail label="Booking ID"><span className="break-all font-mono">{rescheduleSuccess.id}</span></Detail>
               <Detail label="Booking reference"><span className="break-all font-mono">{rescheduleSuccess.booking_reference || "Not available"}</span></Detail>
-              <Detail label="New date">{formatDate(rescheduleSuccess.booking_date)}</Detail>
-              <Detail label="New start time">{tourTimeLabels[rescheduleSuccess.tour_type]?.start || "Not available"}</Detail>
-              <Detail label="New end time">{tourTimeLabels[rescheduleSuccess.tour_type]?.end || "Not available"}</Detail>
+              <Detail label="Current date">{formatDate(rescheduleSuccess.booking_date)}</Detail>
+              <Detail label="Requested date">{formatDate(rescheduleSuccess.rebooking_requested_date)}</Detail>
+              <Detail label="Request status">Awaiting resort review</Detail>
               <Detail label="Payment status">{formatStatusLabel(getDisplayPaymentStatus(rescheduleSuccess))}</Detail>
             </div>
           ) : null}

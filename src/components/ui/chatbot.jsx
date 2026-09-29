@@ -27,14 +27,6 @@ const FAQ_CATEGORIES = [
     ],
   },
   {
-    title: "Resort Facilities",
-    questions: [
-      "What facilities are available?",
-      "Is swimming available?",
-      "What amenities are included?",
-    ],
-  },
-  {
     title: "Events & Venue",
     questions: [
       "Can I book the resort for an event?",
@@ -180,9 +172,6 @@ const buildLocalResponse = (
   const prompt = message.toLowerCase().trim();
   const groupedPackages = groupPackagesByName(packages || []);
   const siteName = siteSettings?.site_name?.trim() || "Kasa Ilaya";
-  const amenities = Array.isArray(siteSettings?.amenities)
-    ? siteSettings.amenities
-    : [];
   const packageBullets = (includeInclusions = false) =>
     groupedPackages.map(({ name, options }) => {
       const variants = options
@@ -422,27 +411,22 @@ const buildLocalResponse = (
 
     "what facilities are available?": assistantReply({
       title: "Resort facilities",
-      intro: amenities.length ? "Facilities listed by the resort:" : "Please check the Amenities page for the latest facility information.",
-      bullets: amenities.slice(0, 10).map((item) => `${item.title || "Facility"}${item.desc ? `: ${item.desc}` : ""}`),
-      nextStep: "Open Amenities to view facility information.",
+      intro: "Facility information is available from the resort team.",
+      nextStep: "Contact the resort to confirm current facilities before your visit.",
     }),
 
     "is swimming available?": (() => {
-      const pool = amenities.find((item) => /swim|pool/i.test(`${item.title || ""} ${item.desc || ""}`));
       return assistantReply({
         title: "Swimming facilities",
-        intro: pool
-          ? `${pool.title}${pool.desc ? `: ${pool.desc}` : " is listed among the resort amenities."}`
-          : "Swimming availability is not specified in the current amenity information.",
-        nextStep: "Check the Amenities page for current details, or contact the resort to confirm before your visit.",
+        intro: "Please contact the resort team to confirm current swimming availability.",
+        nextStep: "Use the Contact page for the latest facility information.",
       });
     })(),
 
     "what amenities are included?": assistantReply({
       title: "Resort amenities",
-      intro: amenities.length ? "Amenities currently listed by the resort:" : "Amenity details are not available right now.",
-      bullets: amenities.slice(0, 10).map((item) => `${item.title || "Amenity"}${item.desc ? `: ${item.desc}` : ""}`),
-      nextStep: "Open Amenities for the facility list and details.",
+      intro: "Facility information is available from the resort team.",
+      nextStep: "Use the Contact page to ask about current facilities.",
     }),
 
     "can i book the resort for an event?": assistantReply({
@@ -609,7 +593,7 @@ const buildLocalResponse = (
       title: `About ${siteName}`,
       intro: `${siteName} Resort & Event Place helps guests explore resort stays, private gatherings, and event planning.`,
       bullets: [
-        "Browse packages and amenities.",
+          "Browse packages and resort information.",
         "Check upcoming schedules and guest reviews.",
         "Send an inquiry through the Contact page.",
       ],
@@ -617,31 +601,10 @@ const buildLocalResponse = (
   }
 
   if (prompt.includes("amenity") || prompt.includes("amenities")) {
-    const amenities = Array.isArray(siteSettings?.amenities)
-      ? siteSettings.amenities
-      : [];
-
-    if (amenities.length === 0) {
-      return assistantReply({
-        title: "Resort amenities",
-        intro:
-          "The Amenities page has the latest information about resort facilities.",
-        nextStep: "Open the Amenities page to view the available facilities.",
-      });
-    }
-
     return assistantReply({
-      title: "Resort amenities",
-      intro: "Here are some of the available facilities:",
-      bullets: amenities
-        .slice(0, 6)
-        .map(
-          (item) =>
-            `${item.title || "Amenity"}${
-              item.desc ? `: ${item.desc}` : ""
-            }`
-        ),
-      nextStep: "Open the Amenities page for more details.",
+      title: "Resort facilities",
+      intro: "Please contact the resort team for current facility details.",
+      nextStep: "Open the Contact page to ask about your visit.",
     });
   }
 

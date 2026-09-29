@@ -1,6 +1,5 @@
 const ADMIN_ALLOWED_PAGES = new Set([
   "AdminDashboard",
-  "AdminBookings",
   "AdminCalendar",
   "AdminInquiries",
   "AdminProfileSettings",

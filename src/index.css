@@ -536,11 +536,29 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .fc-wrapper .fc-daygrid-day {
   border-color: hsl(var(--border)) !important;
 }
+.fc-wrapper .fc-daygrid-day-top {
+  display: flex;
+  min-height: 2rem;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0.2rem 0.3rem 0;
+}
 .fc-wrapper .fc-daygrid-day-number {
-  font-size: 0.8rem;
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  float: none;
+  font-size: 0.875rem;
   font-weight: 500;
   color: hsl(var(--muted-foreground));
-  padding: 4px 6px;
+  padding: 0 0.25rem;
+}
+.fc-wrapper .fc-daygrid-day-events {
+  margin-top: 0.1rem;
 }
 .fc-wrapper .fc-daygrid-day.fc-day-today {
   background-color: hsl(var(--primary) / 0.06) !important;
@@ -549,8 +567,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border-radius: 999px;
-  width: 24px;
-  height: 24px;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;

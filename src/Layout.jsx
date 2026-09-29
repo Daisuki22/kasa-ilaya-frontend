@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
-  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield, Waves,
+  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
   ChartBarIcon, CreditCard
 } from "lucide-react";
@@ -46,7 +46,6 @@ const userNav = [
   { name: "About", icon: Sun, page: "About" },
   { name: "Contact", icon: Bell, page: "Contact" },
   { name: "Packages", icon: Package, page: "Packages" },
-  { name: "Amenities", icon: Waves, page: "Amenities" },
   { name: "My Bookings", icon: CalendarCheck, page: "MyBookings" },
 ];
 
@@ -54,7 +53,6 @@ const adminNav = [
   { name: "Dashboard", icon: LayoutDashboard, page: "AdminDashboard" },
   { name: "Reservation Management", icon: CalendarDays, page: "AdminCalendar" },
   { name: "Package Management", icon: Package, page: "AdminPackages" },
-  { name: "Resort Management", icon: CalendarCheck, page: "AdminBookings" },
   { name: "Reports", icon: ChartBarIcon, page: "AdminReport" },
   { name: "Inquiries", icon: MessageSquareMore, page: "AdminInquiries" },
   { name: "Payment Monitoring", icon: CreditCard, page: "AdminPaymentMonitoring" },

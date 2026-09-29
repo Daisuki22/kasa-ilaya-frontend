@@ -78,7 +78,7 @@ const AdminOnlyRoute = ({ user, pageName, children }) => {
   return children;
 };
 
-const protectedUserPages = new Set(["Packages", "Amenities", "BookingForm", "MyBookings", "ProfileSettings"]);
+const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "ProfileSettings"]);
 const guestOrRegularUserPages = new Set(["About", "Contact"]);
 
 const UserOnlyRoute = ({ isAuthenticated, children }) => {

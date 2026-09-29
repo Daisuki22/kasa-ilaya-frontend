@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { resolveAssetUrl } from '@/lib/assetUrls';
 import { Camera, Loader2, Upload } from 'lucide-react';
 
 export default function ProfileSettings({
@@ -20,9 +21,11 @@ export default function ProfileSettings({
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [profileImageUnavailable, setProfileImageUnavailable] = useState(false);
 
   const syncProfileState = (currentUser) => {
     setUser(currentUser);
+    setProfileImageUnavailable(false);
     setProfileForm({
       full_name: currentUser.full_name || '',
       email: currentUser.email || '',
@@ -145,8 +148,8 @@ export default function ProfileSettings({
       <Card className="mb-6">
         <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-primary/10">
-            {profileForm.profile_image_url ? (
-              <img src={profileForm.profile_image_url} alt={profileForm.full_name || 'Profile photo'} className="h-full w-full object-cover" />
+            {profileForm.profile_image_url && !profileImageUnavailable ? (
+              <img src={resolveAssetUrl(profileForm.profile_image_url)} alt={profileForm.full_name || 'Profile photo'} onError={() => setProfileImageUnavailable(true)} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-primary">
                 {profileForm.full_name?.[0]?.toUpperCase() || 'U'}
