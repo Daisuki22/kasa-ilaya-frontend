@@ -40,6 +40,7 @@ const bookingStatusColors = {
   confirmed: "bg-primary/10 text-primary",
   completed: "bg-muted text-muted-foreground",
   cancelled: "bg-destructive/10 text-destructive",
+  rejected: "bg-destructive/10 text-destructive",
 };
 
 const paymentLabels = {
@@ -632,7 +633,7 @@ export default function AdminPaymentMonitoring() {
                         </TableCell>
                         <TableCell>
                           <Badge className={bookingStatusColors[booking.status] || "bg-muted text-muted-foreground"}>
-                            {booking.status || "pending"}
+                              {booking.status === "confirmed" ? "Approved" : booking.status || "pending"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -682,6 +683,24 @@ export default function AdminPaymentMonitoring() {
                   <span className="text-muted-foreground">Payment Channel</span>
                   <p className="break-words">{getPaymentChannel(selectedBooking)}</p>
                 </div>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground">Payment Number</span>
+                  <p className="break-all font-mono">{selectedBooking.payment_number || "Not provided"}</p>
+                </div>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground">Payment Reference Number</span>
+                  <p className="break-all font-mono">{selectedBooking.payment_reference_number || "Not provided"}</p>
+                </div>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground">Submitted At</span>
+                  <p className="break-words">{selectedBooking.created_date ? format(new Date(selectedBooking.created_date), "MMM d, yyyy h:mm a") : "Not available"}</p>
+                </div>
+                {selectedBooking.approved_at ? (
+                  <div className="min-w-0">
+                    <span className="text-muted-foreground">Approved At</span>
+                    <p className="break-words">{format(new Date(selectedBooking.approved_at), "MMM d, yyyy h:mm a")}</p>
+                  </div>
+                ) : null}
                 <div>
                   <span className="text-muted-foreground">Payment Type</span>
                   <p className="font-medium">{paymentTypeLabels[selectedBooking.payment_type] || "Downpayment"}</p>
@@ -724,7 +743,7 @@ export default function AdminPaymentMonitoring() {
                   <span className="text-muted-foreground">Booking Status</span>
                   <p>
                     <Badge className={bookingStatusColors[selectedBooking.status] || "bg-muted text-muted-foreground"}>
-                      {selectedBooking.status || "pending"}
+                      {selectedBooking.status === "confirmed" ? "Approved" : selectedBooking.status || "pending"}
                     </Badge>
                   </p>
                 </div>
@@ -767,6 +786,13 @@ export default function AdminPaymentMonitoring() {
                   <ReceiptText className="mr-2 h-4 w-4" /> No payment proof uploaded.
                 </div>
               )}
+
+              {selectedBooking.rejection_reason ? (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">
+                  <span className="font-medium text-destructive">Rejection reason</span>
+                  <p className="mt-1 whitespace-pre-wrap">{selectedBooking.rejection_reason}</p>
+                </div>
+              ) : null}
 
               {normalizePaymentStatus(selectedBooking.payment_status) === "pending_verification" && selectedBooking.status === "pending" ? (
                 <p className="rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-muted-foreground">

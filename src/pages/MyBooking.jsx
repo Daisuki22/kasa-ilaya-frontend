@@ -52,6 +52,7 @@ const statusColors = {
   pending: "border-amber-200 bg-amber-50 text-amber-700",
   confirmed: "border-primary/20 bg-primary/10 text-primary",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
+  rejected: "border-destructive/20 bg-destructive/10 text-destructive",
   completed: "border-border bg-muted text-muted-foreground",
   archived: "border-border bg-muted text-muted-foreground",
 };
@@ -90,7 +91,8 @@ const paymentTypeLabels = {
 const statusFilters = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
-  { value: "confirmed", label: "Confirmed" },
+  { value: "confirmed", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
@@ -121,7 +123,7 @@ const formatDate = (value) => {
 };
 
 const canLeaveReview = (booking) => {
-  if (!booking || booking.status === "cancelled" || booking.status === "pending") {
+  if (!booking || ["cancelled", "rejected", "pending"].includes(booking.status)) {
     return false;
   }
 
@@ -710,7 +712,7 @@ export default function MyBookings() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-display text-2xl font-bold text-foreground">{booking.package_name || "Resort Package"}</h3>
                             <Badge className={statusColors[booking.status] || statusColors.pending} variant="outline">
-                              {(booking.status || "pending").replace(/_/g, " ")}
+                              {booking.status === "confirmed" ? "Approved" : (booking.status || "pending").replace(/_/g, " ")}
                             </Badge>
                           </div>
                           <p className="mt-2 text-sm text-muted-foreground">
@@ -820,7 +822,7 @@ export default function MyBookings() {
 
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <Detail label="Status">
-                  <Badge className={statusColors[selectedBooking.status]} variant="outline">{selectedBooking.status}</Badge>
+                  <Badge className={statusColors[selectedBooking.status]} variant="outline">{selectedBooking.status === "confirmed" ? "Approved" : selectedBooking.status}</Badge>
                 </Detail>
                 <Detail label="Payment">
                   <Badge className={`${paymentColors[getDisplayPaymentStatus(selectedBooking)] || paymentColors.unpaid} max-w-full whitespace-normal break-words`}>
@@ -835,6 +837,8 @@ export default function MyBookings() {
                 <Detail label="Payment Type">{paymentTypeLabels[selectedBooking.payment_type] || "Downpayment"}</Detail>
                 <Detail label="Amount Submitted"><span className="font-bold text-primary">{formatMoney(selectedBooking.payment_amount_due || selectedBooking.reservation_fee_amount)}</span></Detail>
                 <Detail label="Mode of Payment">{selectedBooking.payment_mode || selectedBooking.payment_qr_code_label || "Not selected"}</Detail>
+                <Detail label="Payment Number">{selectedBooking.payment_number || "Not provided"}</Detail>
+                <Detail label="Payment Reference Number">{selectedBooking.payment_reference_number || "Not provided"}</Detail>
                 {(selectedBooking.rebooking_status || "none") !== "none" ? (
                   <>
                     <Detail label="Reschedule Status">{formatStatusLabel(selectedBooking.rebooking_status)}</Detail>
@@ -849,6 +853,13 @@ export default function MyBookings() {
                 <div>
                   <span className="text-sm text-muted-foreground">Rebooking Reason</span>
                   <p className="mt-1 rounded-lg bg-muted p-3 text-sm leading-6">{selectedBooking.rebooking_reason}</p>
+                </div>
+              ) : null}
+
+              {selectedBooking.rejection_reason ? (
+                <div>
+                  <span className="text-sm text-muted-foreground">Administrator's rejection reason</span>
+                  <p className="mt-1 whitespace-pre-wrap rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm leading-6">{selectedBooking.rejection_reason}</p>
                 </div>
               ) : null}
 

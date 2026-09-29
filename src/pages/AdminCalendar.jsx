@@ -38,6 +38,7 @@ const statusColors = {
   pending: "border-amber-200 bg-amber-50 text-amber-700",
   confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
+  rejected: "border-destructive/20 bg-destructive/10 text-destructive",
   completed: "border-slate-200 bg-slate-100 text-slate-700",
   expired: "border-destructive/20 bg-destructive/10 text-destructive",
 };
@@ -62,9 +63,10 @@ const paymentTypeLabels = {
 const statusOptions = [
   { value: "all", label: "All active" },
   { value: "pending", label: "Pending" },
-  { value: "confirmed", label: "Confirmed" },
+  { value: "confirmed", label: "Approved" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
+  { value: "rejected", label: "Rejected" },
 ];
 
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
@@ -137,6 +139,7 @@ export default function AdminCalendar() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [user, setUser] = useState(null);
   const [selectedRescheduleRequest, setSelectedRescheduleRequest] = useState(null);
   const [rescheduleDecisionNote, setRescheduleDecisionNote] = useState("");
@@ -161,6 +164,7 @@ export default function AdminCalendar() {
 
   const closeSelectedBooking = () => {
     setSelectedBooking(null);
+    setRejectionReason("");
     const url = new URL(window.location.href);
     url.searchParams.delete("bookingId");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
@@ -287,7 +291,7 @@ export default function AdminCalendar() {
       }
 
       if (newStatus === "confirmed") {
-        toast.success("Reservation confirmed.");
+        toast.success("Booking approved and payment marked as manually verified.");
       } else if (newStatus === "completed") {
         toast.success("Reservation marked as completed.");
       }
@@ -299,6 +303,27 @@ export default function AdminCalendar() {
       closeSelectedBooking();
     } catch (error) {
       toast.error(error?.message || "Unable to update reservation.");
+    }
+  };
+
+  const rejectSelectedBooking = async () => {
+    if (!selectedBooking) return;
+    const reason = rejectionReason.trim();
+    if (reason.length < 5) {
+      toast.error("Enter a rejection reason with at least 5 characters.");
+      return;
+    }
+    try {
+      await baseClient.entities.Booking.reject(selectedBooking.id, reason);
+      toast.success("Booking rejected. The customer can now see the updated status.");
+      setRejectionReason("");
+      await queryClient.refetchQueries({ queryKey: ["admin-all-bookings"] });
+      await queryClient.refetchQueries({ queryKey: ["admin-bookings"] });
+      await queryClient.refetchQueries({ queryKey: ["calendar-bookings"] });
+      await queryClient.refetchQueries({ queryKey: ["my-bookings"] });
+      closeSelectedBooking();
+    } catch (error) {
+      toast.error(error?.message || "Unable to reject reservation.");
     }
   };
 
@@ -384,7 +409,7 @@ export default function AdminCalendar() {
           />
           <MetricCard
             icon={ShieldCheck}
-            label="Confirmed"
+            label="Approved"
             value={metrics.confirmed}
             helper="Approved active bookings"
             tone="text-emerald-600"
@@ -533,7 +558,7 @@ export default function AdminCalendar() {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={statusColors[booking.status] || statusColors.pending}>
-                              {isBookingExpired(booking) && booking.status !== "completed" && booking.status !== "cancelled" ? "expired" : (booking.status || "pending").replace(/_/g, " ")}
+                              {isBookingExpired(booking) && !["completed", "cancelled", "rejected"].includes(booking.status) ? "expired" : booking.status === "confirmed" ? "approved" : (booking.status || "pending").replace(/_/g, " ")}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -604,7 +629,7 @@ export default function AdminCalendar() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className={statusColors[selectedBooking.status] || statusColors.pending}>
-                        {isBookingExpired(selectedBooking) && !["completed", "cancelled"].includes(selectedBooking.status) ? "expired" : (selectedBooking.status || "pending").replace(/_/g, " ")}
+                        {isBookingExpired(selectedBooking) && !["completed", "cancelled", "rejected"].includes(selectedBooking.status) ? "expired" : selectedBooking.status === "confirmed" ? "approved" : (selectedBooking.status || "pending").replace(/_/g, " ")}
                       </Badge>
                       <Badge variant="outline" className={paymentColors[selectedBooking.payment_status] || paymentColors.unpaid}>
                         {(selectedBooking.payment_status || "unpaid").replace(/_/g, " ")}
@@ -625,9 +650,20 @@ export default function AdminCalendar() {
                   <DetailItem label="Amount Submitted">{formatMoney(getSubmittedPaymentAmount(selectedBooking))}</DetailItem>
                   <DetailItem label="Reservation Fee">{formatMoney(selectedBooking.reservation_fee_amount)}</DetailItem>
                   <DetailItem label="Mode of Payment">{getPaymentChannel(selectedBooking)}</DetailItem>
+                  <DetailItem label="Payment Number">{selectedBooking.payment_number || "Not provided"}</DetailItem>
+                  <DetailItem label="Payment Reference Number">{selectedBooking.payment_reference_number || "Not provided"}</DetailItem>
                   <DetailItem label="Booked Date">{formatDate(selectedBooking.created_date)}</DetailItem>
+                  {selectedBooking.approved_at ? <DetailItem label="Approved At">{formatDate(selectedBooking.approved_at)}</DetailItem> : null}
+                  {selectedBooking.rejected_at ? <DetailItem label="Rejected At">{formatDate(selectedBooking.rejected_at)}</DetailItem> : null}
                   <DetailItem label="Stay Date">{formatDate(selectedBooking.booking_date)}</DetailItem>
                 </div>
+
+                {selectedBooking.rejection_reason ? (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">
+                    <span className="font-medium text-destructive">Rejection reason</span>
+                    <p className="mt-1 whitespace-pre-wrap">{selectedBooking.rejection_reason}</p>
+                  </div>
+                ) : null}
 
                 {selectedBooking.receipt_url ? (
                   <div className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm sm:grid-cols-2">
@@ -659,11 +695,15 @@ export default function AdminCalendar() {
                   <div className="space-y-3 border-t border-border pt-4">
                     <Button className="w-full gap-2" onClick={() => updateStatus(selectedBooking.id, "confirmed")}>
                       <CheckCircle2 className="h-4 w-4" />
-                      Confirm Reservation
+                      Approve Booking
                     </Button>
-                    <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                      Owner and staff cannot cancel bookings. Guests may cancel their own active bookings more than 7 days before the reservation date; paid amounts are non-refundable.
-                    </p>
+                    <div className="space-y-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                      <Label htmlFor="booking-rejection-reason">Rejection reason *</Label>
+                      <Textarea id="booking-rejection-reason" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} maxLength={1000} placeholder="Explain why this booking cannot be approved." />
+                      <Button type="button" variant="destructive" className="w-full" onClick={rejectSelectedBooking} disabled={rejectionReason.trim().length < 5}>
+                        Reject Booking
+                      </Button>
+                    </div>
                   </div>
                 )}
                 {selectedBooking.status === "confirmed" && !isBookingExpired(selectedBooking) && (

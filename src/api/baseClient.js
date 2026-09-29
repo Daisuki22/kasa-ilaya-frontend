@@ -465,6 +465,17 @@ const createEntityHandler = (entityName) => ({
     return normalizeEntityDates("Booking", result?.data || result);
   },
 
+  async reject(id, reason) {
+    if (entityName !== "Booking") {
+      throw new Error("Only bookings can be rejected.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=reject`,
+      { method: "PATCH", body: { reason } }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
   async markAdditionalFeePaid(id) {
     if (entityName !== "Booking") {
       throw new Error("Damage fee payment is only available for bookings.");

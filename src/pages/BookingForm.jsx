@@ -130,6 +130,8 @@ export default function BookingForm() {
     customer_name: "",
     customer_email: "",
     customer_phone: "",
+    payment_number: "",
+    payment_reference_number: "",
     guest_count: 1,
     special_requests: "",
   });
@@ -395,6 +397,18 @@ export default function BookingForm() {
       return;
     }
 
+    const paymentNumber = String(form.payment_number || "").trim();
+    if (paymentNumber.length < 5 || paymentNumber.length > 64 || /[\u0000-\u001f\u007f]/.test(paymentNumber)) {
+      toast.error("Enter a valid payment number (5 to 64 characters).");
+      return;
+    }
+
+    const paymentReferenceNumber = String(form.payment_reference_number || "").trim();
+    if (paymentReferenceNumber.length < 4 || paymentReferenceNumber.length > 128 || /[\u0000-\u001f\u007f]/.test(paymentReferenceNumber)) {
+      toast.error("Enter a valid payment reference number (4 to 128 characters).");
+      return;
+    }
+
     if (!receiptUrl) {
       toast.error("Please upload your payment proof before submitting.");
       return;
@@ -451,6 +465,8 @@ export default function BookingForm() {
         payment_status: "pending_verification",
         payment_type: paymentType,
         payment_amount_due: paymentAmountDue,
+        payment_number: paymentNumber,
+        payment_reference_number: paymentReferenceNumber,
         payment_mode: selectedQrCode?.label,
         reservation_fee_amount: reservationFee,
         payment_qr_code_id: selectedQrCode?.id,
@@ -1335,6 +1351,7 @@ export default function BookingForm() {
                               value={selectedQrCodeId}
                               onValueChange={(value) => {
                                 setSelectedQrCodeId(value);
+                                setForm((previous) => ({ ...previous, payment_number: "", payment_reference_number: "" }));
                                 clearReceiptUpload();
                               }}
                             >
@@ -1375,8 +1392,37 @@ export default function BookingForm() {
 
                       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
                         <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">Amount to pay now</span>
+                          <span className="text-muted-foreground">Payment Amount *</span>
                           <span className="font-bold text-primary">₱{paymentAmountDue.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="payment-number">Payment Number *</Label>
+                          <Input
+                            id="payment-number"
+                            className="mt-1"
+                            value={form.payment_number}
+                            onChange={(event) => setForm((previous) => ({ ...previous, payment_number: event.target.value }))}
+                            placeholder="Number used for this payment"
+                            autoComplete="off"
+                            maxLength={64}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="payment-reference-number">Payment Reference Number *</Label>
+                          <Input
+                            id="payment-reference-number"
+                            className="mt-1"
+                            value={form.payment_reference_number}
+                            onChange={(event) => setForm((previous) => ({ ...previous, payment_reference_number: event.target.value }))}
+                            placeholder="Transaction/reference number"
+                            autoComplete="off"
+                            maxLength={128}
+                            required
+                          />
                         </div>
                       </div>
 
