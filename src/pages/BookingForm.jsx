@@ -658,9 +658,9 @@ export default function BookingForm() {
         toast.error("Your session or payment proof is no longer valid. Sign in and upload the proof again.");
       } else if (error?.status === 409) {
         const conflictMessage = String(error?.message || error?.error || "");
-        if (/terms|privacy|legal|document|polic(?:y|ies)/i.test(conflictMessage)) {
+        if (error?.error_code === "BOOKING_POLICIES_CHANGED" || /terms|privacy|legal|document|polic(?:y|ies)/i.test(conflictMessage)) {
           toast.error("The legal documents changed. Review the latest versions and submit again.");
-        } else if (/schedule|date.{0,30}(unavailable|reserved|booked)|unavailable.{0,30}(schedule|date)/i.test(conflictMessage)) {
+        } else if (error?.error_code === "BOOKING_SCHEDULE_UNAVAILABLE" || /schedule|date.{0,30}(unavailable|reserved|booked)|unavailable.{0,30}(schedule|date)/i.test(conflictMessage)) {
           toast.error("That date is no longer available. Please choose another date.");
         } else {
           toast.error(conflictMessage || "This booking conflicts with an existing record. Review the details and try again.");
