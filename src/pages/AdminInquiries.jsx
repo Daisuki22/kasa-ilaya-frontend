@@ -228,7 +228,7 @@ export default function AdminInquiries() {
   const isSelectedInquiryClosed = selectedInquiryStatus === "closed" || selectedInquiryStatus === "archived";
 
   return (
-    <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Inquiry Inbox</h1>

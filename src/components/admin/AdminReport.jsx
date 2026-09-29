@@ -883,7 +883,7 @@ export default function AdminReport() {
   })).filter((item) => item.value > 0);
 
   return (
-    <div className="report-print-area w-full app-content-container space-y-8 px-2 py-6 sm:px-3 lg:px-4">
+    <div className="report-print-area w-full max-w-none space-y-8 px-2 py-6 sm:px-3 lg:px-4">
       <div className="print-only report-print-header">
         <p className="report-print-kicker">Kasa Ilaya Resort</p>
         <h1>{reportPeriodLabel} Sales Report</h1>

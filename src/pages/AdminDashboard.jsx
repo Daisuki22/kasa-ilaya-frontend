@@ -135,7 +135,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="w-full app-content-container space-y-6 px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full max-w-none space-y-6 px-2 py-6 sm:px-3 lg:px-4">
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

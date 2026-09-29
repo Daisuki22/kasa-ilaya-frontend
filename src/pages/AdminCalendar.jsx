@@ -334,7 +334,7 @@ export default function AdminCalendar() {
 
   return (
     <div className="bg-muted/20">
-      <div className="w-full app-content-container space-y-6 px-2 py-6 sm:px-3 lg:px-4">
+      <div className="w-full max-w-none space-y-6 px-2 py-6 sm:px-3 lg:px-4">
         <section className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_0.9fr] lg:p-8">
             <div>

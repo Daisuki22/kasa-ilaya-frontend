@@ -101,7 +101,7 @@ export default function AdminLegalSettings() {
   const DocumentIcon = DOCUMENTS[activeType].icon;
 
   return (
-    <div className="app-content-container app-content-container--narrow space-y-6 py-8">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8">
       <header>
         <h1 className="font-display text-3xl font-bold text-foreground">Legal & Privacy Settings</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">Edit plain-text legal documents, save drafts, preview them, and publish versioned copies for new bookings.</p>

@@ -6,6 +6,7 @@ export default function AdminProfileSettings() {
     <ProfileSettings
       title="Admin Profile Settings"
       description="Manage your admin account details and password."
+      legacySpacing
     />
   );
 }

@@ -373,7 +373,7 @@ export default function AdminPaymentMonitoring() {
   };
 
   return (
-    <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Payment Monitoring</h1>
