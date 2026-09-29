@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { baseClient } from "@/api/baseClient";
+import PaymentMethodImage from "@/components/PaymentMethodImage";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -1296,11 +1297,9 @@ export default function BookingForm() {
                             <div className="overflow-hidden rounded-lg border border-primary/30 bg-card">
                               <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr]">
                                 <div className="bg-white p-4">
-                                  <img
+                                  <PaymentMethodImage
                                     src={selectedPaymentQrCode.image_url}
                                     alt={selectedPaymentQrCode.label}
-                                    loading="lazy"
-                                    decoding="async"
                                     className="mx-auto h-40 w-full max-w-[180px] object-contain"
                                   />
                                 </div>

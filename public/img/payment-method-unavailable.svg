@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">Payment QR image unavailable</title>
+  <rect width="240" height="240" rx="18" fill="#f8fafc"/>
+  <rect x="24" y="24" width="192" height="150" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="3"/>
+  <path d="M48 48h42v42H48zm10 10v22h22V58zm88-10h42v42h-42zm10 10v22h22V58zM48 108h42v42H48zm10 10v22h22v-22zm52-70h14v14h-14zm0 28h14v14h-14zm0 28h14v14h-14zm28 0h14v14h-14zm28 28h14v14h-14zm-56 0h14v14h-14z" fill="#94a3b8"/>
+  <path d="m181 113 24 24m0-24-24 24" fill="none" stroke="#b45309" stroke-linecap="round" stroke-width="7"/>
+  <text x="120" y="207" fill="#475569" font-family="Arial,sans-serif" font-size="13" text-anchor="middle">Payment image unavailable</text>
+</svg>

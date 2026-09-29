@@ -205,8 +205,8 @@ const getRebookingLockedReason = (booking) => {
     return "Select a booking first.";
   }
 
-  if (!["pending", "confirmed"].includes(booking.status)) {
-    return "Only pending or confirmed bookings can request rebooking.";
+  if (booking.status !== "confirmed") {
+    return "Only accepted bookings can request rescheduling.";
   }
 
   if ((booking.rebooking_status || "none") === "pending") {

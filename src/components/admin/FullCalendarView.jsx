@@ -85,11 +85,12 @@ export default function FullCalendarView({ embedded = false }) {
       return;
     }
 
-    const booking = viewingBooking;
-    const nextPaymentStatus = booking?.payment_status || "unpaid";
-
     try {
-      await baseClient.entities.Booking.update(bookingId, { status: newStatus, payment_status: nextPaymentStatus });
+      if (newStatus === "confirmed") {
+        await baseClient.entities.Booking.accept(bookingId);
+      } else {
+        await baseClient.entities.Booking.update(bookingId, { status: newStatus });
+      }
       await queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
       await queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
       await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });

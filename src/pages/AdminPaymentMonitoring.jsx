@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle2, ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
+import { ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
 import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
 
 const paymentColors = {
@@ -132,7 +132,6 @@ export default function AdminPaymentMonitoring() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [feeDialogBooking, setFeeDialogBooking] = useState(null);
   const [feeForm, setFeeForm] = useState({ items: [createDamageItem()], notes: "", status: "unpaid" });
-  const [verifyingId, setVerifyingId] = useState(null);
   const [savingFeeId, setSavingFeeId] = useState(null);
 
   useEffect(() => {
@@ -373,49 +372,6 @@ export default function AdminPaymentMonitoring() {
     }
   };
 
-  const verifyPayment = async (booking) => {
-    setVerifyingId(booking.id);
-
-    try {
-      const nextStatus = booking.status === "pending" ? "confirmed" : booking.status;
-
-      await baseClient.entities.Booking.update(booking.id, {
-        payment_status: "paid",
-        status: nextStatus,
-      });
-
-      try {
-        await baseClient.entities.ActivityLog.create({
-          user_email: user?.email,
-          user_name: user?.full_name,
-          action: "Payment verified",
-          entity_type: "Booking",
-          entity_id: booking.id,
-          details: `Verified payment for booking ${booking.booking_reference || booking.id}`,
-        });
-      } catch (activityLogError) {
-        if (import.meta.env.DEV) {
-          console.warn("Payment activity log could not be recorded", {
-            bookingId: booking.id,
-            message: activityLogError?.message,
-          });
-        }
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ["admin-payment-monitoring"] });
-      await queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
-      await queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
-      await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
-
-      toast.success("Payment marked as verified.");
-      setSelectedBooking((current) => current?.id === booking.id ? { ...current, payment_status: "paid", status: nextStatus } : current);
-    } catch (error) {
-      toast.error(error?.message || "Unable to verify payment.");
-    } finally {
-      setVerifyingId(null);
-    }
-  };
-
   return (
     <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -614,7 +570,6 @@ export default function AdminPaymentMonitoring() {
                     const paymentStatus = normalizePaymentStatus(booking.payment_status);
                     const additionalFeeStatus = normalizeAdditionalFeeStatus(booking.additional_fee_status);
                     const additionalFeeAmount = Number(booking.additional_fee_amount || 0);
-                    const canVerify = paymentStatus === "pending_verification" && booking.status !== "cancelled";
                     const submittedAmount = getSubmittedPaymentAmount(booking);
 
                     return (
@@ -662,18 +617,6 @@ export default function AdminPaymentMonitoring() {
                             <Button variant="ghost" size="icon" onClick={() => openAdditionalFeeDialog(booking)} title="Add additional fee for broken property">
                               <Plus className="h-4 w-4" />
                             </Button>
-                            {canVerify ? (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-primary"
-                                onClick={() => verifyPayment(booking)}
-                                disabled={verifyingId === booking.id}
-                                title="Verify payment"
-                              >
-                                {verifyingId === booking.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                              </Button>
-                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -786,11 +729,10 @@ export default function AdminPaymentMonitoring() {
                 </div>
               )}
 
-              {normalizePaymentStatus(selectedBooking.payment_status) === "pending_verification" && selectedBooking.status !== "cancelled" ? (
-                <Button className="w-full gap-2" onClick={() => verifyPayment(selectedBooking)} disabled={verifyingId === selectedBooking.id}>
-                  {verifyingId === selectedBooking.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                  Verify Payment
-                </Button>
+              {normalizePaymentStatus(selectedBooking.payment_status) === "pending_verification" && selectedBooking.status === "pending" ? (
+                <p className="rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-muted-foreground">
+                  Review the proof in Reservation Management. Accepting the booking verifies this payment automatically.
+                </p>
               ) : null}
               <Button variant="outline" className="w-full gap-2" onClick={() => openAdditionalFeeDialog(selectedBooking)}>
                 <Plus className="h-4 w-4" />

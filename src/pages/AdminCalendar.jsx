@@ -227,8 +227,6 @@ export default function AdminCalendar() {
     }
   };
 
-  const getNextPaymentStatus = (booking) => booking?.payment_status || "unpaid";
-
   const updateStatus = async (bookingId, newStatus) => {
     if (newStatus === "cancelled") {
       toast.error("Owner and staff cannot cancel bookings. Only guests can cancel their own pending bookings before they are marked paid or approved.");
@@ -236,22 +234,30 @@ export default function AdminCalendar() {
     }
 
     const booking = bookings.find((item) => item.id === bookingId);
-    const nextPaymentStatus = getNextPaymentStatus(booking);
-
     try {
-      await baseClient.entities.Booking.update(bookingId, {
-        status: newStatus,
-        payment_status: nextPaymentStatus,
-      });
+      const updatedBooking = newStatus === "confirmed"
+        ? await baseClient.entities.Booking.accept(bookingId)
+        : await baseClient.entities.Booking.update(bookingId, { status: newStatus });
 
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email,
-        user_name: user?.full_name,
-        action: `Booking ${newStatus}`,
-        entity_type: "Booking",
-        entity_id: bookingId,
-        details: `Updated booking ${booking?.booking_reference} to ${newStatus} with payment status ${nextPaymentStatus}`,
-      });
+      if (newStatus !== "confirmed") {
+        try {
+          await baseClient.entities.ActivityLog.create({
+            user_email: user?.email,
+            user_name: user?.full_name,
+            action: `Booking ${newStatus}`,
+            entity_type: "Booking",
+            entity_id: bookingId,
+            details: `Updated booking ${booking?.booking_reference} to ${newStatus} with payment status ${updatedBooking?.payment_status || booking?.payment_status || "unpaid"}`,
+          });
+        } catch (activityLogError) {
+          if (import.meta.env.DEV) {
+            console.warn("Booking activity log could not be recorded", {
+              bookingId,
+              message: activityLogError?.message,
+            });
+          }
+        }
+      }
 
       if (newStatus === "confirmed") {
         toast.success("Reservation confirmed.");
@@ -276,7 +282,7 @@ export default function AdminCalendar() {
       if (decision === "approved") {
         await baseClient.entities.Booking.reschedule(
           selectedRescheduleRequest.id,
-          selectedRescheduleRequest.rebooking_requested_date,
+          undefined,
           rescheduleDecisionNote.trim()
         );
       } else {

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, ImagePlus, Loader2, Pencil, QrCode, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
+import PaymentMethodImage from "@/components/PaymentMethodImage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -203,7 +204,7 @@ export default function AdminPaymentQRCodes() {
                 ) : activeCodes.map((code) => (
                   <TableRow key={code.id}>
                     <TableCell>
-                      <img src={code.image_url} alt={code.label} loading="lazy" decoding="async" className="h-16 w-16 rounded-lg border border-border bg-white p-1 object-contain" />
+                      <PaymentMethodImage src={code.image_url} alt={code.label} className="h-16 w-16 rounded-lg border border-border bg-white p-1 object-contain" />
                     </TableCell>
                     <TableCell className="font-medium">{code.label}</TableCell>
                     <TableCell>
@@ -279,7 +280,7 @@ export default function AdminPaymentQRCodes() {
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
                 </label>
                 {form.image_url ? (
-                  <img src={form.image_url} alt={form.label || 'QR code preview'} className="h-48 w-full rounded-xl border border-border bg-white object-contain p-3" />
+                  <PaymentMethodImage src={form.image_url} alt={form.label || 'QR code preview'} className="h-48 w-full rounded-xl border border-border bg-white object-contain p-3" />
                 ) : (
                   <div className="flex h-48 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 text-sm text-muted-foreground">
                     <QrCode className="mr-2 h-4 w-4" /> No QR image uploaded yet

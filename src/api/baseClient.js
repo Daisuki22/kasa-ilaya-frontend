@@ -234,7 +234,7 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const normalizeEntityDates = (entityName, value) => {
   const dateFields = {
-    Booking: ["booking_date"],
+    Booking: ["booking_date", "rebooking_original_date", "rebooking_requested_date"],
     UpcomingSchedule: ["schedule_date"],
   }[entityName];
 
@@ -377,16 +377,30 @@ const createEntityHandler = (entityName) => ({
     ));
   },
 
+  async accept(id) {
+    if (entityName !== "Booking") {
+      throw new Error("Only bookings can be accepted.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=accept`,
+      { method: "PATCH", body: {} }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
   async reschedule(id, bookingDate, note = "") {
     if (entityName !== "Booking") {
       throw new Error("Rescheduling is only available for bookings.");
     }
 
+    const body = {};
+    if (bookingDate) body.booking_date = bookingDate;
+    if (note) body.note = note;
     const result = await request(
       `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=reschedule`,
       {
         method: "PATCH",
-        body: note ? { booking_date: bookingDate, note } : { booking_date: bookingDate },
+        body,
       }
     );
 
