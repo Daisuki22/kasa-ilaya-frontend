@@ -175,17 +175,6 @@ export default function BookingForm() {
     enabled: !!packageId,
   });
 
-  useEffect(() => {
-    if (!pkg?.max_guests) {
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      guest_count: Math.min(Math.max(prev.guest_count || 1, 1), pkg.max_guests),
-    }));
-  }, [pkg?.max_guests]);
-
   const {
     data: bookingAvailability = { booking_dates: [] },
     isLoading: isLoadingAvailability,
@@ -1133,7 +1122,6 @@ export default function BookingForm() {
                               id="guests"
                               type="number"
                               min="0"
-                              max={Math.max(Number(pkg.max_guests || 1) - 1, 0)}
                               step="1"
                               inputMode="numeric"
                               className="mt-1"
@@ -1145,14 +1133,13 @@ export default function BookingForm() {
                                 const value = event.target.value;
                                 if (!/^\d*$/.test(value)) return;
                                 const count = value === "" ? 0 : Number(value);
-                                const maxAdditionalGuests = Math.max(Number(pkg.max_guests || 1) - 1, 0);
-                                if (count <= maxAdditionalGuests) {
+                                if (Number.isSafeInteger(count) && count < Number.MAX_SAFE_INTEGER) {
                                   setForm((previous) => ({ ...previous, guest_count: count + 1 }));
                                 }
                               }}
                             />
                             <p className="mt-1 text-xs text-muted-foreground">
-                              ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per additional guest. {additionalGuestCount} × ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} = ₱{additionalGuestAmount.toLocaleString()}. One guest is included; package maximum is {pkg.max_guests || 1} guests.
+                              ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per additional guest. {additionalGuestCount} × ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} = ₱{additionalGuestAmount.toLocaleString()}. One guest is included; additional guests have no package limit.
                             </p>
                           </div>
                         </div>

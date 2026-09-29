@@ -140,7 +140,7 @@ export const defaultSiteSettings = {
     "5. Approved rebookings carry over prior payments to the new reservation date. Rebooking requests must be submitted at least 7 days before the reservation date, the requested date must be available for the same package and tour type, and the original booking date remains active until resort approval.\n\n" +
     "6. Cancellation requests must be submitted at least 7 days before the reservation date. Payments remain non-refundable regardless of cancellation.\n\n" +
     "7. Guests must follow resort rules, safety guidelines, staff instructions, and capacity limits throughout their stay.\n\n" +
-    "8. Additional charges apply for exceeding package guest limits, overstaying the reserved schedule, or damaging resort property.\n\n" +
+    "8. One guest is included in the package price. Each additional guest is welcome for the displayed additional guest fee. Other charges may apply for overstaying the reserved schedule or damaging resort property.\n\n" +
     "9. Kasa Ilaya Resort may decline or cancel a booking for policy violations, fraudulent transactions, safety concerns, or force majeure events.\n\n" +
     "10. By proceeding with a reservation, the guest confirms that they have read and accepted these terms and conditions.\n\n" +
     "11. Data Privacy Notice\n\n" +

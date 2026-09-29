@@ -643,7 +643,7 @@ export default function Login() {
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements confirmValue={signUpForm.confirmPassword} required />
+                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements showRequirementsOnFocus confirmValue={signUpForm.confirmPassword} required />
                       <PasswordInput id="signup-confirm" label="Confirm password" value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
                     </div>
                     <Button className="h-11 w-full rounded-lg" disabled={isSubmitting || !passwordMeetsRequirements(signUpForm.password) || signUpForm.password !== signUpForm.confirmPassword} type="submit">

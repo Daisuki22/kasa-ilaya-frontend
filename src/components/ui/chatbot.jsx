@@ -191,7 +191,7 @@ const buildLocalResponse = (
             pkg[priceField] ?? pkg.price ?? 0
           ).toLocaleString();
           const capacity = pkg.max_guests
-            ? `, up to ${pkg.max_guests} guests`
+            ? `, standard group size ${pkg.max_guests}; additional guests are allowed for an extra fee`
             : "";
           const inclusions = Array.isArray(pkg.inclusions)
             ? pkg.inclusions.filter(Boolean)
@@ -567,15 +567,15 @@ const buildLocalResponse = (
     "what are the policies for guests?": assistantReply({
       title: "Guest policies",
       intro: activeRules.length ? "Current guest rules and policies:" : "Review the current terms and policies during booking.",
-      bullets: [...activeRules.map((rule) => `**${rule.title}:** ${rule.description}`), "Additional charges may apply for exceeding package guest limits, overstaying, or property damage."],
+      bullets: [...activeRules.map((rule) => `**${rule.title}:** ${rule.description}`), "One guest is included in the package price. Additional guests are welcome for the displayed fee; overstaying or property damage may incur other charges."],
       nextStep: "Read the booking terms before submitting a reservation.",
     }),
 
     "what extra charges may apply?": assistantReply({
       title: "Additional charges",
       intro: "Additional charges may apply for:",
-      bullets: ["Exceeding the guest limit included in your package.", "Staying beyond your reserved schedule.", "Damage to resort property."],
-      nextStep: "Check your selected package's guest limit and tour schedule before booking.",
+      bullets: ["Each additional guest is charged the displayed per-guest fee.", "Staying beyond your reserved schedule.", "Damage to resort property."],
+      nextStep: "Check the additional guest fee and tour schedule before booking.",
     }),
   };
 
@@ -633,7 +633,7 @@ const buildLocalResponse = (
 
           return `${label}: PHP ${Number(
             pkg.price || 0
-          ).toLocaleString()} for up to ${pkg.max_guests} guests`;
+          ).toLocaleString()} as the base price; one guest is included and additional guests are allowed for an extra fee`;
         })
         .join(" | ");
 

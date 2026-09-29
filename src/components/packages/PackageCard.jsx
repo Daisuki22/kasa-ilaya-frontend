@@ -119,7 +119,7 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 					<div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/85">
 						<span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur">
 							<Users className="h-3.5 w-3.5" />
-							Up to {pkg.max_guests || 10} guests
+							Standard group: {pkg.max_guests || 10} guests; extras allowed
 						</span>
 						<span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur">
 							<ShieldCheck className="h-3.5 w-3.5" />

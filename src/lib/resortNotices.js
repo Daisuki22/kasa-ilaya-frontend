@@ -31,7 +31,7 @@ export const normalizeTermsContent = (content = "") => {
     !visibleSections.some((section) => /exceeding.*guest|overstay|property damage/i.test(section))
   ) {
     visibleSections.push(
-      "Additional Charges\n\nExtra charges apply for exceeding package guest limits, overstaying, or property damage."
+      "Additional Charges\n\nEach additional guest is welcome for the displayed additional guest fee. Extra charges may also apply for overstaying or property damage."
     );
   }
 

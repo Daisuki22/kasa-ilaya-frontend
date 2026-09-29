@@ -23,19 +23,30 @@ const checkLabels = [
 
 export default function PasswordInput({
   id, label, value, onChange, required = false, autoComplete,
-  placeholder, showRequirements = false, showMatch = false, confirmValue,
+  placeholder, showRequirements = false, showRequirementsOnFocus = false,
+  showMatch = false, confirmValue,
 }) {
   const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
   const checks = passwordChecks(value);
   const passed = Object.values(checks).filter(Boolean).length;
   const strength = value.length === 0 ? "" : passed <= 2 ? "Weak" : passed <= 3 ? "Fair" : passed < 5 ? "Good" : "Strong";
   const hasConfirmation = typeof confirmValue === "string";
   const passwordsMatch = hasConfirmation && value === confirmValue && value.length > 0;
+  const shouldShowRequirements = showRequirements && (
+    !showRequirementsOnFocus || focused || Boolean(value)
+  );
 
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <div className="relative">
+      <div
+        className="relative"
+        onFocusCapture={() => setFocused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+        }}
+      >
         <Input
           id={id}
           type={visible ? "text" : "password"}
@@ -45,6 +56,7 @@ export default function PasswordInput({
           autoComplete={autoComplete}
           placeholder={placeholder}
           className="pr-12"
+          aria-describedby={shouldShowRequirements ? `${id}-requirements` : undefined}
         />
         <button
           type="button"
@@ -55,20 +67,25 @@ export default function PasswordInput({
         >
           {visible ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
         </button>
-      </div>
-      {showRequirements ? (
-        <div className="space-y-2" aria-live="polite">
-          <div className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2">
-            {checkLabels.map(([key, text]) => (
-              <p key={key} className={checks[key] ? "flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400" : "flex items-center gap-1.5 text-muted-foreground"}>
-                {checks[key] ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
-                {text}
-              </p>
-            ))}
+        {shouldShowRequirements ? (
+          <div
+            id={`${id}-requirements`}
+            className="absolute left-0 right-0 top-full z-20 mt-2 rounded-lg border bg-card p-3 shadow-lg animate-in fade-in-0 slide-in-from-top-1 duration-150"
+            aria-live="polite"
+          >
+            <p className="mb-2 text-xs font-medium text-foreground">Password must contain:</p>
+            <ul className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2">
+              {checkLabels.map(([key, text]) => (
+                <li key={key} className={checks[key] ? "flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400" : "flex items-center gap-1.5 text-muted-foreground"}>
+                  {checks[key] ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
+                  {text}
+                </li>
+              ))}
+            </ul>
+            {strength ? <p className="mt-2 text-xs text-muted-foreground">Password strength: <span className="font-medium text-foreground">{strength}</span></p> : null}
           </div>
-          {strength ? <p className="text-xs text-muted-foreground">Password strength: <span className="font-medium text-foreground">{strength}</span></p> : null}
-        </div>
-      ) : null}
+        ) : null}
+      </div>
       {showMatch && hasConfirmation && confirmValue.length > 0 ? (
         <p className={passwordsMatch ? "text-xs text-emerald-700 dark:text-emerald-400" : "text-xs text-destructive"} aria-live="polite">
           {passwordsMatch ? "✓ Passwords match" : "✕ Passwords do not match"}
