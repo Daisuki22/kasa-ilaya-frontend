@@ -148,6 +148,7 @@ export default function BookingForm() {
   const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const bookingSubmissionLock = useRef(false);
+  const bookingSubmissionReference = useRef("");
   const [selectedPackageImage, setSelectedPackageImage] = useState("");
 
   useEffect(() => {
@@ -351,6 +352,7 @@ export default function BookingForm() {
 
     if (!open) {
       setModalStep(1);
+      bookingSubmissionReference.current = "";
     }
   };
 
@@ -422,7 +424,8 @@ export default function BookingForm() {
     setSubmitting(true);
 
     try {
-      const ref = "KI-" + Date.now().toString(36).toUpperCase();
+      const ref = bookingSubmissionReference.current || "KI-" + Date.now().toString(36).toUpperCase();
+      bookingSubmissionReference.current = ref;
       const tourType = selectedTour;
       const basePrice = getPackagePriceByTourType(pkg, tourType);
       const additionalGuestCount = Math.max(Number(form.guest_count || 1) - 1, 0);
@@ -625,6 +628,7 @@ export default function BookingForm() {
         payment_mode: selectedQrCode?.label || "",
         payment_qr_code_label: selectedQrCode?.label || "",
       });
+      bookingSubmissionReference.current = "";
 
       if (emailResult?.sent) {
         toast.success("Booking submitted. Email notification will be processed by the resort system.");

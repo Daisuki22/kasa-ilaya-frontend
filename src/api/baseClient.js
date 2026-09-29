@@ -239,6 +239,7 @@ const request = async (path, options = {}) => {
               error: payload.error,
               error_code: payload.error_code,
               details: payload.details,
+              debug: payload.debug,
               request_id: payload.request_id,
             }
           : String(payload || "").slice(0, 500),

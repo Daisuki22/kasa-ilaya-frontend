@@ -19,6 +19,7 @@ import { canAccessAdminPage } from "@/lib/adminAccess";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/lib/AuthContext";
 import { handleImageFallback, LOGO_IMAGE_FALLBACK } from "@/lib/imageFallback";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 import { toast } from "sonner";
 
 const safeLocalStorageGet = (key, fallback = "") => {
@@ -455,7 +456,7 @@ export default function Layout({ children, currentPageName }) {
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full p-0" aria-label="Open user menu">
               <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                 {user.profile_image_url ? (
-                  <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
+                  <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-xs font-semibold text-primary">
                     {user.full_name?.[0]?.toUpperCase() || "U"}
@@ -562,7 +563,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="flex items-center gap-3 px-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                   {user.profile_image_url ? (
-                    <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
+                    <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-sm font-semibold text-primary">
                       {user.full_name?.[0]?.toUpperCase() || "U"}
@@ -711,7 +712,7 @@ export default function Layout({ children, currentPageName }) {
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                     {user.profile_image_url ? (
-                      <img src={user.profile_image_url} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
+                      <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                     ) : (
                       <span className="text-sm font-semibold text-primary">
                         {user.full_name?.[0]?.toUpperCase() || "U"}
