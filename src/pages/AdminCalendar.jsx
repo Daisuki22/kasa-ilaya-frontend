@@ -3,6 +3,7 @@ import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { resolveAssetUrl } from "@/lib/assetUrls";
+import { isBookingExpired } from "@/lib/bookingTimes";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ const statusColors = {
   confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
   completed: "border-slate-200 bg-slate-100 text-slate-700",
+  expired: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
 const paymentColors = {
@@ -531,7 +533,7 @@ export default function AdminCalendar() {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={statusColors[booking.status] || statusColors.pending}>
-                              {(booking.status || "pending").replace(/_/g, " ")}
+                              {isBookingExpired(booking) && booking.status !== "completed" && booking.status !== "cancelled" ? "expired" : (booking.status || "pending").replace(/_/g, " ")}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -544,7 +546,7 @@ export default function AdminCalendar() {
                               <Button variant="ghost" size="icon" title="View reservation" onClick={() => setSelectedBooking(booking)}>
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              {booking.status === "confirmed" && (
+                {booking.status === "confirmed" && !isBookingExpired(booking) && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -602,7 +604,7 @@ export default function AdminCalendar() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className={statusColors[selectedBooking.status] || statusColors.pending}>
-                        {(selectedBooking.status || "pending").replace(/_/g, " ")}
+                        {isBookingExpired(selectedBooking) && !["completed", "cancelled"].includes(selectedBooking.status) ? "expired" : (selectedBooking.status || "pending").replace(/_/g, " ")}
                       </Badge>
                       <Badge variant="outline" className={paymentColors[selectedBooking.payment_status] || paymentColors.unpaid}>
                         {(selectedBooking.payment_status || "unpaid").replace(/_/g, " ")}
@@ -628,6 +630,17 @@ export default function AdminCalendar() {
                 </div>
 
                 {selectedBooking.receipt_url ? (
+                  <div className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm sm:grid-cols-2">
+                    <p><span className="text-muted-foreground">OCR provider:</span> {selectedBooking.payment_proof_ocr_provider || "Not detected"}</p>
+                    <p><span className="text-muted-foreground">OCR amount:</span> {selectedBooking.payment_proof_ocr_amount ? formatMoney(selectedBooking.payment_proof_ocr_amount) : "Not detected"}</p>
+                    <p className="break-all"><span className="text-muted-foreground">OCR reference:</span> {selectedBooking.payment_proof_ocr_reference || "Not detected"}</p>
+                    <p><span className="text-muted-foreground">OCR date:</span> {selectedBooking.payment_proof_ocr_date || "Not detected"}</p>
+                    <p><span className="text-muted-foreground">OCR confidence:</span> {Number(selectedBooking.payment_proof_ocr_confidence || 0).toFixed(0)}%</p>
+                    <p className="text-muted-foreground sm:col-span-2">OCR output is a reading aid only and does not authenticate payment. Admin must verify the original proof and transaction.</p>
+                  </div>
+                ) : null}
+
+                {selectedBooking.receipt_url ? (
                   <PaymentProof src={selectedBooking.receipt_url} />
                 ) : (
                   <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
@@ -642,7 +655,7 @@ export default function AdminCalendar() {
                   </div>
                 )}
 
-                {selectedBooking.status === "pending" && (
+                {selectedBooking.status === "pending" && !isBookingExpired(selectedBooking) && (
                   <div className="space-y-3 border-t border-border pt-4">
                     <Button className="w-full gap-2" onClick={() => updateStatus(selectedBooking.id, "confirmed")}>
                       <CheckCircle2 className="h-4 w-4" />
@@ -653,7 +666,7 @@ export default function AdminCalendar() {
                     </p>
                   </div>
                 )}
-                {selectedBooking.status === "confirmed" && (
+                {selectedBooking.status === "confirmed" && !isBookingExpired(selectedBooking) && (
                   <div className="border-t border-border pt-4">
                     <Button className="w-full gap-2" onClick={() => updateStatus(selectedBooking.id, "completed")}>
                       <CheckCheck className="h-4 w-4" />

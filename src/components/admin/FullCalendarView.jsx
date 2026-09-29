@@ -6,6 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { baseClient } from "@/api/baseClient";
+import { isBookingExpired } from "@/lib/bookingTimes";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const statusBadgeClasses = {
   confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700",
   completed: "border-slate-200 bg-slate-100 text-slate-700",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
+  expired: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
 const tourLabels = {
@@ -487,7 +489,7 @@ export default function FullCalendarView({ embedded = false }) {
                     </p>
                   </div>
                   <Badge variant="outline" className={statusBadgeClasses[viewingBooking.status] || statusBadgeClasses.pending}>
-                    {(viewingBooking.status || "pending").replace(/_/g, " ")}
+                  {isBookingExpired(viewingBooking) && !["completed", "cancelled"].includes(viewingBooking.status) ? "expired" : (viewingBooking.status || "pending").replace(/_/g, " ")}
                   </Badge>
                 </div>
               </div>
@@ -503,7 +505,7 @@ export default function FullCalendarView({ embedded = false }) {
                 <BookingField label="Phone">{viewingBooking.customer_phone || "-"}</BookingField>
               </div>
 
-              {viewingBooking.status === "pending" && canManage && (
+              {viewingBooking.status === "pending" && canManage && !isBookingExpired(viewingBooking) && (
                 <div className="space-y-3 border-t border-border pt-3">
                   <Button size="sm" className="w-full gap-2" onClick={() => updateBookingStatus(viewingBooking.id, "confirmed")}>
                     <CheckCircle2 className="h-4 w-4" />
@@ -514,7 +516,7 @@ export default function FullCalendarView({ embedded = false }) {
                   </p>
                 </div>
               )}
-              {viewingBooking.status === "confirmed" && canManage && (
+              {viewingBooking.status === "confirmed" && canManage && !isBookingExpired(viewingBooking) && (
                 <div className="border-t border-border pt-3">
                   <Button size="sm" className="w-full gap-2" onClick={() => updateBookingStatus(viewingBooking.id, "completed")}>
                     <CheckCheck className="h-4 w-4" />

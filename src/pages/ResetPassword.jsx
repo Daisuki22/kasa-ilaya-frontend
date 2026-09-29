@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CaptchaGate from '@/components/auth/CaptchaGate';
+import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -145,6 +146,10 @@ export default function ResetPassword() {
       toast.error('Passwords do not match.');
       return;
     }
+    if (!passwordMeetsRequirements(form.password)) {
+      toast.error('Password must be at least 10 characters and include uppercase, lowercase, number, and special character.');
+      return;
+    }
 
     if (!isTokenReset && !resetToken) {
       toast.error('Please verify your reset code first.');
@@ -235,27 +240,9 @@ export default function ResetPassword() {
               ) : null}
               {isCodeVerified ? (
                 <>
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-password">New password</Label>
-                    <Input
-                      id="reset-password"
-                      type="password"
-                      value={form.password}
-                      onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-confirm-password">Confirm new password</Label>
-                    <Input
-                      id="reset-confirm-password"
-                      type="password"
-                      value={form.confirmPassword}
-                      onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))}
-                      required
-                    />
-                  </div>
-                  <Button className="w-full" disabled={isSubmitting} type="submit">
+                  <PasswordInput id="reset-password" label="New password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" showRequirements confirmValue={form.confirmPassword} required />
+                  <PasswordInput id="reset-confirm-password" label="Confirm new password" value={form.confirmPassword} onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={form.password} required />
+                  <Button className="w-full" disabled={isSubmitting || !passwordMeetsRequirements(form.password) || form.password !== form.confirmPassword} type="submit">
                     {isSubmitting ? 'Updating password...' : 'Update password'}
                   </Button>
                 </>

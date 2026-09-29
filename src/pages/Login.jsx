@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
 const normalizeEmail = (value) => value.trim().toLowerCase();
 
@@ -406,8 +407,8 @@ export default function Login() {
       return;
     }
 
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long.');
+    if (!passwordMeetsRequirements(password)) {
+      toast.error('Password must be at least 10 characters and include uppercase, lowercase, number, and special character.');
       return;
     }
 
@@ -553,18 +554,7 @@ export default function Login() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
-                      <Input
-                        id="signin-password"
-                        className="h-11 rounded-lg"
-                        type="password"
-                        value={signInForm.password}
-                        onChange={(event) => setSignInForm((current) => ({ ...current, password: event.target.value }))}
-                        placeholder="Enter your password"
-                        required
-                      />
-                    </div>
+                    <PasswordInput id="signin-password" label="Password" value={signInForm.password} onChange={(event) => setSignInForm((current) => ({ ...current, password: event.target.value }))} placeholder="Enter your password" autoComplete="current-password" required />
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <Link className="font-medium text-primary hover:underline" to={`${createPageUrl('ForgotPassword')}?email=${encodeURIComponent(signInForm.email)}`}>
                         Forgot password?
@@ -653,32 +643,10 @@ export default function Login() {
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
-                        <Input
-                          id="signup-password"
-                          className="h-11 rounded-lg"
-                          type="password"
-                          value={signUpForm.password}
-                          onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))}
-                          placeholder="Minimum 8 characters"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-confirm">Confirm password</Label>
-                        <Input
-                          id="signup-confirm"
-                          className="h-11 rounded-lg"
-                          type="password"
-                          value={signUpForm.confirmPassword}
-                          onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))}
-                          placeholder="Repeat password"
-                          required
-                        />
-                      </div>
+                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements confirmValue={signUpForm.confirmPassword} required />
+                      <PasswordInput id="signup-confirm" label="Confirm password" value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
                     </div>
-                    <Button className="h-11 w-full rounded-lg" disabled={isSubmitting} type="submit">
+                    <Button className="h-11 w-full rounded-lg" disabled={isSubmitting || !passwordMeetsRequirements(signUpForm.password) || signUpForm.password !== signUpForm.confirmPassword} type="submit">
                       {isSubmitting ? 'Creating account...' : 'Create Account'}
                     </Button>
                   </form>

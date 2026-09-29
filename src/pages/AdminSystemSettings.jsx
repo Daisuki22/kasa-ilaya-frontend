@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { LayoutTemplate, Waves, Type, BookOpen, FileText, ImageIcon } from "lucide-react";
+import { LayoutTemplate, Waves, Type, BookOpen, ImageIcon } from "lucide-react";
 import SystemSettingsManager from "@/components/admin/SystemSettingsManager";
 import ResortRulesManager from "@/components/admin/ResortRulesManager";
 import { useAuth } from "@/lib/AuthContext";
@@ -32,13 +32,6 @@ const SETTINGS_TABS = [
     label: "Resort Rules",
     icon: BookOpen,
     desc: "Manage the resort rules visible to guests on the homepage.",
-    superAdminOnly: true,
-  },
-  {
-    id: "terms-conditions",
-    label: "Terms & Conditions",
-    icon: FileText,
-    desc: "Edit the guest-facing terms and conditions shown during booking and in the website footer.",
     superAdminOnly: true,
   },
   {
@@ -82,7 +75,7 @@ export default function AdminSystemSettings() {
       <div>
         <h1 className="font-display text-3xl font-bold text-foreground">System Settings</h1>
         <p className="text-muted-foreground mt-1">
-          Manage website branding, homepage content, amenities, resort rules, and legal text.
+          Manage website branding, homepage content, amenities, and resort rules.
         </p>
       </div>
 

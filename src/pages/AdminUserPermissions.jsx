@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import PaginationControls from "@/components/admin/PaginationControls";
 
 const roleBadgeClass = {
   super_admin: "bg-primary/10 text-primary border-primary/30",
@@ -28,6 +29,8 @@ export default function AdminUserPermissions() {
   const [currentUser, setCurrentUser] = useState(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [savingKey, setSavingKey] = useState("");
 
   useEffect(() => {
@@ -61,6 +64,9 @@ export default function AdminUserPermissions() {
     }
     );
   }, [roleFilter, search, users]);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visibleUsers = useMemo(() => filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredUsers, currentPage, pageSize]);
 
   const isSelf = (userId) => currentUser?.id && userId === currentUser.id;
 
@@ -153,14 +159,14 @@ export default function AdminUserPermissions() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
             placeholder="Search by name, email, role, or phone..."
             className="pl-10"
           />
         </div>
 
         <div className="w-full max-w-xs sm:w-auto sm:min-w-[180px]">
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); }}>
             <SelectTrigger>
               <SelectValue placeholder="Filter roles" />
             </SelectTrigger>
@@ -200,7 +206,7 @@ export default function AdminUserPermissions() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((targetUser) => {
+                  visibleUsers.map((targetUser) => {
                     const roleSaving = savingKey === `role-${targetUser.id}`;
                     const statusSaving = savingKey === `status-${targetUser.id}`;
 
@@ -268,9 +274,10 @@ export default function AdminUserPermissions() {
                   })
                 )}
               </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+          </Table>
+        </CardContent>
+        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredUsers.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
+      </Card>
       )}
     </div>
   );

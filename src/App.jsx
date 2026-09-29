@@ -78,6 +78,17 @@ const AdminOnlyRoute = ({ user, pageName, children }) => {
   return children;
 };
 
+const AdminDestinationGuard = ({ user, pageName, children }) => {
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const authenticationPage = ['Login', 'ForgotPassword', 'ResetPassword', 'VerifyRegistrationOtp'].includes(pageName);
+
+  if (isAdmin && !pageName?.startsWith('Admin') && !authenticationPage) {
+    return <Navigate to="/AdminDashboard" replace />;
+  }
+
+  return children;
+};
+
 const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "ProfileSettings"]);
 const guestOrRegularUserPages = new Set(["About", "Contact"]);
 
@@ -102,6 +113,7 @@ const GuestOrRegularUserRoute = ({ user, children }) => {
 
 const WelcomeIntroGate = () => {
   const location = useLocation();
+  const { user, isLoadingAuth } = useAuth();
   const [shouldShowIntro] = useState(() => {
     if (location.pathname !== '/') {
       return false;
@@ -119,6 +131,7 @@ const WelcomeIntroGate = () => {
     }
   });
 
+  if (isLoadingAuth || user?.role === 'admin' || user?.role === 'super_admin') return null;
   return shouldShowIntro ? <WelcomeIntro /> : null;
 };
 
@@ -150,16 +163,19 @@ const AuthenticatedApp = () => {
     <Suspense fallback={<PageLoadingFallback />}>
       <Routes>
         <Route path="/" element={
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
+          <AdminDestinationGuard user={user} pageName={mainPageKey}>
+            <LayoutWrapper currentPageName={mainPageKey}>
+              <MainPage />
+            </LayoutWrapper>
+          </AdminDestinationGuard>
         } />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route
             key={path}
             path={`/${path}`}
             element={
-              path.startsWith('Admin') ? (
+              <AdminDestinationGuard user={user} pageName={path}>
+                {path.startsWith('Admin') ? (
                 <AdminOnlyRoute user={user} pageName={path}>
                   <LayoutWrapper currentPageName={path}>
                     <Page />
@@ -181,7 +197,8 @@ const AuthenticatedApp = () => {
                 <LayoutWrapper currentPageName={path}>
                   <Page />
                 </LayoutWrapper>
-              )
+                )}
+              </AdminDestinationGuard>
             }
           />
         ))}

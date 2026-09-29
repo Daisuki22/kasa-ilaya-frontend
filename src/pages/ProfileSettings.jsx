@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { resolveAssetUrl } from '@/lib/assetUrls';
 import { Camera, Loader2, Upload } from 'lucide-react';
+import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
 export default function ProfileSettings({
   title = 'Profile settings',
@@ -115,6 +116,10 @@ export default function ProfileSettings({
       toast.error('New passwords do not match.');
       return;
     }
+    if (!passwordMeetsRequirements(passwordForm.new_password)) {
+      toast.error('Password must be at least 10 characters and include uppercase, lowercase, number, and special character.');
+      return;
+    }
 
     setSavingPassword(true);
     try {
@@ -216,20 +221,11 @@ export default function ProfileSettings({
           <CardContent>
             {user.has_local_password ? (
             <form className="space-y-4" onSubmit={handlePasswordSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current password</Label>
-                <Input id="current-password" type="password" value={passwordForm.current_password} onChange={(event) => setPasswordForm((current) => ({ ...current, current_password: event.target.value }))} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New password</Label>
-                <Input id="new-password" type="password" value={passwordForm.new_password} onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm new password</Label>
-                <Input id="confirm-password" type="password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} required />
-              </div>
+              <PasswordInput id="current-password" label="Current password" value={passwordForm.current_password} onChange={(event) => setPasswordForm((current) => ({ ...current, current_password: event.target.value }))} autoComplete="current-password" required />
+              <PasswordInput id="new-password" label="New password" value={passwordForm.new_password} onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))} autoComplete="new-password" showRequirements confirmValue={passwordForm.confirmPassword} required />
+              <PasswordInput id="confirm-password" label="Confirm new password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={passwordForm.new_password} required />
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Button className="w-full sm:w-auto" disabled={savingPassword} type="submit">Update password</Button>
+                <Button className="w-full sm:w-auto" disabled={savingPassword || !passwordMeetsRequirements(passwordForm.new_password) || passwordForm.new_password !== passwordForm.confirmPassword} type="submit">Update password</Button>
                 <Link
                   to={`${createPageUrl('ForgotPassword')}?email=${encodeURIComponent(profileForm.email || user.email || '')}`}
                   className="text-center text-sm text-primary hover:underline sm:text-left"

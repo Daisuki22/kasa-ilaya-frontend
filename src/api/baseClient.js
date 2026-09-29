@@ -118,7 +118,7 @@ const buildLoginUrl = (nextUrl) => {
 };
 
 const request = async (path, options = {}) => {
-  const { suppressAuthEvent = false, ...fetchOptions } = options;
+  const { suppressAuthEvent = false, timeoutMs = 20000, ...fetchOptions } = options;
 
   const headers = { ...(fetchOptions.headers || {}) };
   let body = fetchOptions.body;
@@ -148,7 +148,7 @@ const request = async (path, options = {}) => {
   }
 
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   let response;
 
   try {
@@ -449,6 +449,17 @@ const createEntityHandler = (entityName) => ({
     }
     const result = await request(
       `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=accept`,
+      { method: "PATCH", body: {} }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
+  async markAdditionalFeePaid(id) {
+    if (entityName !== "Booking") {
+      throw new Error("Damage fee payment is only available for bookings.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=mark-additional-fee-paid`,
       { method: "PATCH", body: {} }
     );
     return normalizeEntityDates("Booking", result?.data || result);
@@ -853,6 +864,7 @@ export const baseClient = {
           {
             method: "POST",
             body: formData,
+            timeoutMs: 60000,
           }
         );
       },

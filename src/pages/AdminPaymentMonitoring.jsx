@@ -25,8 +25,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
 import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
+import PaginationControls from "@/components/admin/PaginationControls";
 
 const paymentColors = {
   unpaid: "bg-destructive/10 text-destructive",
@@ -129,10 +130,32 @@ export default function AdminPaymentMonitoring() {
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [feeDialogBooking, setFeeDialogBooking] = useState(null);
+  const [feePaymentConfirmation, setFeePaymentConfirmation] = useState(null);
   const [feeForm, setFeeForm] = useState({ items: [createDamageItem()], notes: "", status: "unpaid" });
   const [savingFeeId, setSavingFeeId] = useState(null);
+
+  const confirmAdditionalFeePayment = async () => {
+    if (!feePaymentConfirmation) return;
+    const booking = feePaymentConfirmation;
+    setSavingFeeId(booking.id);
+    try {
+      const updatedBooking = await baseClient.entities.Booking.markAdditionalFeePaid(booking.id);
+      await queryClient.invalidateQueries({ queryKey: ["admin-payment-monitoring"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
+      await queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
+      setSelectedBooking((current) => current?.id === booking.id ? { ...current, ...updatedBooking } : current);
+      toast.success("Damage fee recorded as paid.");
+      setFeePaymentConfirmation(null);
+    } catch (error) {
+      toast.error(error?.message || "Unable to record the damage fee payment.");
+    } finally {
+      setSavingFeeId(null);
+    }
+  };
 
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => {});
@@ -175,6 +198,9 @@ export default function AdminPaymentMonitoring() {
       ].some((value) => String(value || "").toLowerCase().includes(query));
     });
   }, [paymentBookings, paymentFilter, searchTerm]);
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visibleBookings = useMemo(() => filteredBookings.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredBookings, currentPage, pageSize]);
 
   const summary = useMemo(() => {
     return paymentBookings.reduce(
@@ -384,12 +410,12 @@ export default function AdminPaymentMonitoring() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }}
               placeholder="Search reference, guest, or channel"
               className="pl-9"
             />
           </div>
-          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <Select value={paymentFilter} onValueChange={(value) => { setPaymentFilter(value); setPage(1); }}>
             <SelectTrigger className="sm:w-56">
               <SelectValue />
             </SelectTrigger>
@@ -566,7 +592,7 @@ export default function AdminPaymentMonitoring() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredBookings.map((booking) => {
+                  visibleBookings.map((booking) => {
                     const paymentStatus = normalizePaymentStatus(booking.payment_status);
                     const additionalFeeStatus = normalizeAdditionalFeeStatus(booking.additional_fee_status);
                     const additionalFeeAmount = Number(booking.additional_fee_amount || 0);
@@ -614,9 +640,11 @@ export default function AdminPaymentMonitoring() {
                             <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} title="View payment details">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => openAdditionalFeeDialog(booking)} title="Add additional fee for broken property">
-                              <Plus className="h-4 w-4" />
-                            </Button>
+                            {additionalFeeStatus !== "paid" ? (
+                              <Button variant="ghost" size="icon" onClick={() => openAdditionalFeeDialog(booking)} title="Add additional fee for broken property">
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -624,8 +652,9 @@ export default function AdminPaymentMonitoring() {
                   })
                 )}
               </TableBody>
-            </Table>
+          </Table>
           </CardContent>
+          {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredBookings.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
         </Card>
       )}
 
@@ -714,7 +743,17 @@ export default function AdminPaymentMonitoring() {
                   <div className={`rounded-lg border p-3 text-sm ${selectedBooking.payment_proof_review === "duplicate_needs_review" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-amber-500/30 bg-amber-500/5 text-amber-800"}`}>
                     {selectedBooking.payment_proof_review === "duplicate_needs_review"
                       ? "This proof image matches another submission. Review both bookings manually; a duplicate image alone does not establish fraud."
-                      : "Needs manual review. Image checks cannot confirm the transaction or receipt authenticity."}
+                      : selectedBooking.payment_proof_review === "verified"
+                        ? "OCR signals match the expected details. This is not transaction or authenticity verification; review the original proof manually."
+                        : "Needs manual review. OCR readings are not transaction or authenticity verification."}
+                  </div>
+                  <div className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm sm:grid-cols-2">
+                    <p><span className="text-muted-foreground">OCR provider:</span> {selectedBooking.payment_proof_ocr_provider || "Not detected"}</p>
+                    <p><span className="text-muted-foreground">OCR amount:</span> {selectedBooking.payment_proof_ocr_amount ? formatMoney(selectedBooking.payment_proof_ocr_amount) : "Not detected"}</p>
+                    <p className="break-all"><span className="text-muted-foreground">OCR reference:</span> {selectedBooking.payment_proof_ocr_reference || "Not detected"}</p>
+                    <p><span className="text-muted-foreground">OCR date:</span> {selectedBooking.payment_proof_ocr_date || "Not detected"}</p>
+                    <p><span className="text-muted-foreground">OCR confidence:</span> {Number(selectedBooking.payment_proof_ocr_confidence || 0).toFixed(0)}%</p>
+                    <p><span className="text-muted-foreground">Expected submitted amount:</span> {formatMoney(getSubmittedPaymentAmount(selectedBooking))}</p>
                   </div>
                   <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-muted/20">
                     <img src={selectedBooking.receipt_url} alt="Payment proof" className="max-h-[50vh] w-full bg-white object-contain" />
@@ -734,12 +773,48 @@ export default function AdminPaymentMonitoring() {
                   Review the proof in Reservation Management. Accepting the booking verifies this payment automatically.
                 </p>
               ) : null}
-              <Button variant="outline" className="w-full gap-2" onClick={() => openAdditionalFeeDialog(selectedBooking)}>
-                <Plus className="h-4 w-4" />
-                Add or Update Damage Fee
-              </Button>
+              {normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) !== "paid" ? (
+                <Button variant="outline" className="w-full gap-2" onClick={() => openAdditionalFeeDialog(selectedBooking)}>
+                  <Plus className="h-4 w-4" />
+                  Add or Update Damage Fee
+                </Button>
+              ) : null}
+              {Number(selectedBooking.additional_fee_amount || 0) > 0 && normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) === "unpaid" ? (
+                <Button className="w-full gap-2" onClick={() => setFeePaymentConfirmation(selectedBooking)} disabled={savingFeeId === selectedBooking.id}>
+                  {savingFeeId === selectedBooking.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  Mark Damage Fee as Paid
+                </Button>
+              ) : normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) === "paid" ? (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
+                  Damage fee paid {selectedBooking.additional_fee_paid_at ? `on ${formatDate(selectedBooking.additional_fee_paid_at)}` : ""}{selectedBooking.additional_fee_paid_by ? ` by ${selectedBooking.additional_fee_paid_by}` : ""}.
+                </div>
+              ) : null}
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!feePaymentConfirmation} onOpenChange={(open) => !open && setFeePaymentConfirmation(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark damage fee as paid?</DialogTitle>
+          </DialogHeader>
+          {feePaymentConfirmation ? (
+            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-4 text-sm">
+              <p><span className="text-muted-foreground">Booking:</span> {feePaymentConfirmation.booking_reference || feePaymentConfirmation.id}</p>
+              <p><span className="text-muted-foreground">Guest:</span> {feePaymentConfirmation.customer_name || "Guest"}</p>
+              <p><span className="text-muted-foreground">Damage:</span> {feePaymentConfirmation.additional_fee_reason || "Damage fee"}</p>
+              <p className="font-semibold"><span className="text-muted-foreground">Amount:</span> {formatMoney(feePaymentConfirmation.additional_fee_amount)}</p>
+              <p className="text-muted-foreground">This records the existing damage fee as paid and adds an audit entry.</p>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeePaymentConfirmation(null)} disabled={Boolean(savingFeeId)}>Cancel</Button>
+            <Button onClick={confirmAdditionalFeePayment} disabled={!feePaymentConfirmation || Boolean(savingFeeId)}>
+              {savingFeeId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Confirm Payment
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

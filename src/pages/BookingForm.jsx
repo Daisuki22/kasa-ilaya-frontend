@@ -57,7 +57,7 @@ const PAYMENT_POLICY_NOTICE = CANCELLATION_REBOOKING_NOTICE;
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
 const RECEIPT_MIN_BYTES = 1024;
-const ADDITIONAL_GUEST_RATE = 250;
+const ADDITIONAL_GUEST_RATE = 150;
 const PAYMENT_TYPE_LABELS = {
   downpayment: "Downpayment",
   full_payment: "Full Payment",
@@ -722,7 +722,20 @@ export default function BookingForm() {
       setReceiptUrl(file_url);
       setReceiptFileName(file.name);
       setReceiptUploadToken(proof_upload_token);
-      setReceiptValidation({ status: "manual_review", message: validation.reason || "Payment proof requires manual review. Visual checks cannot confirm authenticity." });
+      const ocr = uploadResult.ocr_summary || {};
+      const extracted = [
+        ocr.provider ? `Provider: ${ocr.provider}` : null,
+        Number.isFinite(Number(ocr.amount)) && Number(ocr.amount) > 0 ? `Amount: ₱${Number(ocr.amount).toFixed(2)}` : null,
+        ocr.reference ? `Reference: ${ocr.reference}` : null,
+        ocr.date ? `Date: ${ocr.date}` : null,
+      ].filter(Boolean);
+      const ocrMessage = extracted.length
+        ? `OCR extracted ${extracted.join(" · ")}. This is an automated reading only; an authorized admin must verify the transaction and proof authenticity.`
+        : "OCR could not reliably extract receipt details. An authorized admin must review the image and verify the transaction.";
+      const duplicateNotice = ocr.duplicate_image
+        ? " This image matches a previous upload and will receive additional admin review."
+        : "";
+      setReceiptValidation({ status: "manual_review", message: `${ocrMessage}${duplicateNotice}` });
       toast.success("Payment proof uploaded for manual review.");
     } catch (error) {
       setReceiptValidation({ status: "rejected", message: error?.message || "Unable to upload payment proof." });
@@ -1115,24 +1128,31 @@ export default function BookingForm() {
                             </div>
                           </div>
                           <div>
-                            <Label htmlFor="guests">Additional Number of Guests</Label>
-                            <Select
-                              value={String(additionalGuestCount)}
-                              onValueChange={(value) => setForm({ ...form, guest_count: Number(value) + 1 })}
-                            >
-                              <SelectTrigger id="guests" className="mt-1">
-                                <SelectValue placeholder="Select additional guests" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: Math.max(Number(pkg.max_guests || 1) - 1, 0) + 1 }, (_, index) => index).map((count) => (
-                                  <SelectItem key={count} value={String(count)}>
-                                    {count === 0 ? "No additional guests" : `${count} additional ${count === 1 ? "guest" : "guests"}`}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Label htmlFor="guests">Additional Guests</Label>
+                            <Input
+                              id="guests"
+                              type="number"
+                              min="0"
+                              max={Math.max(Number(pkg.max_guests || 1) - 1, 0)}
+                              step="1"
+                              inputMode="numeric"
+                              className="mt-1"
+                              value={additionalGuestCount}
+                              onKeyDown={(event) => {
+                                if (["-", "+", ".", "e", "E"].includes(event.key)) event.preventDefault();
+                              }}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                if (!/^\d*$/.test(value)) return;
+                                const count = value === "" ? 0 : Number(value);
+                                const maxAdditionalGuests = Math.max(Number(pkg.max_guests || 1) - 1, 0);
+                                if (count <= maxAdditionalGuests) {
+                                  setForm((previous) => ({ ...previous, guest_count: count + 1 }));
+                                }
+                              }}
+                            />
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Additional guests are ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per person. Total guests allowed for this package: {pkg.max_guests || 1}.
+                              ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per additional guest. {additionalGuestCount} × ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} = ₱{additionalGuestAmount.toLocaleString()}. One guest is included; package maximum is {pkg.max_guests || 1} guests.
                             </p>
                           </div>
                         </div>
@@ -1374,7 +1394,7 @@ export default function BookingForm() {
                         <div className="mt-2 space-y-3">
                           <label className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
                             {isUploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                            <span>{isUploadingReceipt ? "Checking image..." : "Upload payment proof"}</span>
+                            <span>{isUploadingReceipt ? "Scanning receipt..." : "Upload payment proof"}</span>
                             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
                           </label>
                           <p className="text-xs text-muted-foreground">
@@ -1393,7 +1413,7 @@ export default function BookingForm() {
                           {receiptUrl ? (
                             <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
                               <div className="flex items-center gap-2 text-amber-700">
-                                <ShieldCheck className="h-4 w-4" /> Suspicious / Needs Manual Review
+                                  <ShieldCheck className="h-4 w-4" /> Pending Admin Review
                               </div>
                               {receiptFileName ? <p className="mt-2 break-all text-xs font-medium text-foreground">Uploaded: {receiptFileName}</p> : null}
                               {receiptValidation?.message ? (

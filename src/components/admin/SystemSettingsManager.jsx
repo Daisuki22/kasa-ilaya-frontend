@@ -26,7 +26,6 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 import { isSuperAdmin } from "@/lib/adminAccess";
 import { defaultSiteSettings, FONT_STYLE_OPTIONS, AMENITY_ICON_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
-import { normalizeTermsContent } from "@/lib/resortNotices";
 
 const buildForm = (settings) => ({
   site_name: settings?.site_name || defaultSiteSettings.site_name,
@@ -48,9 +47,6 @@ const buildForm = (settings) => ({
   amenities_section_label: settings?.amenities_section_label || defaultSiteSettings.amenities_section_label,
   amenities_section_title: settings?.amenities_section_title || defaultSiteSettings.amenities_section_title,
   amenities_section_description: settings?.amenities_section_description || defaultSiteSettings.amenities_section_description,
-  terms_title: settings?.terms_title || defaultSiteSettings.terms_title,
-  terms_summary: settings?.terms_summary || defaultSiteSettings.terms_summary,
-  terms_content: normalizeTermsContent(settings?.terms_content || defaultSiteSettings.terms_content),
 });
 
 export default function SystemSettingsManager({ embedded = false, actorUser = null, section = null }) {
@@ -258,9 +254,6 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
       amenities_section_label: form.amenities_section_label?.trim() || null,
       amenities_section_title: form.amenities_section_title?.trim() || null,
       amenities_section_description: form.amenities_section_description?.trim() || null,
-      terms_title: form.terms_title?.trim() || null,
-      terms_summary: form.terms_summary?.trim() || null,
-      terms_content: form.terms_content?.trim() || null,
       resort_gallery_json:
         resortGallery
           .map((slide) => ({
@@ -834,50 +827,6 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
                 No amenities added yet. Click "Add Amenity" to create one.
               </p>
             )}
-          </div>
-        </CardContent>
-      </Card>
-      )}
-
-      {(embedded || !section || section === "terms-conditions") && (
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-2xl">Terms & Conditions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div>
-            <Label htmlFor="terms-title">Dialog Title</Label>
-            <Input
-              id="terms-title"
-              value={form.terms_title}
-              onChange={(event) => setForm((prev) => ({ ...prev, terms_title: event.target.value }))}
-              placeholder="Terms and Conditions"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="terms-summary">Short Summary</Label>
-            <Textarea
-              id="terms-summary"
-              value={form.terms_summary}
-              rows={3}
-              onChange={(event) => setForm((prev) => ({ ...prev, terms_summary: event.target.value }))}
-              placeholder="Explain what guests are agreeing to before they book."
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="terms-content">Full Terms Content</Label>
-            <Textarea
-              id="terms-content"
-              value={form.terms_content}
-              rows={16}
-              onChange={(event) => setForm((prev) => ({ ...prev, terms_content: event.target.value }))}
-              placeholder="Write the complete terms and conditions shown to guests."
-            />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Separate sections with blank lines to keep the public dialog readable.
-            </p>
           </div>
         </CardContent>
       </Card>

@@ -27,6 +27,7 @@ import {
 } from 'recharts';
 import { baseClient } from '@/api/baseClient';
 import ActivityLogSummaryCards from '@/components/admin/ActivityLogSummaryCards';
+import PaginationControls from '@/components/admin/PaginationControls';
 import { useChartMetrics } from '@/hooks/useChartMetrics';
 import { useAuth } from '@/lib/AuthContext';
 import { isSuperAdmin } from '@/lib/adminAccess';
@@ -86,6 +87,8 @@ export default function AdminActivityLogs() {
 	const [search, setSearch] = useState('');
 	const [entityFilter, setEntityFilter] = useState('all');
 	const [severityFilter, setSeverityFilter] = useState('all');
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 	const canViewSummaryCards = isSuperAdmin(user);
 
 	const { data: logs = [], isLoading, isFetching, refetch } = useQuery({
@@ -111,6 +114,12 @@ export default function AdminActivityLogs() {
 			return matchesQuery && matchesEntity && matchesSeverity;
 		});
 	}, [logs, search, entityFilter, severityFilter]);
+	const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+	const currentPage = Math.min(page, totalPages);
+	const visibleLogs = useMemo(
+		() => filteredLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+		[filteredLogs, currentPage, pageSize]
+	);
 
 	const auditStats = useMemo(() => {
 		const uniqueActors = new Set(filteredLogs.map((log) => log.user_email || log.user_name).filter(Boolean));
@@ -214,13 +223,13 @@ export default function AdminActivityLogs() {
 						<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 						<Input
 							value={search}
-							onChange={(event) => setSearch(event.target.value)}
+							onChange={(event) => { setSearch(event.target.value); setPage(1); }}
 							placeholder="Search by user, action, entity, or details..."
 							className="pl-10"
 						/>
 					</div>
 				</div>
-				<Select value={entityFilter} onValueChange={setEntityFilter}>
+				<Select value={entityFilter} onValueChange={(value) => { setEntityFilter(value); setPage(1); }}>
 					<SelectTrigger>
 						<SelectValue placeholder="All Entities" />
 					</SelectTrigger>
@@ -231,7 +240,7 @@ export default function AdminActivityLogs() {
 						))}
 					</SelectContent>
 				</Select>
-				<Select value={severityFilter} onValueChange={setSeverityFilter}>
+				<Select value={severityFilter} onValueChange={(value) => { setSeverityFilter(value); setPage(1); }}>
 					<SelectTrigger>
 						<SelectValue placeholder="All Severity" />
 					</SelectTrigger>
@@ -364,7 +373,7 @@ export default function AdminActivityLogs() {
 										</TableCell>
 									</TableRow>
 								) : (
-									filteredLogs.map((log) => (
+									visibleLogs.map((log) => (
 										<TableRow key={log.id}>
 											<TableCell className="whitespace-nowrap text-sm">
 												{log.created_date ? format(new Date(log.created_date), 'MMM d, yyyy h:mm a') : 'Unknown'}
@@ -397,6 +406,7 @@ export default function AdminActivityLogs() {
 							</TableBody>
 						</Table>
 					</CardContent>
+					<PaginationControls page={currentPage} pageSize={pageSize} total={filteredLogs.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
 				</Card>
 			)}
 		</div>

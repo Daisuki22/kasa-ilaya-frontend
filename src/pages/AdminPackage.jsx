@@ -26,6 +26,7 @@ import {
   Wallet,
 } from "lucide-react";
 import PackageFormDialog from "@/components/admin/PackageFormDialog";
+import PaginationControls from "@/components/admin/PaginationControls";
 import { toast } from "sonner";
 
 const sortPackagesForDisplay = (packages) =>
@@ -61,6 +62,8 @@ export default function AdminPackages() {
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => {});
@@ -68,7 +71,7 @@ export default function AdminPackages() {
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ["admin-packages"],
-    queryFn: () => baseClient.entities.Package.filter({ is_active: true }, "name"),
+    queryFn: () => baseClient.entities.Package.filter({}, "name"),
   });
 
   const filteredPackages = useMemo(() => {
@@ -89,6 +92,9 @@ export default function AdminPackages() {
       return matchesStatus && matchesSearch;
     });
   }, [packages, searchTerm, statusFilter]);
+  const totalPages = Math.max(1, Math.ceil(filteredPackages.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visiblePackages = useMemo(() => filteredPackages.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredPackages, currentPage, pageSize]);
 
   const uniquePackageCount = useMemo(() => dedupePackagesById(packages).length, [packages]);
 
@@ -218,7 +224,7 @@ export default function AdminPackages() {
             <div>
               <CardTitle className="font-display text-2xl">Package List</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Showing {filteredPackages.length} of {uniquePackageCount} active package records.
+                Showing {filteredPackages.length} of {uniquePackageCount} package records.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,20rem)_auto]">
@@ -226,7 +232,7 @@ export default function AdminPackages() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }}
                   placeholder="Search package or inclusion"
                   className="pl-9"
                 />
@@ -240,7 +246,7 @@ export default function AdminPackages() {
                     key={item.value}
                     size="sm"
                     variant={statusFilter === item.value ? "default" : "ghost"}
-                    onClick={() => setStatusFilter(item.value)}
+                    onClick={() => { setStatusFilter(item.value); setPage(1); }}
                   >
                     {item.label}
                   </Button>
@@ -272,7 +278,7 @@ export default function AdminPackages() {
                 </TableHeader>
                 <TableBody>
                   {filteredPackages.length ? (
-                    filteredPackages.map((pkg) => {
+                    visiblePackages.map((pkg) => {
                       const imageCount = Array.isArray(pkg.gallery_images) ? pkg.gallery_images.length : (pkg.image_url ? 1 : 0);
                       const coverImage = pkg.image_url || pkg.gallery_images?.[0];
 
@@ -334,6 +340,7 @@ export default function AdminPackages() {
             </div>
           )}
         </CardContent>
+        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredPackages.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
       </Card>
 
       <PackageFormDialog

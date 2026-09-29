@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Eye, History, Loader2, MessageSquareMore, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { isSuperAdmin } from "@/lib/adminAccess";
+import usePaginatedRecords from "@/hooks/usePaginatedRecords";
 
 const sortPackagesForDisplay = (packages) =>
   [...packages].sort((left, right) => left.name.localeCompare(right.name));
@@ -193,6 +194,15 @@ const roleLabel = {
     [users]
   );
 
+  const sortedArchivedPackages = useMemo(() => sortPackagesForDisplay(archivedPackages), [archivedPackages]);
+  const archivedBookingsPage = usePaginatedRecords(archivedBookings);
+  const archivedPackagesPage = usePaginatedRecords(sortedArchivedPackages);
+  const archivedQrCodesPage = usePaginatedRecords(archivedQrCodes);
+  const archivedUsersPage = usePaginatedRecords(archivedUsers);
+  const archivedAmenitiesPage = usePaginatedRecords(archivedAmenities);
+  const archivedInquiriesPage = usePaginatedRecords(archivedInquiries);
+  const archiveHistoryPage = usePaginatedRecords(archiveHistory);
+
 
   // Combine all loading and error states
   const isLoading = isLoadingPackages || isLoadingQrCodes || isLoadingUsers || isLoadingBookings || isLoadingAmenities;
@@ -342,7 +352,7 @@ const roleLabel = {
                   </TableHeader>
                   <TableBody>
                     {archivedBookings.length ? (
-                      archivedBookings.map((booking) => (
+                      archivedBookingsPage.visibleRecords.map((booking) => (
                         <TableRow key={booking.id}>
                           <TableCell className="font-mono text-sm">{booking.booking_reference}</TableCell>
                           <TableCell>
@@ -373,6 +383,7 @@ const roleLabel = {
                   </TableBody>
                 </Table>
               </CardContent>
+              {archivedBookingsPage.controls}
             </Card>
           </section>
 
@@ -395,8 +406,8 @@ const roleLabel = {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortPackagesForDisplay(archivedPackages).length ? (
-                      sortPackagesForDisplay(archivedPackages).map((pkg) => (
+                    {sortedArchivedPackages.length ? (
+                      archivedPackagesPage.visibleRecords.map((pkg) => (
                         <TableRow key={pkg.id}>
                           <TableCell className="font-medium">{pkg.name}</TableCell>
                           <TableCell className="font-semibold text-secondary">PHP {pkg.day_tour_price?.toLocaleString() || 0}</TableCell>
@@ -421,6 +432,7 @@ const roleLabel = {
                   </TableBody>
                 </Table>
               </CardContent>
+              {archivedPackagesPage.controls}
             </Card>
           </section>
 
@@ -443,7 +455,7 @@ const roleLabel = {
                   </TableHeader>
                   <TableBody>
                     {archivedQrCodes.length ? (
-                      archivedQrCodes.map((code) => (
+                      archivedQrCodesPage.visibleRecords.map((code) => (
                         <TableRow key={code.id}>
                           <TableCell>
                             <img src={code.image_url} alt={code.label} className="h-16 w-16 rounded-lg border border-border object-cover" />
@@ -474,6 +486,7 @@ const roleLabel = {
                   </TableBody>
                 </Table>
               </CardContent>
+              {archivedQrCodesPage.controls}
             </Card>
           </section>
 
@@ -496,7 +509,7 @@ const roleLabel = {
                   </TableHeader>
                   <TableBody>
                     {archivedUsers.length ? (
-                      archivedUsers.map((targetUser) => (
+                      archivedUsersPage.visibleRecords.map((targetUser) => (
                         <TableRow key={targetUser.id}>
                           <TableCell>
                             <div>
@@ -536,6 +549,7 @@ const roleLabel = {
                   </TableBody>
                 </Table>
               </CardContent>
+              {archivedUsersPage.controls}
             </Card>
           </section>
 
@@ -559,7 +573,7 @@ const roleLabel = {
                         </TableHeader>
                         <TableBody>
                           {archivedAmenities.length ? (
-                            archivedAmenities.map((amenity) => (
+                            archivedAmenitiesPage.visibleRecords.map((amenity) => (
                               <TableRow key={amenity.id}>
                                 <TableCell>
                                   {amenity.image_url ? (
@@ -590,6 +604,7 @@ const roleLabel = {
                         </TableBody>
                       </Table>
                     </CardContent>
+                    {archivedAmenitiesPage.controls}
                   </Card>
         </section>
 
@@ -619,7 +634,7 @@ const roleLabel = {
                     </TableHeader>
                     <TableBody>
                       {archivedInquiries.length ? (
-                        archivedInquiries.map((inquiry) => {
+                        archivedInquiriesPage.visibleRecords.map((inquiry) => {
                           const archiveLog = inquiryArchiveLogById.get(inquiry.id);
 
                           return (
@@ -661,6 +676,7 @@ const roleLabel = {
                   </Table>
                 )}
               </CardContent>
+              {!archivedInquiriesQuery.isLoading ? archivedInquiriesPage.controls : null}
             </Card>
           </section>
         ) : null}
@@ -696,7 +712,7 @@ const roleLabel = {
                     </TableHeader>
                     <TableBody>
                       {archiveHistory.length ? (
-                        archiveHistory.map((log) => (
+                        archiveHistoryPage.visibleRecords.map((log) => (
                           <TableRow key={log.id}>
                             <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                               {formatHistoryDate(log.created_date || log.updated_date)}
@@ -727,6 +743,7 @@ const roleLabel = {
                   </Table>
                 )}
               </CardContent>
+              {!archiveHistoryQuery.isLoading ? archiveHistoryPage.controls : null}
             </Card>
           </section>
         ) : null}

@@ -10,11 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 
 const DEFAULT_SECURITY_SETTINGS = {
   require_strong_password: true,
-  min_password_length: 8,
+  min_password_length: 10,
   session_timeout_minutes: 120,
   max_login_attempts: 5,
   lockout_minutes: 15,
@@ -27,11 +26,8 @@ const getNumberOrDefault = (value, fallback) => {
 };
 
 const buildForm = (settings) => ({
-  require_strong_password:
-    settings?.require_strong_password !== undefined
-      ? Boolean(settings.require_strong_password)
-      : DEFAULT_SECURITY_SETTINGS.require_strong_password,
-  min_password_length: getNumberOrDefault(settings?.min_password_length, DEFAULT_SECURITY_SETTINGS.min_password_length),
+  require_strong_password: true,
+  min_password_length: Math.max(10, getNumberOrDefault(settings?.min_password_length, DEFAULT_SECURITY_SETTINGS.min_password_length)),
   session_timeout_minutes: getNumberOrDefault(settings?.session_timeout_minutes, DEFAULT_SECURITY_SETTINGS.session_timeout_minutes),
   max_login_attempts: getNumberOrDefault(settings?.max_login_attempts, DEFAULT_SECURITY_SETTINGS.max_login_attempts),
   lockout_minutes: getNumberOrDefault(settings?.lockout_minutes, DEFAULT_SECURITY_SETTINGS.lockout_minutes),
@@ -54,8 +50,8 @@ export default function AdminSecuritySettings() {
   }, [settings]);
 
   const validationMessage = useMemo(() => {
-    if (form.min_password_length < 6 || form.min_password_length > 32) {
-      return "Password length must be between 6 and 32 characters.";
+    if (form.min_password_length < 10 || form.min_password_length > 32) {
+      return "Password length must be between 10 and 32 characters.";
     }
 
     if (form.session_timeout_minutes < 10 || form.session_timeout_minutes > 1440) {
@@ -90,8 +86,8 @@ export default function AdminSecuritySettings() {
     setIsSaving(true);
 
     const payload = {
-      require_strong_password: Boolean(form.require_strong_password),
-      min_password_length: Number(form.min_password_length),
+      require_strong_password: true,
+      min_password_length: 10,
       session_timeout_minutes: Number(form.session_timeout_minutes),
       max_login_attempts: Number(form.max_login_attempts),
       lockout_minutes: Number(form.lockout_minutes),
@@ -156,34 +152,9 @@ export default function AdminSecuritySettings() {
             Password Policy
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/20 px-4 py-3">
-            <div>
-              <p className="font-medium text-foreground">Require strong passwords</p>
-              <p className="text-sm text-muted-foreground">
-                Enforce mixed-case, numbers, and symbols when users create or reset passwords.
-              </p>
-            </div>
-            <Switch
-              checked={form.require_strong_password}
-              onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, require_strong_password: checked }))
-              }
-              aria-label="Toggle strong password requirement"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="min-password-length">Minimum password length</Label>
-            <Input
-              id="min-password-length"
-              type="number"
-              min={6}
-              max={32}
-              value={form.min_password_length}
-              onChange={handleNumberChange("min_password_length", DEFAULT_SECURITY_SETTINGS.min_password_length)}
-              className="max-w-xs"
-            />
+        <CardContent>
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
+            New passwords require at least 10 characters, uppercase and lowercase letters, a number, and a special character. This policy is enforced in both the app and the backend.
           </div>
         </CardContent>
       </Card>

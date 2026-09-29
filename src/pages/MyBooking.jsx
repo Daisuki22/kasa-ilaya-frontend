@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import LeaveReviewDialog from "@/components/mybookings/LeaveReviewDialog.jsx";
 import { addDays, format } from "date-fns";
+import { getBookingEndDateTime as getBookingEndTime, getBookingStartDateTime as getBookingStartTime } from "@/lib/bookingTimes";
 import { createPageUrl } from "@/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -113,38 +114,6 @@ const formatDate = (value) => {
   }
 };
 
-const getBookingEndTime = (booking) => {
-  if (!booking?.booking_date || !booking?.tour_type) {
-    return null;
-  }
-
-  if (booking.tour_type === "day_tour") {
-    return new Date(`${booking.booking_date}T18:00:00`);
-  }
-
-  if (booking.tour_type === "night_tour") {
-    return new Date(new Date(`${booking.booking_date}T18:00:00`).getTime() + 12 * 60 * 60 * 1000);
-  }
-
-  if (booking.tour_type === "22_hours") {
-    return new Date(new Date(`${booking.booking_date}T18:00:00`).getTime() + 22 * 60 * 60 * 1000);
-  }
-
-  return null;
-};
-
-const getBookingStartTime = (booking) => {
-  if (!booking?.booking_date || !booking?.tour_type) {
-    return null;
-  }
-
-  if (booking.tour_type === "day_tour") {
-    return new Date(`${booking.booking_date}T08:00:00`);
-  }
-
-  return new Date(`${booking.booking_date}T18:00:00`);
-};
-
 const canLeaveReview = (booking) => {
   if (!booking || booking.status === "cancelled" || booking.status === "pending") {
     return false;
@@ -194,7 +163,7 @@ const getCancellationLockedReason = (booking) => {
 
   const cutoff = new Date(startTime.getTime() - REBOOKING_NOTICE_DAYS * 24 * 60 * 60 * 1000);
   if (Date.now() > cutoff.getTime()) {
-    return "Cancellation requests must be submitted at least 7 days before the reservation date. Requests within 7 days are not permitted.";
+    return "Cancellation is not available within 7 days of the reservation date. You may request a reschedule instead.";
   }
 
   return "";
@@ -205,8 +174,8 @@ const getRebookingLockedReason = (booking) => {
     return "Select a booking first.";
   }
 
-  if (booking.status !== "confirmed") {
-    return "Only accepted bookings can request rescheduling.";
+  if (!["pending", "confirmed"].includes(booking.status)) {
+    return "Only active bookings can request rescheduling.";
   }
 
   if ((booking.rebooking_status || "none") === "pending") {
@@ -215,16 +184,6 @@ const getRebookingLockedReason = (booking) => {
 
   if (Number(booking.rebooking_count || 0) >= 1) {
     return "This booking has already used its one allowed rebooking.";
-  }
-
-  const startTime = getBookingStartTime(booking);
-  if (!startTime) {
-    return "This booking date cannot be checked for rebooking.";
-  }
-
-  const cutoff = new Date(startTime.getTime() - REBOOKING_NOTICE_DAYS * 24 * 60 * 60 * 1000);
-  if (Date.now() > cutoff.getTime()) {
-    return "Rebooking requests must be submitted at least 7 days before the reservation date.";
   }
 
   return "";
@@ -993,7 +952,7 @@ export default function MyBookings() {
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                 <p className="font-semibold">Reschedule Policy</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
-                  <li>One reschedule is allowed per reservation, at least 7 days before the current date.</li>
+                  <li>One reschedule request is allowed per active reservation, subject to resort approval and schedule availability.</li>
                   <li>The package and tour time stay the same. Only the date can be changed.</li>
                   <li>Existing payment details are preserved; rescheduling does not create a refund.</li>
                 </ul>

@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import PaginationControls from "@/components/admin/PaginationControls";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -73,6 +75,9 @@ const InquiryTooltip = ({ active, payload }) => {
 export default function AdminInquiries() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedInquiryId, setSelectedInquiryId] = useState(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [statusValue, setStatusValue] = useState("open");
@@ -93,6 +98,15 @@ export default function AdminInquiries() {
     refetchInterval: 15000,
     refetchOnWindowFocus: true,
   });
+  const filteredInquiries = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return inquiries;
+    return inquiries.filter((inquiry) => [inquiry.guest_name, inquiry.guest_email, inquiry.subject, inquiry.last_message_preview]
+      .some((value) => String(value || "").toLowerCase().includes(query)));
+  }, [inquiries, search]);
+  const totalPages = Math.max(1, Math.ceil(filteredInquiries.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visibleInquiries = useMemo(() => filteredInquiries.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredInquiries, currentPage, pageSize]);
 
   const { data: selectedThread, isLoading: isLoadingThread } = useQuery({
     queryKey: ["admin-inquiry-thread", selectedInquiryId],
@@ -235,7 +249,7 @@ export default function AdminInquiries() {
           <p className="mt-1 text-muted-foreground">Review guest questions, reply from staff, and track resolution progress.</p>
         </div>
         <div className="w-full md:w-56">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -316,6 +330,10 @@ export default function AdminInquiries() {
         </CardContent>
       </Card>
 
+      <div className="relative mb-4 max-w-md">
+        <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search guest, email, subject..." aria-label="Search inquiries" />
+      </div>
+
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.05fr)_minmax(26rem,0.95fr)]">
         <Card className="border-border/80 shadow-sm">
           <CardHeader>
@@ -326,7 +344,7 @@ export default function AdminInquiries() {
               <div className="flex items-center justify-center py-16 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
-            ) : inquiries.length === 0 ? (
+            ) : filteredInquiries.length === 0 ? (
               <div className="px-6 py-16 text-center text-sm text-muted-foreground">No inquiries found for this filter.</div>
             ) : (
               <Table className="min-w-0 table-fixed" containerClassName="overflow-x-hidden">
@@ -340,7 +358,7 @@ export default function AdminInquiries() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inquiries.map((inquiry) => (
+                  {visibleInquiries.map((inquiry) => (
                     <TableRow
                       key={inquiry.id}
                       className={`cursor-pointer ${selectedInquiryId === inquiry.id ? "bg-muted/50" : ""}`}
@@ -389,6 +407,7 @@ export default function AdminInquiries() {
               </Table>
             )}
           </CardContent>
+          {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredInquiries.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
         </Card>
 
         <Card className="border-border/80 shadow-sm">

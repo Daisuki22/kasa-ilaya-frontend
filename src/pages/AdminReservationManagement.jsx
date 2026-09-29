@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/AuthContext";
 import { Archive, CalendarPlus, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import PaginationControls from "@/components/admin/PaginationControls";
+import { Search } from "lucide-react";
 
 const rebookingBadgeClasses = {
   none: "border-border bg-muted text-muted-foreground",
@@ -52,11 +54,24 @@ export default function AdminReservationManagement() {
   const [rebookingBooking, setRebookingBooking] = useState(null);
   const [rebookingNote, setRebookingNote] = useState("");
   const [resolvingRebooking, setResolvingRebooking] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["admin-bookings"],
     queryFn: () => baseClient.entities.Booking.filter({}, "-created_date", 500),
   });
+
+  const filteredBookings = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return bookings;
+    return bookings.filter((booking) => [booking.booking_reference, booking.customer_name, booking.customer_email, booking.package_name, booking.status, booking.payment_status]
+      .some((value) => String(value || "").toLowerCase().includes(query)));
+  }, [bookings, search]);
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visibleBookings = useMemo(() => filteredBookings.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredBookings, currentPage, pageSize]);
 
   const handleArchive = async () => {
     setArchiving(true);
@@ -168,6 +183,10 @@ export default function AdminReservationManagement() {
   return (
     <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
       <h1 className="font-display text-3xl font-bold text-foreground mb-6">Reservation Management</h1>
+      <div className="relative mb-4 max-w-md">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search booking, guest, or status..." className="pl-9" aria-label="Search reservations" />
+      </div>
       <Card>
         <CardContent className="p-0 overflow-x-auto">
           {isLoading ? (
@@ -199,8 +218,8 @@ export default function AdminReservationManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.length ? (
-                  bookings.map((booking) => {
+                {filteredBookings.length ? (
+                  visibleBookings.map((booking) => {
                     const rebookingStatus = booking.rebooking_status || "none";
                     const hasRebooking = rebookingStatus !== "none";
 
@@ -269,6 +288,7 @@ export default function AdminReservationManagement() {
             </Table>
           )}
         </CardContent>
+        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredBookings.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
       </Card>
 
       <AlertDialog open={!!archiveId} onOpenChange={(open) => !open && setArchiveId(null)}>
