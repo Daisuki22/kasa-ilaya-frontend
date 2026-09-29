@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,21 +57,38 @@ export default function AdminReservationManagement() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [packageFilter, setPackageFilter] = useState("");
+  const [sort, setSort] = useState("-created_date");
+  const reservationFilters = {
+    page,
+    limit: pageSize,
+    search: search.trim(),
+    status: statusFilter,
+    payment_status: paymentStatusFilter,
+    date_from: dateFrom,
+    date_to: dateTo,
+    package_id: packageFilter,
+    sort,
+  };
 
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ["admin-bookings"],
-    queryFn: () => baseClient.entities.Booking.filter({}, "-created_date", 500),
+  const { data: bookingPage, isLoading, error: bookingPageError } = useQuery({
+    queryKey: ["admin-bookings", reservationFilters],
+    queryFn: () => baseClient.entities.Booking.adminPage(reservationFilters),
   });
-
-  const filteredBookings = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return bookings;
-    return bookings.filter((booking) => [booking.booking_reference, booking.customer_name, booking.customer_email, booking.package_name, booking.status, booking.payment_status]
-      .some((value) => String(value || "").toLowerCase().includes(query)));
-  }, [bookings, search]);
-  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const visibleBookings = useMemo(() => filteredBookings.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredBookings, currentPage, pageSize]);
+  const { data: packages = [] } = useQuery({
+    queryKey: ["admin-reservation-package-filters"],
+    queryFn: () => baseClient.entities.Package.list("name"),
+  });
+  const bookings = bookingPage?.data || [];
+  const pagination = bookingPage?.pagination || { page, limit: pageSize, total: 0, totalPages: 1 };
+  const currentPage = pagination.page || page;
+  useEffect(() => {
+    if (pagination.page && pagination.page !== page) setPage(pagination.page);
+  }, [pagination.page, page]);
 
   const handleArchive = async () => {
     setArchiving(true);
@@ -187,12 +204,66 @@ export default function AdminReservationManagement() {
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search booking, guest, or status..." className="pl-9" aria-label="Search reservations" />
       </div>
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Label className="space-y-1 text-xs text-muted-foreground">
+          <span>Reservation status</span>
+          <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="archived">Archived</option>
+          </select>
+        </Label>
+        <Label className="space-y-1 text-xs text-muted-foreground">
+          <span>Payment status</span>
+          <select value={paymentStatusFilter} onChange={(event) => { setPaymentStatusFilter(event.target.value); setPage(1); }} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
+            <option value="">All payment statuses</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="pending_verification">Pending verification</option>
+            <option value="paid">Paid</option>
+          </select>
+        </Label>
+        <Label className="space-y-1 text-xs text-muted-foreground">
+          <span>Package</span>
+          <select value={packageFilter} onChange={(event) => { setPackageFilter(event.target.value); setPage(1); }} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
+            <option value="">All packages</option>
+            {packages.map((pkg) => <option key={pkg.id} value={pkg.id}>{pkg.name}</option>)}
+          </select>
+        </Label>
+        <Label className="space-y-1 text-xs text-muted-foreground">
+          <span>Sort reservations</span>
+          <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
+            <option value="-created_date">Newest added</option>
+            <option value="created_date">Oldest added</option>
+            <option value="booking_date">Booking date: earliest</option>
+            <option value="-booking_date">Booking date: latest</option>
+            <option value="customer_name">Guest name</option>
+            <option value="package_name">Package name</option>
+            <option value="-total_amount">Amount: highest</option>
+            <option value="total_amount">Amount: lowest</option>
+            <option value="status">Reservation status</option>
+            <option value="payment_status">Payment status</option>
+          </select>
+        </Label>
+        <Label className="space-y-1 text-xs text-muted-foreground">
+          <span>Booking date from</span>
+          <Input type="date" value={dateFrom} max={dateTo || undefined} onChange={(event) => { setDateFrom(event.target.value); setPage(1); }} />
+        </Label>
+        <Label className="space-y-1 text-xs text-muted-foreground">
+          <span>Booking date to</span>
+          <Input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => { setDateTo(event.target.value); setPage(1); }} />
+        </Label>
+      </div>
       <Card>
         <CardContent className="p-0 overflow-x-auto">
           {isLoading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
+          ) : bookingPageError ? (
+            <div className="p-8 text-center text-sm text-destructive">{bookingPageError.message || "Unable to load reservations."}</div>
           ) : (
             <Table className="min-w-[1180px] table-fixed">
               <colgroup>
@@ -218,8 +289,8 @@ export default function AdminReservationManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBookings.length ? (
-                  visibleBookings.map((booking) => {
+                {bookings.length ? (
+                  bookings.map((booking) => {
                     const rebookingStatus = booking.rebooking_status || "none";
                     const hasRebooking = rebookingStatus !== "none";
 
@@ -288,7 +359,7 @@ export default function AdminReservationManagement() {
             </Table>
           )}
         </CardContent>
-        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredBookings.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
+        {!isLoading && !bookingPageError ? <PaginationControls page={currentPage} pageSize={pageSize} total={pagination.total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
       </Card>
 
       <AlertDialog open={!!archiveId} onOpenChange={(open) => !open && setArchiveId(null)}>

@@ -377,6 +377,16 @@ const createEntityHandler = (entityName) => ({
     return request(`/entities.php?${params.toString()}`);
   },
 
+  async adminPage(filters = {}) {
+    if (entityName !== "Booking") throw new Error("Reservation pagination is only available for bookings.");
+    const params = new URLSearchParams({ entity: "Booking", action: "admin-page" });
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+    }
+    const result = await request(`/entities.php?${params.toString()}`);
+    return { ...result, data: normalizeEntityDates("Booking", result?.data || []) };
+  },
+
   async list(sortField, limit, offset) {
     const params = new URLSearchParams({
       entity: entityName,
