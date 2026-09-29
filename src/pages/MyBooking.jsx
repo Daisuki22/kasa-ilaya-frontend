@@ -65,10 +65,6 @@ const paymentColors = {
 };
 
 const getDisplayPaymentStatus = (booking) => {
-  if (booking?.status === "cancelled" || booking?.status === "archived") {
-    return booking.status;
-  }
-
   return booking?.payment_status || "unpaid";
 };
 
@@ -100,6 +96,7 @@ const statusFilters = [
 ];
 
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
+const formatMoneyWithCents = (value) => `PHP ${Number(value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const REBOOKING_NOTICE_DAYS = 7;
 
 const formatDate = (value) => {
@@ -140,8 +137,7 @@ const getDismissedReviewStorageKey = (email) => `kasa-ilaya-dismissed-reviews:${
 
 const canCancelBooking = (booking) => {
   return (
-    booking?.status === "pending" &&
-    (booking.payment_status || "unpaid") !== "paid" &&
+    ["pending", "confirmed"].includes(booking?.status) &&
     getCancellationLockedReason(booking) === ""
   );
 };
@@ -151,18 +147,8 @@ const getCancellationLockedReason = (booking) => {
     return "";
   }
 
-  const paymentStatus = booking.payment_status || "unpaid";
-
-  if (paymentStatus === "paid") {
-    return "Paid bookings can no longer be cancelled online because the reservation has already been paid.";
-  }
-
-  if (booking.status === "confirmed") {
-    return "Accepted bookings can no longer be cancelled online because the reservation has already been approved by the resort.";
-  }
-
-  if (booking.status !== "pending") {
-    return "Only pending bookings can be cancelled online.";
+  if (!["pending", "confirmed"].includes(booking.status)) {
+    return "Only active bookings can be cancelled online.";
   }
 
   const daysUntilBooking = calendarDaysUntil(booking.booking_date);
@@ -170,8 +156,12 @@ const getCancellationLockedReason = (booking) => {
     return "This booking date cannot be checked for cancellation.";
   }
 
+  if (daysUntilBooking <= 0) {
+    return "Reservations on today or past dates cannot be cancelled online.";
+  }
+
   if (daysUntilBooking <= REBOOKING_NOTICE_DAYS) {
-    return "Cancellation is not available within 7 days of the reservation date. You may request a reschedule instead.";
+    return "Online cancellation is no longer available within 7 days of your reservation date. You may request a reschedule.";
   }
 
   return "";
@@ -778,6 +768,11 @@ export default function MyBookings() {
                           Cancel Booking
                         </Button>
                       ) : null}
+                      {booking.payment_status === "paid" && canCancelBooking(booking) ? (
+                        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs leading-5 text-amber-900 dark:text-amber-100">
+                          Payment is non-refundable.
+                        </p>
+                      ) : null}
                       {getCancellationLockedReason(booking) ? (
                         <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs leading-5 text-amber-900 dark:text-amber-100">
                           {getCancellationLockedReason(booking)}
@@ -883,6 +878,11 @@ export default function MyBookings() {
               {getCancellationLockedReason(selectedBooking) ? (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
                   {getCancellationLockedReason(selectedBooking)}
+                </div>
+              ) : null}
+              {selectedBooking.payment_status === "paid" && canCancelBooking(selectedBooking) ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
+                  Payment is non-refundable.
                 </div>
               ) : null}
 
@@ -1102,13 +1102,21 @@ export default function MyBookings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="block">Are you sure you want to cancel this booking?</span>
+              {bookingToCancel?.payment_status === "paid" ? (
+                <span className="mb-2 block">Your booking can be cancelled, but payments are non-refundable according to the resort's cancellation policy.</span>
+              ) : null}
+              <span className="block">Are you sure you want to cancel this reservation?</span>
               <span className="mt-3 block space-y-1">
                 <span className="block">Reference: {bookingToCancel?.booking_reference || "Not available"}</span>
                 <span className="block">Date: {formatDate(bookingToCancel?.booking_date)}</span>
                 <span className="block">Package: {bookingToCancel?.package_name || "Not available"}</span>
                 <span className="block">Amount: {formatMoney(bookingToCancel?.total_amount)}</span>
               </span>
+              {bookingToCancel?.payment_status === "paid" ? (
+                <span className="mt-3 block font-medium text-destructive">
+                  Your payment of {formatMoneyWithCents(bookingToCancel?.payment_amount_due || bookingToCancel?.total_amount)} is non-refundable and will not be refunded if you cancel.
+                </span>
+              ) : null}
               <span className="mt-3 block">This action cannot be undone from your account.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1128,7 +1136,7 @@ export default function MyBookings() {
                   Cancelling...
                 </>
               ) : (
-                "Yes, Cancel Booking"
+                "Cancel Booking"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

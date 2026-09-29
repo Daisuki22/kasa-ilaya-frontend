@@ -256,7 +256,7 @@ export default function AdminCalendar() {
 
   const updateStatus = async (bookingId, newStatus) => {
     if (newStatus === "cancelled") {
-      toast.error("Owner and staff cannot cancel bookings. Only guests can cancel their own pending bookings before they are marked paid or approved.");
+      toast.error("Owner and staff cannot cancel bookings. Guests may cancel their own active bookings more than 7 days before the reservation date; paid amounts are non-refundable.");
       return;
     }
 
@@ -662,7 +662,7 @@ export default function AdminCalendar() {
                       Confirm Reservation
                     </Button>
                     <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                      Owner and staff cannot cancel bookings. Guests may only cancel their own pending bookings before they are marked paid or approved.
+                      Owner and staff cannot cancel bookings. Guests may cancel their own active bookings more than 7 days before the reservation date; paid amounts are non-refundable.
                     </p>
                   </div>
                 )}

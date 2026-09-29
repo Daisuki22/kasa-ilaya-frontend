@@ -473,26 +473,26 @@ const buildLocalResponse = (
     "what is the cancellation policy?": assistantReply({
       title: "Cancellation policy",
       intro: CANCELLATION_REBOOKING_NOTICE,
-      bullets: ["Submit cancellation or rebooking requests through My Booking or contact the resort team.", "Requests made within 7 days of the reservation date are not permitted."],
+      bullets: ["Online cancellation is available only more than 7 days before the reservation date.", "Within 7 days, you may request a reschedule subject to the existing rules and resort approval.", "Paid bookings are not refunded when cancelled."],
       nextStep: "Review the full current terms during booking or contact the resort about your reservation.",
     }),
 
     "can i cancel my reservation?": assistantReply({
       title: "Cancel a reservation",
-      intro: "Cancellation requests must be submitted at least 7 days before the reservation date. Requests within 7 days are not permitted, and payments are non-refundable.",
+      intro: "You can cancel online if your reservation is more than 7 days away. Paid reservations are non-refundable. Within 7 days, online cancellation is unavailable, but you may request a reschedule.",
       nextStep: "Open My Booking to review available actions or contact the resort team for help.",
     }),
 
     "can i get a refund after cancelling a paid reservation?": assistantReply({
       title: "Refunds for cancelled bookings",
       intro: "All payments are non-refundable, including payments for cancelled reservations.",
-      nextStep: "If your request is to change your date, submit a rebooking request at least 7 days before your reservation.",
+      nextStep: "If you want to change your reservation date, request a reschedule in My Booking, subject to the existing rules and resort approval.",
     }),
 
     "what happens to my payment if a rebooking is approved?": assistantReply({
       title: "Payment after an approved rebooking",
       intro: "If the resort approves your rebooking, your prior payment carries over to the new reservation date.",
-      important: "Rebooking requests must be submitted at least 7 days before the reservation date. Payments remain non-refundable.",
+      important: "One reschedule request is allowed per active reservation and is subject to schedule availability and resort approval. Payments remain non-refundable.",
       nextStep: "Submit your request through My Booking and wait for the resort's decision.",
     }),
 
