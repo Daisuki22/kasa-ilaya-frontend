@@ -256,7 +256,7 @@ export default function Contact() {
       <section className="relative min-h-[34rem] overflow-hidden bg-foreground text-white lg:min-h-[38rem]">
         <RotatingBannerBackground images={heroImages} alt="Kasa Ilaya Resort contact banner" />
 
-        <div className="relative flex min-h-[34rem] w-full max-w-none flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
+        <div className="relative flex min-h-[34rem] w-full app-content-container flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur">
               <MessageSquareMore className="h-4 w-4" />
@@ -292,7 +292,7 @@ export default function Contact() {
       </section>
 
       <section className="border-b border-border bg-card">
-        <div className="grid w-full max-w-none gap-4 px-2 py-6 sm:px-3 md:grid-cols-2 lg:grid-cols-4 lg:px-4">
+        <div className="grid w-full app-content-container gap-4 px-2 py-6 sm:px-3 md:grid-cols-2 lg:grid-cols-4 lg:px-4">
           {[
             { icon: Phone, label: "Phone", value: RESORT_CONTACT.phoneDisplay, href: `tel:${RESORT_CONTACT.phoneLink}` },
             { icon: Mail, label: "Email", value: RESORT_CONTACT.email, href: `mailto:${RESORT_CONTACT.email}` },
@@ -320,7 +320,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <section className="grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.92fr_1.08fr] lg:px-4 lg:py-10">
+      <section className="grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.92fr_1.08fr] lg:px-4 lg:py-10">
         <div className="space-y-6">
           <div>
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Get in Touch</span>
@@ -429,7 +429,7 @@ export default function Contact() {
       </section>
 
       <section className="border-y border-border bg-muted/35 py-12 sm:py-16">
-        <div className="w-full max-w-none px-2 sm:px-3 lg:px-4">
+        <div className="w-full app-content-container px-2 sm:px-3 lg:px-4">
           <div className="mb-6">
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Location</span>
             <h2 className="mt-3 font-display text-3xl font-bold text-foreground">Find Us on the Map</h2>
@@ -451,7 +451,7 @@ export default function Contact() {
       </section>
 
       {shouldShowInquiryMessages ? (
-      <section className="grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.92fr_1.08fr] lg:px-4 lg:py-10">
+      <section className="grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.92fr_1.08fr] lg:px-4 lg:py-10">
         <Card className="border-border/80 shadow-sm">
           <CardHeader className="space-y-2">
             <CardTitle className="font-display text-2xl">Your Inquiry Messages</CardTitle>

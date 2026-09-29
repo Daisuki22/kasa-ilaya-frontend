@@ -21,7 +21,7 @@ export default function VideoPresentationSection() {
       className="relative overflow-hidden bg-[linear-gradient(180deg,hsl(var(--muted)/0.55),hsl(var(--background)))] py-24 sm:py-28 lg:py-32"
     >
       <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.18),transparent_60%)]" />
-      <div className="relative grid w-full max-w-none gap-14 px-2 sm:px-3 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16 lg:px-4">
+      <div className="relative grid w-full app-content-container gap-14 px-2 sm:px-3 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16 lg:px-4">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
             <Video className="h-4 w-4" />

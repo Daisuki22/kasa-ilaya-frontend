@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -305,7 +305,7 @@ const roleLabel = {
     );
   }
   return (
-    <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Archive</h1>

@@ -89,7 +89,7 @@ export default function AboutSection({ standalone = false }) {
   if (!standalone) {
     return (
       <section id="about-us" className="bg-background py-20 sm:py-24 lg:py-28">
-        <div className="grid w-full max-w-none gap-10 px-2 sm:px-3 lg:grid-cols-[0.95fr_1.05fr] lg:px-4">
+        <div className="grid w-full app-content-container gap-10 px-2 sm:px-3 lg:grid-cols-[0.95fr_1.05fr] lg:px-4">
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <img src={heroImage} alt={`${siteName} resort view`} loading="lazy" decoding="async" onError={handleImageFallback} className="aspect-[4/3] h-full w-full object-cover" />
           </div>
@@ -121,7 +121,7 @@ export default function AboutSection({ standalone = false }) {
       <section className="relative min-h-[34rem] overflow-hidden bg-foreground text-white lg:min-h-[38rem]">
         <RotatingBannerBackground images={pageBannerImages} alt={`${siteName} about banner`} />
 
-        <div className="relative flex min-h-[34rem] w-full max-w-none flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
+        <div className="relative flex min-h-[34rem] w-full app-content-container flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur">
               <TreePalm className="h-4 w-4" />
@@ -158,7 +158,7 @@ export default function AboutSection({ standalone = false }) {
       </section>
 
       <section className="border-b border-border bg-card">
-        <div className="grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-4 lg:px-4 lg:py-10">
+        <div className="grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-4 lg:px-4 lg:py-10">
           {[
             { label: "Guest focus", value: "Clear", icon: HeartHandshake },
             { label: "Experience", value: "Resort + Events", icon: Sparkles },
@@ -179,7 +179,7 @@ export default function AboutSection({ standalone = false }) {
       </section>
 
       <section className="bg-background py-16 sm:py-20 lg:py-24">
-        <div className="grid w-full max-w-none gap-10 px-2 sm:px-3 lg:grid-cols-[0.9fr_1.1fr] lg:px-4">
+        <div className="grid w-full app-content-container gap-10 px-2 sm:px-3 lg:grid-cols-[0.9fr_1.1fr] lg:px-4">
           <div>
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Our Story</span>
             <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl">
@@ -214,7 +214,7 @@ export default function AboutSection({ standalone = false }) {
       </section>
 
       <section className="border-y border-border bg-muted/35 py-16 sm:py-20 lg:py-24">
-        <div className="w-full max-w-none px-2 sm:px-3 lg:px-4">
+        <div className="w-full app-content-container px-2 sm:px-3 lg:px-4">
           <div className="mb-10 max-w-3xl">
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">What Guides Us</span>
             <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
@@ -237,7 +237,7 @@ export default function AboutSection({ standalone = false }) {
       </section>
 
       <section className="bg-background py-16 sm:py-20 lg:py-24">
-        <div className="grid w-full max-w-none gap-10 px-2 sm:px-3 lg:grid-cols-[1.05fr_0.95fr] lg:px-4">
+        <div className="grid w-full app-content-container gap-10 px-2 sm:px-3 lg:grid-cols-[1.05fr_0.95fr] lg:px-4">
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <img src={gallery[0]?.src || heroImage} alt="Kasa Ilaya resort grounds" loading="lazy" decoding="async" onError={handleImageFallback} className="aspect-[16/11] w-full object-cover" />
           </div>
@@ -262,7 +262,7 @@ export default function AboutSection({ standalone = false }) {
       <section className="relative overflow-hidden bg-foreground text-white">
         <img src={gallery[1]?.src || heroImage} alt="Plan a Kasa Ilaya visit" loading="lazy" decoding="async" onError={handleImageFallback} className="absolute inset-0 h-full w-full object-cover opacity-35" />
         <div className="absolute inset-0 bg-black/65" />
-        <div className="relative grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[1fr_auto] lg:items-center lg:px-4 lg:py-10">
+        <div className="relative grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[1fr_auto] lg:items-center lg:px-4 lg:py-10">
           <div>
             <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
               Plan a visit that fits your group

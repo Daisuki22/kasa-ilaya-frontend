@@ -115,8 +115,8 @@ export default function ResortGallerySlider() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(56,161,105,0.16),_transparent_42%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)/0.45))] px-4 py-20 sm:px-6 lg:px-10 xl:px-14">
-      <div className="w-full max-w-none space-y-8">
+    <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(56,161,105,0.16),_transparent_42%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)/0.45))] py-20">
+      <div className="w-full app-content-container space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}

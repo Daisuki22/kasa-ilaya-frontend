@@ -141,7 +141,7 @@ export default function AdminSecuritySettings() {
   }
 
   return (
-    <div className="w-full max-w-none space-y-6 px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full app-content-container space-y-6 px-2 py-6 sm:px-3 lg:px-4">
       <div>
         <h1 className="font-display text-3xl font-bold text-foreground">Security Settings</h1>
         <p className="text-muted-foreground mt-1">

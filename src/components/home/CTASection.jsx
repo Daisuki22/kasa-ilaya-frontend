@@ -29,7 +29,7 @@ export default function CTASection() {
           ) : null}
         </div>
       </div>
-      <div className="relative w-full max-w-none px-2 text-center sm:px-3 lg:px-4">
+      <div className="relative w-full app-content-container px-2 text-center sm:px-3 lg:px-4">
         <h2 className="mb-5 font-display text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
           Ready to Book Your Stay?
         </h2>

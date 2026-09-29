@@ -139,7 +139,7 @@ export default function ProfileSettings({
   }
 
   return (
-    <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold text-foreground">{title}</h1>
         <p className="mt-2 text-muted-foreground">{description}</p>

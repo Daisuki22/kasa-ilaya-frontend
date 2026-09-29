@@ -827,7 +827,7 @@ export default function BookingForm() {
   }
 
   return (
-    <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
       <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 gap-2">
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>

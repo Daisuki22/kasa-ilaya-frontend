@@ -7,7 +7,7 @@ export default function ResortRulesSection() {
 
   return (
     <section className="bg-background py-24 sm:py-28 lg:py-32">
-      <div className="w-full max-w-none px-2 sm:px-3 lg:px-4">
+      <div className="w-full app-content-container px-2 sm:px-3 lg:px-4">
         <div className="mb-16 text-center lg:mb-20">
           <span className="text-secondary font-medium text-sm tracking-wider uppercase">Guest Guide</span>
           <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">

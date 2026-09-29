@@ -182,7 +182,7 @@ export default function Packages() {
           </>
         ) : null}
 
-        <div className="relative flex min-h-[34rem] w-full max-w-none flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
+        <div className="relative flex min-h-[34rem] w-full app-content-container flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur">
               <Sparkles className="h-4 w-4" />
@@ -231,7 +231,7 @@ export default function Packages() {
       </section>
 
       <section className="border-b border-border bg-card">
-        <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
+        <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Package Finder</span>
@@ -251,7 +251,7 @@ export default function Packages() {
         </div>
       </section>
 
-      <section className="w-full max-w-none px-2 py-8 sm:px-3 lg:px-4 lg:py-10">
+      <section className="w-full app-content-container px-2 py-8 sm:px-3 lg:px-4 lg:py-10">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="font-display text-3xl font-bold text-foreground">Available Packages</h2>

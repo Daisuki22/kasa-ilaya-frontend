@@ -174,7 +174,7 @@ export default function AdminPackages() {
   };
 
   return (
-    <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
+    <div className="w-full app-content-container px-2 py-6 sm:px-3 lg:px-4">
       <div className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid gap-6 border-b border-border bg-gradient-to-br from-primary/10 via-card to-secondary/10 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>

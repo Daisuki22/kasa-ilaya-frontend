@@ -265,7 +265,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
 
   return (
     <section className="bg-gradient-to-b from-background via-muted/20 to-background py-24 sm:py-28 lg:py-32">
-      <div className="w-full max-w-none px-2 sm:px-3 lg:px-4">
+      <div className="w-full app-content-container px-2 sm:px-3 lg:px-4">
         <div className="mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <Badge variant="outline" className="mb-3 border-primary/20 bg-primary/5 text-primary">
