@@ -424,7 +424,7 @@ const buildLocalResponse = (
       title: "Resort facilities",
       intro: amenities.length ? "Facilities listed by the resort:" : "Please check the Amenities page for the latest facility information.",
       bullets: amenities.slice(0, 10).map((item) => `${item.title || "Facility"}${item.desc ? `: ${item.desc}` : ""}`),
-      nextStep: "Open Amenities to view the full list.",
+      nextStep: "Open Amenities to view facility information.",
     }),
 
     "is swimming available?": (() => {
@@ -434,7 +434,7 @@ const buildLocalResponse = (
         intro: pool
           ? `${pool.title}${pool.desc ? `: ${pool.desc}` : " is listed among the resort amenities."}`
           : "Swimming availability is not specified in the current amenity information.",
-        nextStep: pool ? "Check the Amenities page for current details." : "Contact the resort to confirm before your visit.",
+        nextStep: "Check the Amenities page for current details, or contact the resort to confirm before your visit.",
       });
     })(),
 
@@ -442,7 +442,7 @@ const buildLocalResponse = (
       title: "Resort amenities",
       intro: amenities.length ? "Amenities currently listed by the resort:" : "Amenity details are not available right now.",
       bullets: amenities.slice(0, 10).map((item) => `${item.title || "Amenity"}${item.desc ? `: ${item.desc}` : ""}`),
-      nextStep: "Open Amenities for the full list and details.",
+      nextStep: "Open Amenities for the facility list and details.",
     }),
 
     "can i book the resort for an event?": assistantReply({
@@ -626,7 +626,7 @@ const buildLocalResponse = (
         title: "Resort amenities",
         intro:
           "The Amenities page has the latest information about resort facilities.",
-        nextStep: "Open the Amenities page to view the available amenities.",
+        nextStep: "Open the Amenities page to view the available facilities.",
       });
     }
 

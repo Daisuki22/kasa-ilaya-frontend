@@ -203,7 +203,7 @@ export default function AdminPaymentQRCodes() {
                 ) : activeCodes.map((code) => (
                   <TableRow key={code.id}>
                     <TableCell>
-                      <img src={code.image_url} alt={code.label} className="h-16 w-16 rounded-lg border border-border object-cover" />
+                      <img src={code.image_url} alt={code.label} loading="lazy" decoding="async" className="h-16 w-16 rounded-lg border border-border bg-white p-1 object-contain" />
                     </TableCell>
                     <TableCell className="font-medium">{code.label}</TableCell>
                     <TableCell>

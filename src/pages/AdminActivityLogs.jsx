@@ -27,6 +27,7 @@ import {
 } from 'recharts';
 import { baseClient } from '@/api/baseClient';
 import ActivityLogSummaryCards from '@/components/admin/ActivityLogSummaryCards';
+import { useChartMetrics } from '@/hooks/useChartMetrics';
 import { useAuth } from '@/lib/AuthContext';
 import { isSuperAdmin } from '@/lib/adminAccess';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,6 +81,7 @@ const AuditTooltip = ({ active, payload, label }) => {
 };
 
 export default function AdminActivityLogs() {
+  const chartMetrics = useChartMetrics();
 	const { user } = useAuth();
 	const [search, setSearch] = useState('');
 	const [entityFilter, setEntityFilter] = useState('all');
@@ -254,8 +256,8 @@ export default function AdminActivityLogs() {
 								<ResponsiveContainer width="100%" height="100%">
 									<LineChart data={activityTrendData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
 										<CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-										<XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-										<YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+										<XAxis dataKey="label" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" />
+										<YAxis width={chartMetrics.tickFontSize * 3} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
 										<Tooltip content={<AuditTooltip />} />
 										<Line type="monotone" dataKey="total" name="Total logs" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 3 }} />
 										<Line type="monotone" dataKey="high" name="High severity" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} />
@@ -312,8 +314,8 @@ export default function AdminActivityLogs() {
 									<ResponsiveContainer width="100%" height="100%">
 										<BarChart data={entityChartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
 											<CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-											<XAxis dataKey="entity" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" interval={0} />
-											<YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+											<XAxis dataKey="entity" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" interval="preserveStartEnd" />
+											<YAxis width={chartMetrics.tickFontSize * 3} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
 											<Tooltip content={<AuditTooltip />} />
 											<Bar dataKey="count" name="Logs" radius={[6, 6, 0, 0]}>
 												{entityChartData.map((item, index) => (

@@ -39,8 +39,7 @@ test("calculates only verified collection data and leaves untracked profit categ
   ]);
 
   assert.equal(report.revenueRows[0].amount, 2700);
-  assert.equal(report.revenueRows[1].amount, null);
-  assert.equal(report.revenueRows[3].amount, 250);
+  assert.equal(report.revenueRows[1].amount, 250);
   assert.equal(report.totalSales, 2950);
   assert.equal(report.totalDirectCosts, null);
   assert.equal(report.grossProfit, null);

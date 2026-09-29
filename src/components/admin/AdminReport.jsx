@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/lib/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useChartMetrics } from "@/hooks/useChartMetrics";
 import { getRecognizedBookingRevenue, toFiniteAmount } from "@/lib/dashboardRevenue";
 import {
   calculateProfitReport,
@@ -51,6 +52,18 @@ const toAmount = toFiniteAmount;
 const toDateKey = toReportDateKey;
 
 const formatCurrency = (value) => currencyFormatter.format(toAmount(value));
+
+const loadAllBookings = async () => {
+  const pageSize = 500;
+  const allBookings = [];
+  let offset = 0;
+  while (true) {
+    const page = await baseClient.entities.Booking.list("-created_date", pageSize, offset);
+    allBookings.push(...page);
+    if (page.length < pageSize) return allBookings;
+    offset += page.length;
+  }
+};
 
 const chartColors = [
   "hsl(var(--primary))",
@@ -743,6 +756,7 @@ const downloadExcelReport = ({
 
 export default function AdminReport() {
   const { user } = useAuth();
+  const chartMetrics = useChartMetrics();
   const { settings: siteSettings } = useSiteSettings();
   const [period, setPeriod] = useState("Weekly");
   const [rangeIndex, setRangeIndex] = useState(0);
@@ -789,7 +803,7 @@ export default function AdminReport() {
     setError(null);
 
     Promise.all([
-      baseClient.entities.Booking.list("-created_date", 1000),
+      loadAllBookings(),
       baseClient.entities.Package.list("name", 1000),
     ])
       .then(([bookingRows, packageRows]) => {
@@ -824,8 +838,6 @@ export default function AdminReport() {
   const preparedDate = format(new Date(), "MMM d, yyyy");
   const {
     revenueRows,
-    directCostRows,
-    operatingExpenseRows,
     totalSales,
     totalDirectCosts,
     grossProfit,
@@ -833,6 +845,21 @@ export default function AdminReport() {
     netProfit,
   } = calculateProfitReport(filteredBookings);
   const formatReportAmount = (amount) => amount === null ? "Not recorded" : formatCurrency(amount);
+  const reportableBookings = filteredBookings.filter((booking) => !["cancelled", "archived"].includes(booking.status));
+  const paymentStatuses = ["paid", "pending_verification", "unpaid"];
+  const paymentSummary = paymentStatuses.map((status) => {
+    const matching = reportableBookings.filter((booking) => booking.payment_status === status);
+    return {
+      status,
+      count: matching.length,
+      amount: matching.reduce((sum, booking) => sum + (status === "paid" ? getRecognizedBookingRevenue(booking) : toAmount(booking.payment_amount_due ?? booking.reservation_fee_amount)), 0),
+    };
+  });
+  const revenueBreakdown = revenueRows.filter((row) => row.amount !== null).map((row) => ({
+    ...row,
+    percentage: totalSales > 0 ? (row.amount / totalSales) * 100 : 0,
+  }));
+  const bookingStatuses = ["confirmed", "pending", "completed", "cancelled"];
 
   const packageCounts = packages.map((pkg) => ({
     name: pkg.name,
@@ -919,6 +946,7 @@ export default function AdminReport() {
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <label className="grid gap-1 text-xs font-medium text-muted-foreground">Date Range
           <select
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             value={customRange ? "custom" : rangeIndex}
@@ -926,8 +954,7 @@ export default function AdminReport() {
               if (event.target.value === "custom") return;
               setRangeIndex(Number(event.target.value));
               setCustomRange(null);
-            }}
-          >
+            }}>
             {customRange ? <option value="custom">Custom date range</option> : null}
             {dateRanges.map((range, index) => (
               <option key={range.label} value={index}>
@@ -935,6 +962,7 @@ export default function AdminReport() {
               </option>
             ))}
           </select>
+          </label>
           <label className="grid gap-1 text-xs font-medium text-muted-foreground">
             From date
             <Input
@@ -955,6 +983,7 @@ export default function AdminReport() {
               aria-label="Report end date"
             />
           </label>
+          <label className="grid gap-1 text-xs font-medium text-muted-foreground">Package
           <select
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             value={packageFilter}
@@ -967,6 +996,7 @@ export default function AdminReport() {
               </option>
             ))}
           </select>
+          </label>
         </div>
       </div>
 
@@ -1027,32 +1057,53 @@ export default function AdminReport() {
                 </div>
               </div>
 
+              <div className="profit-report-filter-summary">
+                <strong>REPORT FILTERS</strong>
+                <span>Period: {reportPeriodLabel} ({period})</span>
+                <span>Package: {packageFilter === "All" ? "All Packages" : packageFilter}</span>
+              </div>
+
               <table className="profit-report-statement">
                 <tbody>
-                  <tr className="profit-section"><td colSpan={2}>REVENUE / SALES</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>REVENUE</td></tr>
                   {revenueRows.map((row) => (
                     <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
                   ))}
                   <tr className="profit-total"><td>TOTAL REVENUE (A)</td><td>{formatCurrency(totalSales)}</td></tr>
-                  <tr className="profit-section"><td colSpan={2}>COST OF SALES / DIRECT COSTS</td></tr>
-                  {directCostRows.map((row) => (
-                    <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>EXPENSES</td></tr>
+                  <tr><td>Expenses recorded in system</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>SUMMARY</td></tr>
+                  <tr><td>Total Revenue</td><td>{formatCurrency(totalSales)}</td></tr>
+                  <tr><td>Total Expenses</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
+                  <tr className="profit-highlight"><td>Gross Profit</td><td>{formatReportAmount(grossProfit)}</td></tr>
+                  <tr className="profit-highlight"><td>Net Profit / Loss</td><td>{formatReportAmount(netProfit)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>REVENUE BREAKDOWN</td></tr>
+                  {revenueBreakdown.map((row) => (
+                    <tr key={`breakdown-${row.label}`}><td>{row.label} ({row.percentage.toFixed(1)}%)</td><td>{formatCurrency(row.amount)}</td></tr>
                   ))}
-                  <tr className="profit-total"><td>TOTAL COST OF SALES (B)</td><td>{formatReportAmount(totalDirectCosts)}</td></tr>
-                  <tr className="profit-highlight"><td>GROSS PROFIT (A - B)</td><td>{formatReportAmount(grossProfit)}</td></tr>
-                  <tr className="profit-section"><td colSpan={2}>OPERATING EXPENSES</td></tr>
-                  {operatingExpenseRows.map((row) => (
-                    <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>PAYMENT SUMMARY</td></tr>
+                  {paymentSummary.map((row) => (
+                    <tr key={row.status}><td>{row.status.replace(/_/g, " ")} ({row.count} bookings)</td><td>{formatCurrency(row.amount)}</td></tr>
                   ))}
-                  <tr className="profit-total"><td>TOTAL OPERATING EXPENSES (C)</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
-                  <tr className="profit-highlight"><td>NET PROFIT / (LOSS) (Gross Profit - C)</td><td>{formatReportAmount(netProfit)}</td></tr>
+                  <tr className="profit-section"><td colSpan={2}>BOOKING PERFORMANCE</td></tr>
+                  <tr><td>Total bookings</td><td>{totalBookings}</td></tr>
+                  {bookingStatuses.map((status) => {
+                    const count = filteredBookings.filter((booking) => booking.status === status).length;
+                    const percentage = totalBookings ? (count / totalBookings) * 100 : 0;
+                    return <tr key={`booking-${status}`}><td>{status[0].toUpperCase() + status.slice(1)} ({percentage.toFixed(1)}%)</td><td>{count}</td></tr>;
+                  })}
+                  {filteredBookings.some((booking) => Number(booking.rebooking_count) > 0) ? (() => {
+                    const count = filteredBookings.filter((booking) => Number(booking.rebooking_count) > 0).length;
+                    const percentage = totalBookings ? (count / totalBookings) * 100 : 0;
+                    return <tr><td>Rescheduled ({percentage.toFixed(1)}%)</td><td>{count}</td></tr>;
+                  })() : null}
                 </tbody>
               </table>
 
               <div className="profit-report-notes">
                 <strong>Remarks / Notes:</strong>
                 <p>Booking income includes verified payments only and is grouped by reservation date because payment dates are not stored. Paid additional fees are included under Other Income.</p>
-                <p>Separate event and food sales, direct costs, and operating expenses are not recorded in the system; gross and net profit are unavailable.</p>
+                <p>Expense, direct cost, and separate event or food sales records are not available in the current system. Profit values are therefore reported as not recorded.</p>
               </div>
 
               <div className="profit-report-signatures">
@@ -1063,7 +1114,7 @@ export default function AdminReport() {
               </div>
 
               <footer className="profit-report-footer">
-                <span>Kasa Ilaya Resort and Event Place</span>
+                <span>Kasa Ilaya Resort and Event Place &mdash; Private</span>
               </footer>
             </div>
           </section>
@@ -1106,11 +1157,11 @@ export default function AdminReport() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={timelineData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                    <LineChart data={timelineData} margin={chartMetrics.margin}>
                       <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                      <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
-                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis yAxisId="left" width={chartMetrics.tickFontSize * 5} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
+                      <YAxis yAxisId="right" orientation="right" width={chartMetrics.tickFontSize * 3} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                       <Tooltip content={<ChartTooltip />} />
                       <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 3 }} />
                       <Line yAxisId="right" type="monotone" dataKey="bookings" name="Bookings" stroke="hsl(var(--secondary))" strokeWidth={3} dot={{ r: 3 }} />
@@ -1166,10 +1217,10 @@ export default function AdminReport() {
               <div className="h-80">
                 {packageChartData.length ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={packageChartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                    <BarChart data={packageChartData} margin={chartMetrics.margin}>
                       <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" interval={0} />
-                      <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
+                      <XAxis dataKey="name" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" interval="preserveStartEnd" />
+                      <YAxis width={chartMetrics.tickFontSize * 5} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
                       <Tooltip content={<ChartTooltip />} />
                       <Bar dataKey="revenue" name="Revenue" radius={[6, 6, 0, 0]}>
                         {packageChartData.map((entry, index) => (

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { LayoutTemplate, Waves, Type, BookOpen, FileText, Images, ImageIcon } from "lucide-react";
+import { LayoutTemplate, Waves, Type, BookOpen, FileText, ImageIcon } from "lucide-react";
 import SystemSettingsManager from "@/components/admin/SystemSettingsManager";
 import ResortRulesManager from "@/components/admin/ResortRulesManager";
 import { useAuth } from "@/lib/AuthContext";
@@ -42,13 +42,6 @@ const SETTINGS_TABS = [
     superAdminOnly: true,
   },
   {
-    id: "resort-gallery",
-    label: "Resort Gallery",
-    icon: Images,
-    desc: "Manage the slider photos shown to guests on the home page. Super admins only.",
-    superAdminOnly: true,
-  },
-  {
     id: "packages-banner",
     label: "Page Banners",
     icon: ImageIcon,
@@ -61,7 +54,8 @@ export default function AdminSystemSettings() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("tab") || "homepage";
+    const requestedTab = urlParams.get("tab");
+    return SETTINGS_TABS.some((tab) => tab.id === requestedTab) ? requestedTab : "homepage";
   });
   const superAdminUser = isSuperAdmin(user);
   const visibleTabs = useMemo(
@@ -88,7 +82,7 @@ export default function AdminSystemSettings() {
       <div>
         <h1 className="font-display text-3xl font-bold text-foreground">System Settings</h1>
         <p className="text-muted-foreground mt-1">
-          Manage website branding, homepage content, resort gallery images, amenities, resort rules, and legal text.
+          Manage website branding, homepage content, amenities, resort rules, and legal text.
         </p>
       </div>
 

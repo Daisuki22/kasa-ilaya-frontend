@@ -2,11 +2,11 @@ import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { baseClient } from "@/api/baseClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
-  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield, Images,
+  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield, Waves,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
   ChartBarIcon, CreditCard
 } from "lucide-react";
@@ -19,6 +19,7 @@ import { canAccessAdminPage } from "@/lib/adminAccess";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/lib/AuthContext";
 import { handleImageFallback, LOGO_IMAGE_FALLBACK } from "@/lib/imageFallback";
+import { toast } from "sonner";
 
 const safeLocalStorageGet = (key, fallback = "") => {
   try {
@@ -45,7 +46,7 @@ const userNav = [
   { name: "About", icon: Sun, page: "About" },
   { name: "Contact", icon: Bell, page: "Contact" },
   { name: "Packages", icon: Package, page: "Packages" },
-  { name: "Gallery", icon: Images, page: "Amenities" },
+  { name: "Amenities", icon: Waves, page: "Amenities" },
   { name: "My Bookings", icon: CalendarCheck, page: "MyBookings" },
 ];
 
@@ -66,6 +67,7 @@ const adminNav = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  const queryClient = useQueryClient();
   const { user, isLoadingAuth } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -141,32 +143,16 @@ export default function Layout({ children, currentPageName }) {
     setNotificationSeenAt(Number.isFinite(stored) ? stored : 0);
   }, [user]);
 
-  const { data: notificationBookings = [] } = useQuery({
-    queryKey: ["user-notification-bookings", user?.email, isRegularAdmin, isSuperAdminUser],
-    queryFn: () => {
-      if (isRegularAdmin || isSuperAdminUser) {
-        return baseClient.entities.Booking.filter(
-          { status: ["pending", "confirmed", "completed", "cancelled"] },
-          "-updated_date",
-          80
-        );
-      }
-
-      return baseClient.entities.Booking.filter({ customer_email: user?.email }, "-updated_date", 50);
-    },
-    enabled: Boolean(user),
+  const { data: persistedNotifications = [] } = useQuery({
+    queryKey: ["user-notifications", user?.email],
+    queryFn: () => baseClient.entities.Notification.list("-created_date", 100),
+    enabled: Boolean(user?.email),
     refetchInterval: 30000,
   });
 
-  const { data: notificationLogs = [] } = useQuery({
-    queryKey: ["user-notification-logs", user?.email, isRegularAdmin, isSuperAdminUser],
-    queryFn: () => {
-      if (isRegularAdmin || isSuperAdminUser) {
-        return baseClient.entities.ActivityLog.list("-created_date", 120);
-      }
-
-      return baseClient.entities.ActivityLog.filter({ user_email: user?.email }, "-created_date", 30);
-    },
+  const { data: persistedUnreadCount = { count: 0 } } = useQuery({
+    queryKey: ["user-notification-unread-count", user?.email],
+    queryFn: () => baseClient.entities.Notification.unreadCount(),
     enabled: Boolean(user?.email),
     refetchInterval: 30000,
   });
@@ -189,65 +175,13 @@ export default function Layout({ children, currentPageName }) {
     });
   }
 
-  if (user?.updated_date) {
-    accountNotifications.push({
-      id: "account-updated",
-      title: "Account details updated",
-      description: "Your profile or account settings were recently updated.",
-      createdAt: user.updated_date,
-      link: createPageUrl("ProfileSettings"),
-    });
-  }
-
-  const bookingNotifications = asArray(notificationBookings).flatMap((booking) => {
-    const createdAt = booking.updated_date || booking.created_date || booking.booking_date;
-    const result = [];
-    const bookingTargetPage = (isRegularAdmin || isSuperAdminUser) ? "AdminBookings" : "MyBookings";
-
-    if (booking.status) {
-      const statusLabel = booking.status.replace(/_/g, " ");
-      result.push({
-        id: `booking-status-${booking.id}`,
-        title: isRegularAdmin || isSuperAdminUser ? `Booking ${statusLabel}` : `Booking ${statusLabel}`,
-        description: `${booking.package_name || "Reservation"} on ${booking.booking_date || "selected date"}.`,
-        createdAt,
-        link: createPageUrl(bookingTargetPage),
-      });
-    }
-
-    if (booking.payment_status) {
-      const paymentLabel = booking.payment_status.replace(/_/g, " ");
-      result.push({
-        id: `booking-payment-${booking.id}`,
-        title: `Payment ${paymentLabel}`,
-        description: `${booking.package_name || "Booking"} payment update was recorded.`,
-        createdAt,
-        link: createPageUrl(bookingTargetPage),
-      });
-    }
-
-    return result;
-  });
-
-  const activityNotifications = asArray(notificationLogs)
-    .filter((entry) => {
-      if (isRegularAdmin || isSuperAdminUser) {
-        return true;
-      }
-
-      const action = (entry.action || "").toLowerCase();
-      return action.includes("booking") || action.includes("profile") || action.includes("password") || action.includes("account");
-    })
-    .map((entry) => ({
-      id: `activity-${entry.id}`,
-      title: entry.action || "Account update",
-      description: entry.details || "An update was recorded for your account.",
-      createdAt: entry.created_date || entry.updated_date || new Date().toISOString(),
-      link:
-        entry.entity_type === "Booking"
-          ? createPageUrl((isRegularAdmin || isSuperAdminUser) ? "AdminBookings" : "MyBookings")
-          : createPageUrl(isSuperAdminUser ? "AdminActivityLogs" : isRegularAdmin ? "AdminDashboard" : "ProfileSettings"),
-    }));
+  const persistedNotificationItems = asArray(persistedNotifications).map((item) => ({
+    ...item,
+    id: `persisted-${item.id}`,
+    createdAt: item.created_date,
+    isPersistent: true,
+    link: item.link ? createPageUrl(item.link.replace(/^\//, "")) : createPageUrl("MyBookings"),
+  }));
 
   const chatNotifications = asArray(notificationInquiries)
     .filter((inquiry) => isAdmin ? inquiry.last_sender_type === "guest" : inquiry.last_sender_type === "admin")
@@ -261,18 +195,13 @@ export default function Layout({ children, currentPageName }) {
       link: createPageUrl(isAdmin ? "AdminInquiries" : "Contact"),
     }));
 
-  const notifications = (isRegularAdmin
-    ? [...bookingNotifications, ...activityNotifications, ...chatNotifications]
-    : isSuperAdminUser
-      ? [...bookingNotifications, ...activityNotifications, ...chatNotifications]
-      : [...bookingNotifications, ...activityNotifications, ...accountNotifications, ...chatNotifications]
-  )
+  const notifications = [...persistedNotificationItems, ...accountNotifications, ...chatNotifications]
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
     .slice(0, 12);
 
-  const unreadCount = notifications.filter((item) => new Date(item.createdAt).getTime() > notificationSeenAt).length;
+  const unreadCount = Number(persistedUnreadCount.count || 0) + notifications.filter((item) => !item.isPersistent && new Date(item.createdAt).getTime() > notificationSeenAt).length;
 
-  const markNotificationsAsRead = () => {
+  const markNotificationsAsRead = async () => {
     if (!user) {
       return;
     }
@@ -281,6 +210,15 @@ export default function Layout({ children, currentPageName }) {
     const key = `ki-notifications-seen-at:${user.id || user.email}`;
     safeLocalStorageSet(key, String(seenAt));
     setNotificationSeenAt(seenAt);
+    try {
+      await baseClient.entities.Notification.markAllRead();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["user-notifications", user.email] }),
+        queryClient.invalidateQueries({ queryKey: ["user-notification-unread-count", user.email] }),
+      ]);
+    } catch (error) {
+      toast.error(error?.message || "Unable to update notifications.");
+    }
   };
 
   useEffect(() => {
@@ -384,7 +322,7 @@ export default function Layout({ children, currentPageName }) {
               <p className="text-xs text-muted-foreground">{notificationSubtitle}</p>
             </div>
             <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" onClick={markNotificationsAsRead}>
-              <CheckCheck className="h-3.5 w-3.5" /> Mark read
+              <CheckCheck className="h-3.5 w-3.5" /> Mark all as read
             </Button>
           </div>
 
@@ -394,7 +332,7 @@ export default function Layout({ children, currentPageName }) {
             ) : (
               notifications.map((item) => {
                 const eventTime = new Date(item.createdAt);
-                const isUnread = eventTime.getTime() > notificationSeenAt;
+                const isUnread = item.isPersistent ? !item.is_read : eventTime.getTime() > notificationSeenAt;
                 return (
                   <DropdownMenuItem key={item.id} asChild>
                     <Link

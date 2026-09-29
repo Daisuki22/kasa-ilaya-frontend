@@ -344,7 +344,7 @@ export default function Contact() {
                 <p className="text-sm text-muted-foreground">Explore before sending a message.</p>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               {[
                 { label: "View Packages", url: packagesUrl },
                 { label: "About the Resort", url: aboutUrl },

@@ -206,10 +206,11 @@ export default function ProfileSettings({
 
         <Card>
           <CardHeader>
-            <CardTitle>Update password</CardTitle>
-            <CardDescription>Use your current password to set a new one.</CardDescription>
+            <CardTitle>{user.has_local_password ? 'Update password' : 'Google Sign-In'}</CardTitle>
+            <CardDescription>{user.has_local_password ? 'Use your current password to set a new one.' : 'This account uses Google Sign-In. Password management is handled by Google.'}</CardDescription>
           </CardHeader>
           <CardContent>
+            {user.has_local_password ? (
             <form className="space-y-4" onSubmit={handlePasswordSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current password</Label>
@@ -233,6 +234,7 @@ export default function ProfileSettings({
                 </Link>
               </div>
             </form>
+            ) : null}
           </CardContent>
         </Card>
       </div>

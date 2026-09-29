@@ -26,7 +26,11 @@ export const toReportDateKey = (value) => {
 
 export const filterReportBookings = (bookings, startDate, endDate, packageFilter = "All") => {
   if (!isValidDateKey(startDate) || !isValidDateKey(endDate) || startDate > endDate) return [];
+  const seenIds = new Set();
   return bookings.filter((booking) => {
+    const id = String(booking?.id || "");
+    if (!id || seenIds.has(id)) return false;
+    seenIds.add(id);
     const bookingDate = toReportDateKey(booking.booking_date);
     return bookingDate >= startDate && bookingDate <= endDate &&
       (packageFilter === "All" || booking.package_name === packageFilter);
@@ -46,24 +50,10 @@ export const calculateProfitReport = (bookings) => {
 
   const revenueRows = [
     { label: "Room / Villa Bookings", amount: collectedBookingRevenue },
-    { label: "Event / Venue Rentals", amount: null },
-    { label: "Food & Beverage Sales", amount: null },
     { label: "Other Income (Amenities, Add-ons, etc.)", amount: paidAdditionalFees },
   ];
-  const directCostRows = [
-    { label: "Food & Beverage Cost", amount: null },
-    { label: "Event Supplies & Materials", amount: null },
-    { label: "Housekeeping / Amenities Supplies", amount: null },
-  ];
-  const operatingExpenseRows = [
-    { label: "Salaries & Wages", amount: null },
-    { label: "Utilities (Electricity, Water, Internet)", amount: null },
-    { label: "Maintenance & Repairs", amount: null },
-    { label: "Marketing & Advertising", amount: null },
-    { label: "Permits, Licenses & Insurance", amount: null },
-    { label: "Depreciation", amount: null },
-    { label: "Miscellaneous Expenses", amount: null },
-  ];
+  const directCostRows = [];
+  const operatingExpenseRows = [];
 
   return {
     revenueRows,

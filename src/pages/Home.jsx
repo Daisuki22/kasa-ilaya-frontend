@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import HeroSection from "@/components/home/HeroSection";
 
-const ResortGallerySlider = lazy(() => import("@/components/home/ResortGallerySlider"));
 const VideoPresentationSection = lazy(() => import("@/components/home/VideoPresentationSection"));
 const UpcomingScheduleSection = lazy(() => import("@/components/home/UpcomingScheduleSection"));
 const FeaturesSection = lazy(() => import("@/components/home/FeaturesSection"));
@@ -55,9 +54,6 @@ export default function Home() {
   return (
     <div>
       <HeroSection />
-      <LazyHomeSection minHeight="36rem">
-        <ResortGallerySlider />
-      </LazyHomeSection>
       <LazyHomeSection minHeight="36rem">
         <VideoPresentationSection />
       </LazyHomeSection>

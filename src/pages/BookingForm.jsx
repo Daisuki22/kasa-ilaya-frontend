@@ -57,7 +57,7 @@ const defaultTour = { label: "Choose a tour type", time: "Select inside the book
 const PAYMENT_POLICY_NOTICE = CANCELLATION_REBOOKING_NOTICE;
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
-const RECEIPT_MIN_BYTES = 12 * 1024;
+const RECEIPT_MIN_BYTES = 1024;
 const ADDITIONAL_GUEST_RATE = 250;
 const PAYMENT_TYPE_LABELS = {
   downpayment: "Downpayment",
@@ -73,74 +73,20 @@ const analyzeReceiptImage = (file) => new Promise((resolve) => {
       const { naturalWidth: width, naturalHeight: height } = image;
       URL.revokeObjectURL(url);
 
-      if (width < 360 || height < 360) {
-        resolve({ valid: false, reason: "The receipt image is too small to review clearly." });
-        return;
-      }
-
       if (width > 8000 || height > 8000) {
         resolve({ valid: false, reason: "The receipt image is too large. Please upload a clearer compressed screenshot." });
         return;
       }
 
       const ratio = width / height;
-      if (ratio > 0.98) {
-        resolve({ valid: false, reason: "Upload a portrait payment receipt screenshot. Landscape images are automatically declined." });
-        return;
-      }
-
-      if (ratio < 0.28) {
-        resolve({ valid: false, reason: "The image shape does not look like a readable payment receipt screenshot." });
-        return;
-      }
-
-      const sampleWidth = 120;
-      const sampleHeight = 120;
-      const canvas = document.createElement("canvas");
-      canvas.width = sampleWidth;
-      canvas.height = sampleHeight;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-
-      if (!context) {
-        resolve({ valid: true });
-        return;
-      }
-
-      context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
-      const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
-      const grays = [];
-      let total = 0;
-
-      for (let index = 0; index < data.length; index += 4) {
-        const gray = (data[index] * 0.299) + (data[index + 1] * 0.587) + (data[index + 2] * 0.114);
-        grays.push(gray);
-        total += gray;
-      }
-
-      const mean = total / grays.length;
-      const variance = grays.reduce((sum, gray) => sum + ((gray - mean) ** 2), 0) / grays.length;
-      const contrast = Math.sqrt(variance);
-      let edgePixels = 0;
-
-      for (let y = 1; y < sampleHeight; y += 1) {
-        for (let x = 1; x < sampleWidth; x += 1) {
-          const current = grays[(y * sampleWidth) + x];
-          const left = grays[(y * sampleWidth) + x - 1];
-          const above = grays[((y - 1) * sampleWidth) + x];
-          if (Math.abs(current - left) + Math.abs(current - above) > 32) {
-            edgePixels += 1;
-          }
-        }
-      }
-
-      const edgeDensity = edgePixels / ((sampleWidth - 1) * (sampleHeight - 1));
-
-      if (mean < 18 || mean > 246 || contrast < 10 || edgeDensity < 0.025) {
-        resolve({ valid: false, reason: "The image does not contain enough readable receipt detail." });
-        return;
-      }
-
-      resolve({ valid: true });
+      const needsReview = width < 360 || height < 360 || ratio > 1.35 || ratio < 0.28;
+      resolve({
+        valid: true,
+        status: "manual_review",
+        reason: needsReview
+          ? "The image format or dimensions need a closer look. The resort team will review the proof manually."
+          : "The file is readable, but payment details and authenticity must be checked by the resort team.",
+      });
     } catch {
       URL.revokeObjectURL(url);
       resolve({ valid: false, reason: "The receipt image could not be inspected." });
@@ -454,8 +400,8 @@ export default function BookingForm() {
       return;
     }
 
-    if (receiptValidation?.status !== "accepted") {
-      toast.error("Please upload a valid receipt image before submitting.");
+    if (receiptValidation?.status !== "manual_review") {
+      toast.error("Upload a readable payment proof image before submitting.");
       return;
     }
 
@@ -710,7 +656,7 @@ export default function BookingForm() {
 
     setIsUploadingReceipt(true);
     setReceiptUrl("");
-    setReceiptValidation({ status: "checking", message: "Checking if the file looks like a valid receipt..." });
+    setReceiptValidation({ status: "checking", message: "Checking image readability and upload requirements..." });
     setAgreedToRules(false);
 
     try {
@@ -723,8 +669,8 @@ export default function BookingForm() {
 
       const { file_url } = await baseClient.integrations.Core.UploadFile({ file, purpose: "payment_receipt" });
       setReceiptUrl(file_url);
-      setReceiptValidation({ status: "accepted", message: "Receipt image passed the automatic file check." });
-      toast.success("Payment receipt uploaded and accepted.");
+      setReceiptValidation({ status: "manual_review", message: validation.reason || "Payment proof requires manual review. Visual checks cannot confirm authenticity." });
+      toast.success("Payment proof uploaded for manual review.");
     } catch (error) {
       setReceiptValidation({ status: "rejected", message: error?.message || "Unable to upload payment proof." });
       toast.error(error?.message || "Unable to upload payment proof.");
@@ -1355,7 +1301,7 @@ export default function BookingForm() {
                                     alt={selectedPaymentQrCode.label}
                                     loading="lazy"
                                     decoding="async"
-                                    className="h-40 w-full object-contain"
+                                    className="mx-auto h-40 w-full max-w-[180px] object-contain"
                                   />
                                 </div>
                                 <div className="space-y-1 border-t border-border bg-muted/30 p-4 text-sm sm:border-l sm:border-t-0">
@@ -1382,11 +1328,11 @@ export default function BookingForm() {
                         <div className="mt-2 space-y-3">
                           <label className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
                             {isUploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                            <span>{isUploadingReceipt ? "Checking receipt..." : "Upload portrait receipt image"}</span>
+                            <span>{isUploadingReceipt ? "Checking image..." : "Upload payment proof"}</span>
                             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
                           </label>
                           <p className="text-xs text-muted-foreground">
-                            JPG, PNG, or WebP portrait receipt screenshots only. Non-receipt files are rejected automatically.
+                            JPG, PNG, or WebP images up to 8 MB. Proof details and authenticity are checked by an authorized resort admin.
                           </p>
                           {receiptValidation?.status === "checking" ? (
                             <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
@@ -1395,13 +1341,13 @@ export default function BookingForm() {
                           ) : null}
                           {receiptValidation?.status === "rejected" ? (
                             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                              Automatically declined: {receiptValidation.message}
+                              Upload blocked: {receiptValidation.message}
                             </div>
                           ) : null}
                           {receiptUrl ? (
                             <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
-                              <div className="flex items-center gap-2 text-primary">
-                                <CheckCircle2 className="h-4 w-4" /> Receipt accepted for admin verification.
+                              <div className="flex items-center gap-2 text-amber-700">
+                                <ShieldCheck className="h-4 w-4" /> Suspicious / Needs Manual Review
                               </div>
                               {receiptValidation?.message ? (
                                 <p className="mt-1 text-xs text-muted-foreground">{receiptValidation.message}</p>
@@ -1420,12 +1366,12 @@ export default function BookingForm() {
                       <div className="mb-4 rounded-lg border border-border bg-muted/20 p-4">
                         <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                           <span>
-                            {receiptValidation?.status === "accepted"
-                              ? "Payment receipt accepted. Continue to terms and conditions."
-                              : "Upload an accepted payment receipt before continuing."}
+                            {receiptValidation?.status === "manual_review"
+                              ? "Payment proof uploaded. An authorized admin will verify the details."
+                              : "Upload a readable payment proof before continuing."}
                           </span>
                           <span className="flex items-center gap-2">
-                            {receiptValidation?.status === "accepted" ? <CheckCircle2 className="h-4 w-4 text-primary" /> : null}
+                            {receiptValidation?.status === "manual_review" ? <ShieldCheck className="h-4 w-4 text-amber-700" /> : null}
                           </span>
                         </div>
                       </div>
@@ -1434,7 +1380,7 @@ export default function BookingForm() {
                         <Button variant="outline" onClick={() => setModalStep(2)}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={() => setModalStep(4)} disabled={isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "accepted"}>
+                        <Button className="flex-1" onClick={() => setModalStep(4)} disabled={isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "manual_review"}>
                           Next: Terms
                         </Button>
                       </div>
@@ -1520,7 +1466,7 @@ export default function BookingForm() {
                         <Button variant="outline" onClick={() => setModalStep(3)} disabled={submitting}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "accepted" || !agreedToRules}>
+                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "manual_review" || !agreedToRules}>
                           {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                           {submitting ? "Processing Booking..." : "Submit Booking"}
                         </Button>

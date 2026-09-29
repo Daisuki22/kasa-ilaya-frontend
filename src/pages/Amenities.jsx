@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
-  Camera,
   CheckCircle2,
   ImageIcon,
   Loader2,
@@ -21,28 +20,9 @@ import { Button } from "@/components/ui/button";
 import { AMENITY_ICON_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPageBannerImages } from "@/lib/pageBannerImages";
 import RotatingBannerBackground from "@/components/common/RotatingBannerBackground";
-import { handleImageFallback } from "@/lib/imageFallback";
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='%23eef2f7'/%3E%3Cpath d='M225 380l112-138 82 96 52-62 104 104H225z' fill='%23cbd5e1'/%3E%3Ccircle cx='545' cy='205' r='44' fill='%23d8dee8'/%3E%3Ctext x='50%25' y='500' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='28' fill='%2394a3b8'%3EKasa Ilaya%3C/text%3E%3C/svg%3E";
-
-const FALLBACK_GALLERY = [
-  {
-    src: "/img/room_Resort%20View.jpg",
-    title: "Resort View",
-    subtitle: "Open-air leisure spaces with calming resort scenery.",
-  },
-  {
-    src: "/img/room_eventplace.jpg",
-    title: "Event Place",
-    subtitle: "Flexible spaces for birthdays, reunions, and private gatherings.",
-  },
-  {
-    src: "/img/room_kubo.jpg",
-    title: "Kubo Area",
-    subtitle: "Easygoing corners for meals, rest, and poolside bonding.",
-  },
-];
 
 const experienceNotes = [
   "Comfortable spaces for families, barkada trips, and private events.",
@@ -77,27 +57,14 @@ export default function Amenities() {
     enabled: !isCheckingAuth,
   });
 
-  const gallerySlides = useMemo(() => {
-    const slides = Array.isArray(settings?.resort_gallery)
-      ? settings.resort_gallery.filter((slide) => slide?.src)
-      : [];
-
-    return (slides.length > 0 ? slides : FALLBACK_GALLERY).map((slide) => ({
-      src: slide.src,
-      title: slide.title || "Resort Space",
-      subtitle: slide.subtitle || "Discover one of the guest areas at Kasa Ilaya Resort.",
-    }));
-  }, [settings?.resort_gallery]);
-
   const heroImages = getPageBannerImages(settings);
   const heroImage = heroImages[0];
-  const featuredImages = gallerySlides.slice(0, 4);
   const amenities = Array.isArray(settings?.amenities) ? settings.amenities.filter((item) => item?.title) : [];
   const locations = new Set(propertyItems.map((item) => item.location_found).filter(Boolean));
 
   const metrics = [
     { label: "Featured amenities", value: Math.max(amenities.length, 1), icon: Sparkles },
-    { label: "Guest areas", value: Math.max(locations.size, featuredImages.length), icon: MapPin },
+    { label: "Guest areas", value: locations.size, icon: MapPin },
     { label: "Managed facilities", value: propertyItems.length || amenities.length, icon: ShieldCheck },
   ];
 
@@ -122,13 +89,13 @@ export default function Amenities() {
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur">
               <TreePalm className="h-4 w-4" />
-              Resort Gallery
+              Resort Amenities
             </div>
             <h1 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-              Gallery made for restful stays and memorable gatherings
+              Amenities for restful stays and memorable gatherings
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
-              Explore Kasa Ilaya Resort&apos;s pools, event spaces, private corners, and guest facilities before planning your visit.
+              Explore the facilities and services available to guests before planning your visit.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="gap-2">
@@ -171,7 +138,7 @@ export default function Amenities() {
         <div className="grid w-full max-w-none gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.9fr_1.1fr] lg:px-4 lg:py-10">
           <div>
             <span className="text-sm font-semibold uppercase tracking-wider text-secondary">
-              {settings?.amenities_section_label || "Our Gallery"}
+              {settings?.amenities_section_label || "Our Amenities"}
             </span>
             <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
               {settings?.amenities_section_title || "Everything You Need"}
@@ -229,64 +196,13 @@ export default function Amenities() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-muted/35 py-16 sm:py-20 lg:py-24">
-        <div className="grid w-full max-w-none gap-8 px-2 sm:px-3 lg:grid-cols-[1.1fr_0.9fr] lg:px-4">
-          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-            <div className="relative aspect-[16/10]">
-              <img
-                src={featuredImages[0]?.src || PLACEHOLDER_IMAGE}
-                alt={featuredImages[0]?.title || "Featured resort space"}
-                loading="lazy"
-                decoding="async"
-                onError={handleImageFallback}
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-5 text-white sm:p-6">
-                <div className="flex items-center gap-2 text-sm font-medium text-white/80">
-                  <Camera className="h-4 w-4" />
-                  Featured space
-                </div>
-                <h3 className="mt-2 font-display text-2xl font-bold">{featuredImages[0]?.title || "Resort View"}</h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-white/80">
-                  {featuredImages[0]?.subtitle || "Preview one of the resort spaces available to guests."}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-center">
-            <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Spaces</span>
-            <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
-              See the setting before you arrive
-            </h2>
-            <p className="mt-4 leading-8 text-muted-foreground">
-              From poolside relaxation to event-ready areas, the resort layout supports simple family visits and larger celebrations.
-            </p>
-
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              {featuredImages.slice(1, 4).map((slide) => (
-                <div key={slide.src} className="overflow-hidden rounded-lg border border-border bg-card">
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img src={slide.src} alt={slide.title} loading="lazy" decoding="async" onError={handleImageFallback} className="h-full w-full object-cover" />
-                  </div>
-                  <div className="p-4">
-                    <p className="font-semibold text-foreground">{slide.title}</p>
-                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{slide.subtitle}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="bg-background py-16 sm:py-20 lg:py-24">
         <div className="w-full max-w-none px-2 sm:px-3 lg:px-4">
           <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <span className="text-sm font-semibold uppercase tracking-wider text-secondary">Facilities</span>
               <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
-                Available resort Gallery entries
+                Available resort facilities
               </h2>
             </div>
             <p className="max-w-2xl leading-8 text-muted-foreground">
@@ -318,7 +234,7 @@ export default function Amenities() {
 
       <section className="relative overflow-hidden bg-foreground text-white">
         <img
-          src={featuredImages[1]?.src || heroImage}
+          src={heroImage}
           alt="Plan a Kasa Ilaya visit"
           loading="lazy"
           decoding="async"
@@ -332,7 +248,7 @@ export default function Amenities() {
               Plan your visit
             </div>
             <h2 className="mt-5 font-display text-3xl font-bold text-white sm:text-4xl">
-              Ready to match the Gallery with the right package?
+              Ready to match the right amenities with a package?
             </h2>
             <p className="mt-4 max-w-2xl leading-8 text-white/75">
               Compare day tour, night tour, and longer stay options so your group gets the right space, schedule, and facilities.

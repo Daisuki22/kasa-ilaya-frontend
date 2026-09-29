@@ -579,7 +579,7 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
                       <div className="grid gap-3 border-t border-border bg-muted/20 p-4 sm:grid-cols-3 lg:p-6">
                         <div className="rounded-2xl bg-background/90 p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Gallery</p>
-                          <p className="mt-2 text-sm text-foreground">Homepage gallery and resort visuals continue below the hero section.</p>
+                          <p className="mt-2 text-sm text-foreground">Homepage images and resort visuals continue below the hero section.</p>
                         </div>
                         <div className="rounded-2xl bg-background/90 p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Amenities</p>

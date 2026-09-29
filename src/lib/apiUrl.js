@@ -1,7 +1,5 @@
 const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const candidateApiUrl = import.meta.env.DEV
-  ? configuredApiUrl || "/api"
-  : "/api";
+const candidateApiUrl = configuredApiUrl || "/api";
 
 const isLocalApiUrl = (value) => {
   if (!/^https?:\/\//i.test(value)) {

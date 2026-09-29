@@ -291,6 +291,16 @@ const withEntityDefaults = (entityName, payload) => {
 };
 
 const createEntityHandler = (entityName) => ({
+  async unreadCount() {
+    if (entityName !== "Notification") throw new Error("Unread counts are only available for notifications.");
+    return request("/entities.php?entity=Notification&action=unread-count");
+  },
+
+  async markAllRead() {
+    if (entityName !== "Notification") throw new Error("Mark all read is only available for notifications.");
+    return request("/entities.php?entity=Notification&action=mark-all-read", { method: "PATCH" });
+  },
+
   async availability(excludeBookingId) {
     if (entityName !== "Booking") {
       throw new Error("Availability is only available for bookings.");
@@ -301,7 +311,7 @@ const createEntityHandler = (entityName) => ({
     return request(`/entities.php?${params.toString()}`);
   },
 
-  async list(sortField, limit) {
+  async list(sortField, limit, offset) {
     const params = new URLSearchParams({
       entity: entityName,
     });
@@ -312,6 +322,10 @@ const createEntityHandler = (entityName) => ({
 
     if (typeof limit === "number") {
       params.set("limit", String(limit));
+    }
+
+    if (typeof offset === "number" && offset > 0) {
+      params.set("offset", String(offset));
     }
 
     return asArray(
@@ -710,6 +724,7 @@ export const baseClient = {
     UpcomingSchedule: createEntityHandler("UpcomingSchedule"),
     User: createEntityHandler("User"),
     Review: createEntityHandler("Review"),
+    Notification: createEntityHandler("Notification"),
     Payment: createEntityHandler("Payment"),
   },
 

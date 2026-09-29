@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useChartMetrics } from "@/hooks/useChartMetrics";
 import {
   Bar,
   BarChart,
@@ -123,6 +124,7 @@ const PaymentTooltip = ({ active, payload, label }) => {
 };
 
 export default function AdminPaymentMonitoring() {
+  const chartMetrics = useChartMetrics();
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -523,10 +525,10 @@ export default function AdminPaymentMonitoring() {
             <div className="h-72">
               {paymentChannelChart.length ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={paymentChannelChart} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                  <BarChart data={paymentChannelChart} margin={chartMetrics.margin}>
                     <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                    <XAxis dataKey="channel" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" interval={0} />
-                    <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
+                    <XAxis dataKey="channel" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" interval="preserveStartEnd" />
+                    <YAxis width={chartMetrics.tickFontSize * 5} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
                     <Tooltip content={<PaymentTooltip />} />
                     <Bar dataKey="amount" name="Amount" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                   </BarChart>
@@ -766,6 +768,11 @@ export default function AdminPaymentMonitoring() {
               {selectedBooking.receipt_url ? (
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">Payment Proof</span>
+                  <div className={`rounded-lg border p-3 text-sm ${selectedBooking.payment_proof_review === "duplicate_needs_review" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-amber-500/30 bg-amber-500/5 text-amber-800"}`}>
+                    {selectedBooking.payment_proof_review === "duplicate_needs_review"
+                      ? "This proof image matches another submission. Review both bookings manually; a duplicate image alone does not establish fraud."
+                      : "Needs manual review. Image checks cannot confirm the transaction or receipt authenticity."}
+                  </div>
                   <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-muted/20">
                     <img src={selectedBooking.receipt_url} alt="Payment proof" className="max-h-[50vh] w-full bg-white object-contain" />
                   </a>
