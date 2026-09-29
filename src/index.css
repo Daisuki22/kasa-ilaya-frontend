@@ -634,7 +634,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 7mm;
+    margin: 0;
   }
 
   html,
@@ -669,8 +669,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .report-print-area {
     position: absolute !important;
-    inset: 0 auto auto 0 !important;
-    width: 100% !important;
+    inset: 7mm auto auto 7mm !important;
+    width: calc(100% - 14mm) !important;
     max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -1029,7 +1029,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 0;
   }
 
   html,
