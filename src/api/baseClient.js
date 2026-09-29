@@ -218,7 +218,7 @@ const request = async (path, options = {}) => {
     const rawMessage =
       typeof payload === "string"
         ? payload
-        : payload?.error || "Request failed.";
+        : payload?.message || payload?.error || "Request failed.";
 
     if (import.meta.env.DEV) {
       console.warn("Kasa Ilaya API response failed", {
@@ -460,6 +460,17 @@ const createEntityHandler = (entityName) => ({
     }
     const result = await request(
       `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=mark-additional-fee-paid`,
+      { method: "PATCH", body: {} }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
+  async cancel(id) {
+    if (entityName !== "Booking") {
+      throw new Error("Only bookings can be cancelled.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=cancel`,
       { method: "PATCH", body: {} }
     );
     return normalizeEntityDates("Booking", result?.data || result);

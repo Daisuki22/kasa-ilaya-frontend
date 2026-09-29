@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import LeaveReviewDialog from "@/components/mybookings/LeaveReviewDialog.jsx";
 import { addDays, format } from "date-fns";
-import { getBookingEndDateTime as getBookingEndTime, getBookingStartDateTime as getBookingStartTime } from "@/lib/bookingTimes";
+import { calendarDaysUntil, getBookingEndDateTime as getBookingEndTime } from "@/lib/bookingTimes";
 import { createPageUrl } from "@/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -108,6 +108,15 @@ const formatDate = (value) => {
   }
 
   try {
+    const dateKey = String(value).slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Manila",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(new Date(`${dateKey}T00:00:00.000Z`));
+    }
     return format(new Date(value), "MMM d, yyyy");
   } catch {
     return value;
@@ -138,7 +147,7 @@ const canCancelBooking = (booking) => {
 };
 
 const getCancellationLockedReason = (booking) => {
-  if (!booking || booking.status === "cancelled" || booking.status === "completed") {
+  if (!booking || ["cancelled", "completed", "archived"].includes(booking.status)) {
     return "";
   }
 
@@ -156,13 +165,12 @@ const getCancellationLockedReason = (booking) => {
     return "Only pending bookings can be cancelled online.";
   }
 
-  const startTime = getBookingStartTime(booking);
-  if (!startTime || Number.isNaN(startTime.getTime())) {
+  const daysUntilBooking = calendarDaysUntil(booking.booking_date);
+  if (daysUntilBooking === null) {
     return "This booking date cannot be checked for cancellation.";
   }
 
-  const cutoff = new Date(startTime.getTime() - REBOOKING_NOTICE_DAYS * 24 * 60 * 60 * 1000);
-  if (Date.now() > cutoff.getTime()) {
+  if (daysUntilBooking <= REBOOKING_NOTICE_DAYS) {
     return "Cancellation is not available within 7 days of the reservation date. You may request a reschedule instead.";
   }
 
@@ -507,25 +515,7 @@ export default function MyBookings() {
     setIsCancellingBooking(true);
 
     try {
-      await baseClient.entities.Booking.update(bookingToCancel.id, { status: "cancelled" });
-
-      try {
-        await baseClient.entities.ActivityLog.create({
-          user_email: user?.email,
-          user_name: user?.full_name,
-          action: "User Cancelled Booking",
-          entity_type: "Booking",
-          entity_id: bookingToCancel.id,
-          details: `User cancelled booking ${bookingToCancel.booking_reference}`,
-        });
-      } catch (activityLogError) {
-        if (import.meta.env.DEV) {
-          console.warn("Cancellation activity log could not be recorded", {
-            bookingId: bookingToCancel.id,
-            message: activityLogError?.message,
-          });
-        }
-      }
+      await baseClient.entities.Booking.cancel(bookingToCancel.id);
 
       toast.success("Booking cancelled successfully.");
       setBookingToCancel(null);
@@ -787,6 +777,11 @@ export default function MyBookings() {
                           <XCircle className="h-4 w-4" />
                           Cancel Booking
                         </Button>
+                      ) : null}
+                      {getCancellationLockedReason(booking) ? (
+                        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs leading-5 text-amber-900 dark:text-amber-100">
+                          {getCancellationLockedReason(booking)}
+                        </p>
                       ) : null}
                       {!isLoadingReviews && canLeaveReview(booking) && !blockedReviewBookingIds.has(booking.id) && !reviewedBookingIds.has(booking.id) ? (
                         <Button
@@ -1107,7 +1102,14 @@ export default function MyBookings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will cancel booking {bookingToCancel?.booking_reference || "this reservation"} for {bookingToCancel?.package_name || "your selected package"}. This action cannot be undone from your account.
+              <span className="block">Are you sure you want to cancel this booking?</span>
+              <span className="mt-3 block space-y-1">
+                <span className="block">Reference: {bookingToCancel?.booking_reference || "Not available"}</span>
+                <span className="block">Date: {formatDate(bookingToCancel?.booking_date)}</span>
+                <span className="block">Package: {bookingToCancel?.package_name || "Not available"}</span>
+                <span className="block">Amount: {formatMoney(bookingToCancel?.total_amount)}</span>
+              </span>
+              <span className="mt-3 block">This action cannot be undone from your account.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
