@@ -140,6 +140,8 @@ export default function BookingForm() {
   const [paymentType, setPaymentType] = useState("downpayment");
   const [selectedQrCodeId, setSelectedQrCodeId] = useState("");
   const [receiptUrl, setReceiptUrl] = useState("");
+  const [receiptFileName, setReceiptFileName] = useState("");
+  const [receiptUploadToken, setReceiptUploadToken] = useState("");
   const [receiptValidation, setReceiptValidation] = useState(null);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -365,6 +367,8 @@ export default function BookingForm() {
 
   const clearReceiptUpload = () => {
     setReceiptUrl("");
+    setReceiptFileName("");
+    setReceiptUploadToken("");
     setReceiptValidation(null);
   };
 
@@ -402,6 +406,11 @@ export default function BookingForm() {
 
     if (!receiptUrl) {
       toast.error("Please upload your payment proof before submitting.");
+      return;
+    }
+
+    if (!receiptUploadToken) {
+      toast.error("Please upload your payment proof again before submitting.");
       return;
     }
 
@@ -455,6 +464,7 @@ export default function BookingForm() {
         payment_qr_code_id: selectedQrCode?.id,
         payment_qr_code_label: selectedQrCode?.label,
         receipt_url: receiptUrl,
+        payment_proof_token: receiptUploadToken,
         terms_document_id: termsDocument.id,
         terms_version: termsDocument.version,
         terms_accepted: termsAccepted,
@@ -635,6 +645,8 @@ export default function BookingForm() {
     } catch (error) {
       if (error?.status === 401) {
         toast.error("Your session expired. Sign in again to submit your booking.");
+      } else if (error?.status === 403) {
+        toast.error("Your session or payment proof is no longer valid. Sign in and upload the proof again.");
       } else if (error?.status === 409) {
         toast.error(/terms|privacy|legal|document|polic(?:y|ies)/i.test(error?.message || "")
           ? "The legal documents changed. Review the latest versions and submit again."
@@ -685,8 +697,9 @@ export default function BookingForm() {
 
     setIsUploadingReceipt(true);
     setReceiptUrl("");
+    setReceiptFileName("");
+    setReceiptUploadToken("");
     setReceiptValidation({ status: "checking", message: "Checking image readability and upload requirements..." });
-    setAgreedToRules(false);
 
     try {
       const validation = await validateReceiptFile(file);
@@ -696,8 +709,14 @@ export default function BookingForm() {
         return;
       }
 
-      const { file_url } = await baseClient.integrations.Core.UploadFile({ file, purpose: "payment_receipt" });
+      const uploadResult = await baseClient.integrations.Core.UploadFile({ file, purpose: "payment_receipt" });
+      if (!uploadResult?.file_url || !uploadResult?.proof_upload_token) {
+        throw new Error("The upload service did not return a valid payment proof reference. Please try again.");
+      }
+      const { file_url, proof_upload_token } = uploadResult;
       setReceiptUrl(file_url);
+      setReceiptFileName(file.name);
+      setReceiptUploadToken(proof_upload_token);
       setReceiptValidation({ status: "manual_review", message: validation.reason || "Payment proof requires manual review. Visual checks cannot confirm authenticity." });
       toast.success("Payment proof uploaded for manual review.");
     } catch (error) {
@@ -1026,7 +1045,6 @@ export default function BookingForm() {
                             <Label>Tour Type *</Label>
                             <Select value={selectedTour} onValueChange={(value) => {
                               setSelectedTour(value);
-                              setAgreedToRules(false);
                             }}>
                               <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Select tour type" />
@@ -1372,6 +1390,7 @@ export default function BookingForm() {
                               <div className="flex items-center gap-2 text-amber-700">
                                 <ShieldCheck className="h-4 w-4" /> Suspicious / Needs Manual Review
                               </div>
+                              {receiptFileName ? <p className="mt-2 break-all text-xs font-medium text-foreground">Uploaded: {receiptFileName}</p> : null}
                               {receiptValidation?.message ? (
                                 <p className="mt-1 text-xs text-muted-foreground">{receiptValidation.message}</p>
                               ) : null}
@@ -1458,7 +1477,7 @@ export default function BookingForm() {
                         <Button variant="outline" onClick={() => setModalStep(3)} disabled={submitting}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "manual_review" || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
+                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || receiptValidation?.status !== "manual_review" || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
                           {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                           {submitting ? "Processing Booking..." : "Submit Booking"}
                         </Button>

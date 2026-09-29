@@ -174,13 +174,27 @@ export default function Layout({ children, currentPageName }) {
     });
   }
 
-  const persistedNotificationItems = asArray(persistedNotifications).map((item) => ({
-    ...item,
-    id: `persisted-${item.id}`,
-    createdAt: item.created_date,
-    isPersistent: true,
-    link: item.link ? createPageUrl(item.link.replace(/^\//, "")) : createPageUrl("MyBookings"),
-  }));
+  const persistedNotificationItems = asArray(persistedNotifications).map((item) => {
+    const storedLink = String(item.link || "");
+    const legacyBookingLink = /^\/?AdminBookings(?:[/?#]|$)/i.test(storedLink);
+    const isAdminBookingNotification = isAdmin && (
+      String(item.entity_type || "").toLowerCase() === "booking" || legacyBookingLink
+    );
+    const storedBookingId = item.entity_id || new URLSearchParams(storedLink.split("?")[1] || "").get("bookingId");
+    const bookingLink = `${createPageUrl("AdminCalendar")}${storedBookingId ? `?bookingId=${encodeURIComponent(storedBookingId)}` : ""}`;
+
+    return {
+      ...item,
+      id: `persisted-${item.id}`,
+      createdAt: item.created_date,
+      isPersistent: true,
+      link: isAdminBookingNotification
+        ? bookingLink
+        : storedLink
+          ? createPageUrl(storedLink.replace(/^\//, ""))
+          : createPageUrl("MyBookings"),
+    };
+  });
 
   const chatNotifications = asArray(notificationInquiries)
     .filter((inquiry) => isAdmin ? inquiry.last_sender_type === "guest" : inquiry.last_sender_type === "admin")

@@ -139,15 +139,40 @@ export default function AdminCalendar() {
   const [selectedRescheduleRequest, setSelectedRescheduleRequest] = useState(null);
   const [rescheduleDecisionNote, setRescheduleDecisionNote] = useState("");
   const [rescheduleDecision, setRescheduleDecision] = useState("");
+  const requestedBookingId = new URLSearchParams(window.location.search).get("bookingId");
 
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => {});
   }, []);
 
   const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ["admin-all-bookings"],
-    queryFn: () => baseClient.entities.Booking.list("-created_date", 500),
+    queryKey: ["admin-all-bookings", requestedBookingId],
+    queryFn: async () => {
+      const listedBookings = await baseClient.entities.Booking.list("-created_date", 500);
+      if (!requestedBookingId || listedBookings.some((booking) => String(booking.id) === requestedBookingId)) {
+        return listedBookings;
+      }
+      const [requestedBooking] = await baseClient.entities.Booking.filter({ id: requestedBookingId }, "-created_date", 1);
+      return requestedBooking ? [requestedBooking, ...listedBookings] : listedBookings;
+    },
   });
+
+  const closeSelectedBooking = () => {
+    setSelectedBooking(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("bookingId");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  useEffect(() => {
+    if (!requestedBookingId || isLoading) return;
+    const requestedBooking = bookings.find((booking) => String(booking.id) === requestedBookingId);
+    if (requestedBooking) {
+      setStatusFilter("all");
+      setSearchTerm("");
+      setSelectedBooking(requestedBooking);
+    }
+  }, [bookings, isLoading, requestedBookingId]);
 
   const activeBookings = useMemo(
     () => bookings.filter((booking) => booking.status !== "archived"),
@@ -221,7 +246,7 @@ export default function AdminCalendar() {
       queryClient.invalidateQueries({ queryKey: ["admin-bookings-archived"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
-      setSelectedBooking(null);
+      closeSelectedBooking();
     } catch (error) {
       toast.error(error?.message || "Unable to archive booking.");
     }
@@ -269,7 +294,7 @@ export default function AdminCalendar() {
       await queryClient.refetchQueries({ queryKey: ["admin-bookings"] });
       await queryClient.refetchQueries({ queryKey: ["calendar-bookings"] });
       await queryClient.refetchQueries({ queryKey: ["my-bookings"] });
-      setSelectedBooking(null);
+      closeSelectedBooking();
     } catch (error) {
       toast.error(error?.message || "Unable to update reservation.");
     }
@@ -559,7 +584,7 @@ export default function AdminCalendar() {
           </CardContent>
         </section>
 
-        <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+        <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && closeSelectedBooking()}>
           <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto sm:max-h-[90vh]">
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">Reservation Details</DialogTitle>
