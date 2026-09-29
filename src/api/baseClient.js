@@ -122,6 +122,25 @@ const request = async (path, options = {}) => {
 
   const headers = { ...(fetchOptions.headers || {}) };
   let body = fetchOptions.body;
+  const originalBody = body;
+  const requestMethod = fetchOptions.method || "GET";
+  const isBookingCreate = requestMethod === "POST" && /\/entities(?:\.php)?\?entity=Booking(?:&|$)/i.test(path);
+  const requestUrl = buildApiUrl(path);
+  const requestBodyKeys = originalBody instanceof FormData
+    ? Array.from(new Set(Array.from(originalBody.keys())))
+    : originalBody && typeof originalBody === "object"
+      ? Object.keys(originalBody)
+      : [];
+
+  if (isBookingCreate && import.meta.env.DEV) {
+    console.info("[BOOKING DEBUG] request", {
+      url: requestUrl,
+      method: requestMethod,
+      bodyKeys: requestBodyKeys,
+      credentials: "include",
+      hasAuthorizationHeader: Boolean(headers.Authorization || headers.authorization),
+    });
+  }
 
   if (body && !(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
@@ -133,7 +152,7 @@ const request = async (path, options = {}) => {
   let response;
 
   try {
-    response = await fetch(buildApiUrl(path), {
+    response = await fetch(requestUrl, {
       credentials: "include",
       cache: "no-store",
       ...fetchOptions,
@@ -145,6 +164,14 @@ const request = async (path, options = {}) => {
     window.clearTimeout(timeoutId);
     if (import.meta.env.DEV) {
       console.warn("Kasa Ilaya API request failed", path, error);
+    }
+    if (isBookingCreate && import.meta.env.DEV) {
+      console.error("[BOOKING DEBUG] response", {
+        url: requestUrl,
+        method: requestMethod,
+        status: "network_error",
+        error: error?.message || "Request failed before an HTTP response was received.",
+      });
     }
 
     if (error?.name === "AbortError") {
@@ -202,6 +229,22 @@ const request = async (path, options = {}) => {
       });
     }
 
+    if (isBookingCreate && import.meta.env.DEV) {
+      console.error("[BOOKING DEBUG] response", {
+        url: requestUrl,
+        method: requestMethod,
+        status: response.status,
+        body: typeof payload === "object" && payload !== null
+          ? {
+              error: payload.error,
+              error_code: payload.error_code,
+              details: payload.details,
+              request_id: payload.request_id,
+            }
+          : String(payload || "").slice(0, 500),
+      });
+    }
+
     const message =
       /SQLSTATE\[HY000\]\s*\[2002\]|target machine actively refused/i.test(
         rawMessage
@@ -210,6 +253,9 @@ const request = async (path, options = {}) => {
         : rawMessage;
 
     const error = new Error(message);
+    error.status = response.status;
+    error.endpoint = requestUrl;
+    error.method = requestMethod;
 
     if (payload && typeof payload === "object") {
       Object.assign(error, payload);
@@ -225,6 +271,15 @@ const request = async (path, options = {}) => {
     }
 
     throw error;
+  }
+
+  if (isBookingCreate && import.meta.env.DEV) {
+    console.info("[BOOKING DEBUG] response", {
+      url: requestUrl,
+      method: requestMethod,
+      status: response.status,
+      bodyKeys: payload && typeof payload === "object" ? Object.keys(payload) : [],
+    });
   }
 
   return resolveAssetUrlsDeep(payload);
