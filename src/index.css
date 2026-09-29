@@ -634,7 +634,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 7mm 7mm 0;
+    margin: 7mm;
   }
 
   html,
@@ -1029,7 +1029,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 10mm 0;
+    margin: 10mm;
   }
 
   html,
@@ -1049,7 +1049,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   #root header,
   #root nav,
   #root aside,
-  #root footer { display: none !important; }
+  #root > footer { display: none !important; }
 
   .report-print-area > :not(.profit-report-print) { display: none !important; }
 
