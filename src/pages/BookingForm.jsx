@@ -654,7 +654,8 @@ export default function BookingForm() {
       } else if (error?.status === 422 || error?.status === 400) {
         toast.error(error?.message || "Some booking details need to be corrected.");
       } else if (error?.status >= 500) {
-        toast.error("We couldn't complete your booking right now. Please try again.");
+        const reference = error?.request_id ? ` Reference: ${error.request_id}` : "";
+        toast.error(`We couldn't complete your booking right now. Please try again.${reference}`);
       } else if (error?.status) {
         toast.error(error?.message || "Your booking request was rejected. Please review it and try again.");
       } else {
