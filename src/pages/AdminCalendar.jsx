@@ -47,7 +47,13 @@ const paymentColors = {
   unpaid: "border-destructive/20 bg-destructive/10 text-destructive",
   pending_verification: "border-sky-200 bg-sky-50 text-sky-700",
   paid: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  declined: "border-destructive/20 bg-destructive/10 text-destructive",
 };
+
+const paymentStatusLabel = (booking) => booking?.status === "rejected" ? "declined" : (booking?.payment_status || "unpaid").replace(/_/g, " ");
+const bookingStatusLabel = (booking) => booking?.status === "rejected"
+  ? (booking.payment_proof_review === "auto_declined" && /^Receipt is outdated\./.test(booking.rejection_reason || "") ? "Declined — Outdated Receipt" : "Declined")
+  : booking?.status === "confirmed" ? "approved" : (booking?.status || "pending").replace(/_/g, " ");
 
 const tourLabels = {
   day_tour: "Day Tour",
@@ -302,6 +308,13 @@ export default function AdminCalendar() {
       await queryClient.refetchQueries({ queryKey: ["my-bookings"] });
       closeSelectedBooking();
     } catch (error) {
+      if (error?.status === "DECLINED") {
+        await queryClient.refetchQueries({ queryKey: ["admin-all-bookings"] });
+        await queryClient.refetchQueries({ queryKey: ["calendar-bookings"] });
+        toast.error(error?.reason || "This receipt was declined and cannot be approved.");
+        closeSelectedBooking();
+        return;
+      }
       toast.error(error?.message || "Unable to update reservation.");
     }
   };
@@ -558,7 +571,7 @@ export default function AdminCalendar() {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={statusColors[booking.status] || statusColors.pending}>
-                              {isBookingExpired(booking) && !["completed", "cancelled", "rejected"].includes(booking.status) ? "expired" : booking.status === "confirmed" ? "approved" : (booking.status || "pending").replace(/_/g, " ")}
+                              {isBookingExpired(booking) && !["completed", "cancelled", "rejected"].includes(booking.status) ? "expired" : bookingStatusLabel(booking)}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -629,10 +642,10 @@ export default function AdminCalendar() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className={statusColors[selectedBooking.status] || statusColors.pending}>
-                        {isBookingExpired(selectedBooking) && !["completed", "cancelled", "rejected"].includes(selectedBooking.status) ? "expired" : selectedBooking.status === "confirmed" ? "approved" : (selectedBooking.status || "pending").replace(/_/g, " ")}
+                        {isBookingExpired(selectedBooking) && !["completed", "cancelled", "rejected"].includes(selectedBooking.status) ? "expired" : bookingStatusLabel(selectedBooking)}
                       </Badge>
-                      <Badge variant="outline" className={paymentColors[selectedBooking.payment_status] || paymentColors.unpaid}>
-                        {(selectedBooking.payment_status || "unpaid").replace(/_/g, " ")}
+                      <Badge variant="outline" className={paymentColors[paymentStatusLabel(selectedBooking).replace(/ /g, "_")] || paymentColors.unpaid}>
+                        {paymentStatusLabel(selectedBooking)}
                       </Badge>
                     </div>
                   </div>
@@ -691,7 +704,7 @@ export default function AdminCalendar() {
                   </div>
                 )}
 
-                {selectedBooking.status === "pending" && !isBookingExpired(selectedBooking) && (
+                {selectedBooking.status === "pending" && selectedBooking.payment_status !== "declined" && !isBookingExpired(selectedBooking) && (
                   <div className="space-y-3 border-t border-border pt-4">
                     <Button className="w-full gap-2" onClick={() => updateStatus(selectedBooking.id, "confirmed")}>
                       <CheckCircle2 className="h-4 w-4" />

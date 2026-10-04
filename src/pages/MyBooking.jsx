@@ -713,7 +713,7 @@ export default function MyBookings() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-display text-2xl font-bold text-foreground">{booking.package_name || "Resort Package"}</h3>
                             <Badge className={statusColors[booking.status] || statusColors.pending} variant="outline">
-                              {booking.status === "confirmed" ? "Approved" : (booking.status || "pending").replace(/_/g, " ")}
+                              {booking.status === "confirmed" ? "Approved" : booking.status === "rejected" ? "Declined" : (booking.status || "pending").replace(/_/g, " ")}
                             </Badge>
                           </div>
                           <p className="mt-2 text-sm text-muted-foreground">
@@ -823,7 +823,7 @@ export default function MyBookings() {
 
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <Detail label="Status">
-                  <Badge className={statusColors[selectedBooking.status]} variant="outline">{selectedBooking.status === "confirmed" ? "Approved" : selectedBooking.status}</Badge>
+                  <Badge className={statusColors[selectedBooking.status]} variant="outline">{selectedBooking.status === "confirmed" ? "Approved" : selectedBooking.status === "rejected" ? "Declined" : selectedBooking.status}</Badge>
                 </Detail>
                 <Detail label="Payment">
                   <Badge className={`${paymentColors[getDisplayPaymentStatus(selectedBooking)] || paymentColors.unpaid} max-w-full whitespace-normal break-words`}>
