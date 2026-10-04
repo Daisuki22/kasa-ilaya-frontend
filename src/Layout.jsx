@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,9 +8,10 @@ import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
   Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
-  ChartBarIcon, CreditCard, FileText
+  ChartBarIcon, CreditCard, FileText, Phone, Mail, MapPin, ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
@@ -21,6 +22,27 @@ import { useAuth } from "@/lib/AuthContext";
 import { handleImageFallback, LOGO_IMAGE_FALLBACK } from "@/lib/imageFallback";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 import { toast } from "sonner";
+import { RESORT_CONTACT } from "@/lib/resortContact";
+
+const RESORT_MAP_URL = "https://www.google.com/maps?q=14.24133309901719%2C120.9992428775908";
+
+const footerQuickLinks = [
+  { label: "Home", page: "Home" },
+  { label: "About Us", page: "About" },
+  { label: "Rooms & Accommodations", page: "Packages" },
+  { label: "Amenities", page: "Packages" },
+  { label: "Gallery", page: "About" },
+  { label: "Contact Us", page: "Contact" },
+];
+
+const footerBookingLinks = [
+  { label: "Book Now", page: "BookingForm" },
+  { label: "My Booking", page: "MyBookings" },
+  { label: "Booking Status", page: "MyBookings" },
+  { label: "Payment", page: "BookingForm" },
+  { label: "Payment Verification", page: "MyBookings" },
+  { label: "Booking Terms", type: "terms" },
+];
 
 const safeLocalStorageGet = (key, fallback = "") => {
   try {
@@ -39,6 +61,53 @@ const safeLocalStorageSet = (key, value) => {
 };
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
+
+function FooterLinkColumn({ title, links, onLegalOpen }) {
+  return (
+    <div>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">{title}</h2>
+      <ul className="mt-4 space-y-2.5">
+        {links.map((item) => (
+          item.type ? (
+            <li key={`${item.label}-${item.type}`}><FooterLegalLink label={item.label} type={item.type} onOpen={onLegalOpen} /></li>
+          ) : (
+            <FooterRouteLink key={`${item.label}-${item.page}`} {...item} />
+          )
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FooterRouteLink({ label, page }) {
+  const location = useLocation();
+  const destination = createPageUrl(page);
+  const onSamePage = location.pathname === destination || (page === "Home" && location.pathname === "/");
+
+  return (
+    <li>
+      <Link
+        to={destination}
+        onClick={onSamePage ? (event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); } : undefined}
+        className="inline-flex min-h-8 items-center text-sm text-white/75 transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+      >
+        {label}
+      </Link>
+    </li>
+  );
+}
+
+function FooterLegalLink({ label, type, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(type)}
+      className="inline-flex min-h-8 items-center text-sm text-white/75 transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+    >
+      {label}
+    </button>
+  );
+}
 
 const Chatbot = lazy(() => import("@/components/chatbot"));
 
@@ -71,6 +140,7 @@ export default function Layout({ children, currentPageName }) {
   const { user, isLoadingAuth } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
   const initializedChatNotifications = useRef(false);
   const deliveredChatNotifications = useRef(new Set());
@@ -88,6 +158,11 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const isAdminMode = Boolean(isAdmin && isAdminPage);
+  const { data: footerLegalDocuments = [], isLoading: isLoadingFooterLegal, isError: hasFooterLegalError } = useQuery({
+    queryKey: ["published-legal-documents"],
+    queryFn: () => baseClient.entities.LegalDocument.list("-published_at", 10),
+    enabled: !isAdminMode && Boolean(footerLegalType),
+  });
   const allowedAdminNav = adminNav.filter((item) => canAccessAdminPage(user, item.page));
   const guestNav = userNav.filter((item) => {
     if (item.page === "MyBookings") {
@@ -105,6 +180,9 @@ export default function Layout({ children, currentPageName }) {
     ? "AdminProfileSettings"
     : "ProfileSettings";
   const siteName = siteSettings?.site_name?.trim() || "Kasa Ilaya";
+  const footerLegalDocument = asArray(footerLegalDocuments).find(
+    (document) => document.document_type === footerLegalType && document.status === "published"
+  );
 
   const bodyFontFamily = FONT_STYLE_OPTIONS[siteSettings?.body_font_style]?.cssFamily || FONT_STYLE_OPTIONS.inter.cssFamily;
   const headingFontFamily = FONT_STYLE_OPTIONS[siteSettings?.heading_font_style]?.cssFamily || FONT_STYLE_OPTIONS.playfair.cssFamily;
@@ -757,13 +835,102 @@ export default function Layout({ children, currentPageName }) {
         <main className={`min-h-screen ${isAdminMode ? "pt-16 md:pt-0" : "pt-16"}`}>{children}</main>
 
         {!isAdminMode ? (
-          <footer className="border-t border-border bg-card/80">
-            <div className="flex w-full max-w-none items-center justify-center px-2 py-5 text-center text-sm text-muted-foreground sm:px-3 lg:px-4">
-              <p>
-                {siteName} Resort & Event Place. All guest reservations are subject to resort policies and confirmation. @2026 All rights reserved.
-              </p>
-            </div>
-          </footer>
+          <>
+            <footer id="site-footer" className="border-t border-white/10 bg-[#173d32] text-white">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid gap-8 border-b border-white/15 py-9 sm:py-11 md:grid-cols-[minmax(0,1.4fr)_auto] md:items-center md:gap-10">
+                  <div className="flex items-start gap-4">
+                    <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10 p-1.5">
+                      {siteSettings?.logo_url ? (
+                        <img src={resolveAssetUrl(siteSettings.logo_url)} alt={`${siteName} logo`} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
+                      ) : (
+                        <TreePalm className="h-8 w-8 text-secondary" aria-hidden="true" />
+                      )}
+                    </Link>
+                    <div className="min-w-0 max-w-xl">
+                      <p className="font-display text-xl font-bold tracking-tight sm:text-2xl">{siteName} Resort</p>
+                      <p className="mt-2 text-sm leading-6 text-white/75">
+                        Kasa Ilaya Resort &amp; Event Place — your destination for relaxing stays, celebrations, and unforgettable moments.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-start gap-3 md:items-end">
+                    <p className="text-sm text-white/75">Ready to plan your visit?</p>
+                    <Button asChild className="min-h-11 gap-2 bg-secondary px-5 font-semibold text-secondary-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-secondary/90 hover:shadow-md focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-[#173d32]">
+                      <Link to={createPageUrl("BookingForm")}>
+                        <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                        Book Now
+                        <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
+                <nav aria-label="Footer navigation" className="grid grid-cols-2 gap-x-5 gap-y-8 py-9 sm:gap-x-8 md:grid-cols-4 md:py-10">
+                  <FooterLinkColumn title="Quick Links" links={footerQuickLinks} />
+                  <FooterLinkColumn title="Booking" links={footerBookingLinks} onLegalOpen={setFooterLegalType} />
+                  <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">Information</h2>
+                    <ul className="mt-4 space-y-2.5">
+                      <FooterRouteLink label="About Kasa Ilaya" page="About" />
+                      <FooterRouteLink label="FAQs & Guest Help" page="Contact" />
+                      <li><FooterLegalLink label="Privacy Policy" type="privacy" onOpen={setFooterLegalType} /></li>
+                      <li><FooterLegalLink label="Terms & Conditions" type="terms" onOpen={setFooterLegalType} /></li>
+                      <li><FooterLegalLink label="Cancellation Policy" type="terms" onOpen={setFooterLegalType} /></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">Contact</h2>
+                    <ul className="mt-4 space-y-3 text-sm">
+                      <li>
+                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white/75 transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
+                          <Phone className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                          <span>{RESORT_CONTACT.phoneDisplay}</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white/75 transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
+                          <Mail className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                          <span>{RESORT_CONTACT.email}</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={RESORT_MAP_URL} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white/75 transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                          <span>{RESORT_CONTACT.address}</span>
+                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden="true" />
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </nav>
+
+                <div className="flex flex-col gap-3 border-t border-white/15 py-5 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between lg:pr-64">
+                  <p>© {new Date().getFullYear()} Kasa Ilaya Resort. All rights reserved.</p>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                    <FooterLegalLink label="Privacy Policy" type="privacy" onOpen={setFooterLegalType} />
+                    <FooterLegalLink label="Terms & Conditions" type="terms" onOpen={setFooterLegalType} />
+                  </div>
+                </div>
+              </div>
+            </footer>
+
+            <Dialog open={Boolean(footerLegalType)} onOpenChange={(open) => { if (!open) setFooterLegalType(null); }}>
+              <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+                <DialogHeader className="border-b border-border px-6 py-5 pr-12 text-left">
+                  <DialogTitle className="font-display text-2xl text-foreground">{footerLegalDocument?.title || (footerLegalType === "terms" ? "Terms & Conditions" : "Privacy Policy")}</DialogTitle>
+                  <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {isLoadingFooterLegal ? "Loading the published document…" : footerLegalDocument ? `Published version ${footerLegalDocument.version}.` : hasFooterLegalError ? "Unable to load the published document." : "The resort has not published this document yet."}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+                  <div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">
+                    {isLoadingFooterLegal ? "Loading document…" : footerLegalDocument?.content || (hasFooterLegalError ? "Please try again later or contact Kasa Ilaya Resort for help." : "For help with resort policies, please contact Kasa Ilaya Resort.")}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
         ) : null}
       </div>
 
