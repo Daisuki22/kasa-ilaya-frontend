@@ -5,7 +5,6 @@ const VideoPresentationSection = lazy(() => import("@/components/home/VideoPrese
 const UpcomingScheduleSection = lazy(() => import("@/components/home/UpcomingScheduleSection"));
 const ResortRulesSection = lazy(() => import("@/components/home/ResortRulesSection"));
 const ReviewsSection = lazy(() => import("@/components/home/ReviewSection.jsx"));
-const CTASection = lazy(() => import("@/components/home/CTASection"));
 
 function LazyHomeSection({ children, minHeight = "16rem" }) {
   const sectionRef = useRef(null);
@@ -64,9 +63,6 @@ export default function Home() {
       </LazyHomeSection>
       <LazyHomeSection>
         <ReviewsSection />
-      </LazyHomeSection>
-      <LazyHomeSection>
-        <CTASection />
       </LazyHomeSection>
     </div>
   );

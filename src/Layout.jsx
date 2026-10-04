@@ -30,7 +30,6 @@ const footerQuickLinks = [
   { label: "Home", page: "Home" },
   { label: "About Us", page: "About" },
   { label: "Rooms & Accommodations", page: "Packages" },
-  { label: "Amenities", page: "Packages" },
   { label: "Gallery", page: "About" },
   { label: "Contact Us", page: "Contact" },
 ];
