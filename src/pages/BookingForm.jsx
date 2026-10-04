@@ -1464,14 +1464,14 @@ export default function BookingForm() {
                           ) : null}
                           {receiptValidation?.status === "rejected" ? (
                             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                              Upload blocked: {receiptValidation.message}
+                              {receiptValidation.message?.startsWith("Receipt is outdated.") ? "Declined — Outdated Receipt" : receiptValidation.message?.startsWith("Receipt date is invalid.") ? "Declined — Invalid Receipt Date" : `Declined — ${receiptValidation.message}`}
                             </div>
                           ) : null}
                           {receiptUrl ? (
                             <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
                               {receiptValidation?.status === "rejected" ? (
                                 <div className="flex items-center gap-2 font-medium text-destructive">
-                                  <ShieldCheck className="h-4 w-4" /> Declined — Receipt Does Not Match
+                                  <ShieldCheck className="h-4 w-4" /> {receiptValidation?.message?.startsWith("Receipt is outdated.") ? "Declined — Outdated Receipt" : receiptValidation?.message?.startsWith("Receipt date is invalid.") ? "Declined — Invalid Receipt Date" : "Declined — Receipt Does Not Match"}
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2 text-amber-700">
