@@ -398,16 +398,7 @@ export default function BookingForm() {
     }
 
     const paymentNumber = String(form.payment_number || "").trim();
-    if (paymentNumber.length < 5 || paymentNumber.length > 64 || /[\u0000-\u001f\u007f]/.test(paymentNumber)) {
-      toast.error("Enter a valid payment number (5 to 64 characters).");
-      return;
-    }
-
     const paymentReferenceNumber = String(form.payment_reference_number || "").trim();
-    if (paymentReferenceNumber.length < 4 || paymentReferenceNumber.length > 128 || /[\u0000-\u001f\u007f]/.test(paymentReferenceNumber)) {
-      toast.error("Enter a valid payment reference number (4 to 128 characters).");
-      return;
-    }
 
     if (!receiptUrl) {
       toast.error("Please upload your payment proof before submitting.");
@@ -718,6 +709,7 @@ export default function BookingForm() {
     setReceiptUrl("");
     setReceiptFileName("");
     setReceiptUploadToken("");
+    setForm((previous) => ({ ...previous, payment_number: "", payment_reference_number: "" }));
     setReceiptValidation({ status: "checking", message: "Checking image readability and upload requirements..." });
 
     try {
@@ -740,9 +732,17 @@ export default function BookingForm() {
       const extracted = [
         ocr.provider ? `Provider: ${ocr.provider}` : null,
         Number.isFinite(Number(ocr.amount)) && Number(ocr.amount) > 0 ? `Amount: ₱${Number(ocr.amount).toFixed(2)}` : null,
+        ocr.payment_number ? `Payment number: ${ocr.payment_number}` : null,
         ocr.reference ? `Reference: ${ocr.reference}` : null,
         ocr.date ? `Date: ${ocr.date}` : null,
       ].filter(Boolean);
+      if (ocr.autofill_payment_number || ocr.autofill_reference) {
+        setForm((previous) => ({
+          ...previous,
+          payment_number: ocr.autofill_payment_number ? ocr.payment_number : previous.payment_number,
+          payment_reference_number: ocr.autofill_reference ? ocr.reference : previous.payment_reference_number,
+        }));
+      }
       const ocrMessage = extracted.length
         ? `OCR extracted ${extracted.join(" · ")}. This is an automated reading only; an authorized admin must verify the transaction and proof authenticity.`
         : "OCR could not reliably extract receipt details. An authorized admin must review the image and verify the transaction.";
@@ -834,9 +834,15 @@ export default function BookingForm() {
                   ? <>A booking confirmation email has been sent to <strong>{form.customer_email}</strong>.</>
                   : <>Your booking was saved, but the email notification could not be delivered right now.</>}
               </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Your payment proof was submitted and is now waiting for admin verification.
-              </p>
+              {bookingComplete.status === "rejected" ? (
+                <p className="text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-lg px-3 py-2 mb-4">
+                  Your receipt was declined automatically: {bookingComplete.rejection_reason || "The payment details did not match the booking."}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">
+                  Your payment proof was submitted and is now waiting for admin verification.
+                </p>
+              )}
               {!bookingComplete.email_sent && bookingComplete.email_error ? (
                 <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
                   {bookingComplete.email_error}
@@ -1413,7 +1419,6 @@ export default function BookingForm() {
                             placeholder="Number used for this payment"
                             autoComplete="off"
                             maxLength={64}
-                            required
                           />
                         </div>
                         <div>
@@ -1426,7 +1431,6 @@ export default function BookingForm() {
                             placeholder="Transaction/reference number"
                             autoComplete="off"
                             maxLength={128}
-                            required
                           />
                         </div>
                       </div>
@@ -1440,7 +1444,7 @@ export default function BookingForm() {
                             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
                           </label>
                           <p className="text-xs text-muted-foreground">
-                            JPG, PNG, or WebP images up to 8 MB. Your booking stays Pending until an authorized admin manually checks your receipt, payment number, amount, and reference number.
+                            JPG, PNG, or WebP images up to 8 MB. Clear mismatches are declined automatically; incomplete reads stay Pending for admin review.
                           </p>
                           {receiptValidation?.status === "checking" ? (
                             <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">

@@ -61,12 +61,13 @@ const paymentColors = {
   unpaid: "bg-destructive/10 text-destructive",
   pending_verification: "bg-amber-100 text-amber-800",
   paid: "bg-primary/10 text-primary",
+  declined: "bg-destructive/10 text-destructive",
   cancelled: "bg-destructive/10 text-destructive",
   archived: "bg-muted text-muted-foreground",
 };
 
 const getDisplayPaymentStatus = (booking) => {
-  return booking?.payment_status || "unpaid";
+  return booking?.status === "rejected" ? "declined" : booking?.payment_status || "unpaid";
 };
 
 const formatStatusLabel = (value) => (value || "unpaid").replace(/_/g, " ");
@@ -858,7 +859,7 @@ export default function MyBookings() {
 
               {selectedBooking.rejection_reason ? (
                 <div>
-                  <span className="text-sm text-muted-foreground">Administrator's rejection reason</span>
+                  <span className="text-sm text-muted-foreground">Decline reason</span>
                   <p className="mt-1 whitespace-pre-wrap rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm leading-6">{selectedBooking.rejection_reason}</p>
                 </div>
               ) : null}

@@ -123,6 +123,7 @@ export default function Login() {
   });
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const [isCheckingGoogle, setIsCheckingGoogle] = useState(true);
+  const [googleLoadError, setGoogleLoadError] = useState('');
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState('');
   const [googleBirthday, setGoogleBirthday] = useState('');
   const [isGoogleBirthdayOpen, setIsGoogleBirthdayOpen] = useState(false);
@@ -220,10 +221,12 @@ export default function Login() {
       return undefined;
     }
 
+    setGoogleLoadError('');
     loadGoogleScript()
       .then((google) => {
-        if (!isMounted || !google?.accounts?.id || !googleButtonRef.current) {
-          return;
+        if (!isMounted) return;
+        if (!google?.accounts?.id || !googleButtonRef.current) {
+          throw new Error('Google sign-in did not initialize.');
         }
 
         google.accounts.id.initialize({
@@ -244,6 +247,7 @@ export default function Login() {
       .catch(() => {
         if (isMounted) {
           setIsGoogleReady(false);
+          setGoogleLoadError('Google sign-in could not load. Check the authorized website origin in Google Cloud, then refresh this page.');
         }
       });
 
@@ -504,9 +508,17 @@ export default function Login() {
                 <>
                   <div className="mb-6 space-y-3">
                     {googleConfig.enabled ? (
-                      <div className="flex min-h-11 justify-center">
-                        <div ref={googleButtonRef} className="min-h-11" />
-                      </div>
+                      <>
+                        <div className={isGoogleReady ? "flex min-h-11 justify-center" : "hidden"}>
+                          <div ref={googleButtonRef} className="min-h-11" />
+                        </div>
+                        {!isGoogleReady ? (
+                          <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-lg border-border bg-background" disabled>
+                            <GoogleMark />
+                            Continue with Google
+                          </Button>
+                        ) : null}
+                      </>
                     ) : (
                       <Button
                         type="button"
@@ -526,12 +538,13 @@ export default function Login() {
                       <div className="h-px flex-1 bg-border" />
                     </div>
 
-                    {googleConfig.enabled && !isGoogleReady ? (
+                    {googleConfig.enabled && !isGoogleReady && !googleLoadError ? (
                       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading Google sign-in...
                       </div>
                     ) : null}
+                    {googleLoadError ? <p role="status" className="text-center text-xs text-muted-foreground">{googleLoadError}</p> : null}
                   </div>
 
                   <Tabs value={activeTab} onValueChange={setActiveTab}>

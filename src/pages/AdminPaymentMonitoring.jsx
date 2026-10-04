@@ -33,6 +33,7 @@ const paymentColors = {
   unpaid: "bg-destructive/10 text-destructive",
   pending_verification: "bg-accent/20 text-accent-foreground-black",
   paid: "bg-primary/10 text-primary",
+  declined: "bg-destructive/10 text-destructive",
 };
 
 const bookingStatusColors = {
@@ -47,6 +48,7 @@ const paymentLabels = {
   unpaid: "Unpaid",
   pending_verification: "Pending verification",
   paid: "Paid",
+  declined: "Declined",
 };
 
 const paymentTypeLabels = {
@@ -96,12 +98,14 @@ const formatDate = (value) => {
 };
 
 const normalizePaymentStatus = (status) => status || "unpaid";
+const displayPaymentStatus = (booking) => booking?.status === "rejected" ? "declined" : normalizePaymentStatus(booking?.payment_status);
 const normalizeAdditionalFeeStatus = (status) => status || "unpaid";
 
 const chartColors = {
   paid: "hsl(var(--primary))",
   pending_verification: "hsl(var(--secondary))",
   unpaid: "hsl(var(--destructive))",
+  declined: "hsl(var(--destructive))",
   pending: "hsl(var(--secondary))",
 };
 
@@ -176,7 +180,7 @@ export default function AdminPaymentMonitoring() {
     const query = searchTerm.trim().toLowerCase();
 
     return paymentBookings.filter((booking) => {
-      const paymentStatus = normalizePaymentStatus(booking.payment_status);
+      const paymentStatus = displayPaymentStatus(booking);
       const matchesStatus = paymentFilter === "all" || paymentStatus === paymentFilter;
 
       if (!matchesStatus) {
@@ -206,7 +210,7 @@ export default function AdminPaymentMonitoring() {
   const summary = useMemo(() => {
     return paymentBookings.reduce(
       (totals, booking) => {
-        const paymentStatus = normalizePaymentStatus(booking.payment_status);
+        const paymentStatus = displayPaymentStatus(booking);
         const submittedAmount = getSubmittedPaymentAmount(booking);
         const additionalFee = toFiniteAmount(booking.additional_fee_amount);
 
@@ -236,9 +240,9 @@ export default function AdminPaymentMonitoring() {
   }, [paymentBookings]);
 
   const paymentStatusChart = useMemo(() => {
-    return ["paid", "pending_verification", "unpaid"].map((status) => {
+    return ["paid", "pending_verification", "declined", "unpaid"].map((status) => {
       const rows = paymentBookings.filter((booking) => (
-        booking.status !== "cancelled" && normalizePaymentStatus(booking.payment_status) === status
+        booking.status !== "cancelled" && displayPaymentStatus(booking) === status
       ));
 
       return {
@@ -423,6 +427,7 @@ export default function AdminPaymentMonitoring() {
             <SelectContent>
               <SelectItem value="all">All payments</SelectItem>
               <SelectItem value="pending_verification">Pending verification</SelectItem>
+              <SelectItem value="declined">Declined</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="unpaid">Unpaid</SelectItem>
             </SelectContent>
@@ -594,7 +599,7 @@ export default function AdminPaymentMonitoring() {
                   </TableRow>
                 ) : (
                   visibleBookings.map((booking) => {
-                    const paymentStatus = normalizePaymentStatus(booking.payment_status);
+                    const paymentStatus = displayPaymentStatus(booking);
                     const additionalFeeStatus = normalizeAdditionalFeeStatus(booking.additional_fee_status);
                     const additionalFeeAmount = Number(booking.additional_fee_amount || 0);
                     const submittedAmount = getSubmittedPaymentAmount(booking);
@@ -734,8 +739,8 @@ export default function AdminPaymentMonitoring() {
                 <div>
                   <span className="text-muted-foreground">Payment Status</span>
                   <p>
-                    <Badge className={paymentColors[normalizePaymentStatus(selectedBooking.payment_status)] || paymentColors.unpaid}>
-                      {paymentLabels[normalizePaymentStatus(selectedBooking.payment_status)] || normalizePaymentStatus(selectedBooking.payment_status)}
+                    <Badge className={paymentColors[displayPaymentStatus(selectedBooking)] || paymentColors.unpaid}>
+                      {paymentLabels[displayPaymentStatus(selectedBooking)] || displayPaymentStatus(selectedBooking)}
                     </Badge>
                   </p>
                 </div>
@@ -760,7 +765,9 @@ export default function AdminPaymentMonitoring() {
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">Payment Proof</span>
                   <div className={`rounded-lg border p-3 text-sm ${selectedBooking.payment_proof_review === "duplicate_needs_review" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-amber-500/30 bg-amber-500/5 text-amber-800"}`}>
-                    {selectedBooking.payment_proof_review === "duplicate_needs_review"
+                    {selectedBooking.payment_proof_review === "auto_declined"
+                      ? `Automatically declined: ${selectedBooking.rejection_reason || "The payment details did not match the booking."}`
+                      : selectedBooking.payment_proof_review === "duplicate_needs_review"
                       ? "This proof image matches another submission. Review both bookings manually; a duplicate image alone does not establish fraud."
                       : selectedBooking.payment_proof_review === "verified"
                         ? "OCR signals match the expected details. This is not transaction or authenticity verification; review the original proof manually."
@@ -794,7 +801,7 @@ export default function AdminPaymentMonitoring() {
                 </div>
               ) : null}
 
-              {normalizePaymentStatus(selectedBooking.payment_status) === "pending_verification" && selectedBooking.status === "pending" ? (
+              {displayPaymentStatus(selectedBooking) === "pending_verification" && selectedBooking.status === "pending" ? (
                 <p className="rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-muted-foreground">
                   Review the proof in Reservation Management. Accepting the booking verifies this payment automatically.
                 </p>
