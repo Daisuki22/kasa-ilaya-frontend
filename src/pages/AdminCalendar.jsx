@@ -308,7 +308,7 @@ export default function AdminCalendar() {
       await queryClient.refetchQueries({ queryKey: ["my-bookings"] });
       closeSelectedBooking();
     } catch (error) {
-      if (error?.status === "DECLINED") {
+      if (String(error?.status || "").toLowerCase() === "declined") {
         await queryClient.refetchQueries({ queryKey: ["admin-all-bookings"] });
         await queryClient.refetchQueries({ queryKey: ["calendar-bookings"] });
         toast.error(error?.reason || "This receipt was declined and cannot be approved.");
