@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -135,6 +136,8 @@ const adminNav = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  const location = useLocation();
+  const prefersReducedMotion = useReducedMotion();
   const queryClient = useQueryClient();
   const { user, isLoadingAuth } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -626,16 +629,23 @@ export default function Layout({ children, currentPageName }) {
               <Link
                 key={item.page || item.href}
                 to={item.href || createPageUrl(item.page)}
-                className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition-all duration-200 ${
+                className={`group relative isolate flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition-all duration-200 ${
                   currentPageName === item.page
-                    ? "border-primary/15 bg-primary text-primary-foreground shadow-md shadow-primary/15"
+                    ? "border-primary/15 text-primary-foreground shadow-md shadow-primary/15"
                     : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/80 hover:text-foreground hover:shadow-sm"
                 }`}
               >
+                {currentPageName === item.page ? (
+                  <motion.span
+                    layoutId="admin-sidebar-active"
+                    className="absolute inset-0 z-0 rounded-xl bg-primary"
+                    transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                  />
+                ) : null}
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${currentPageName === item.page ? "bg-white/15" : "bg-muted/70 group-hover:bg-primary/10"}`}>
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="relative z-10 h-4 w-4" />
                 </span>
-                {item.name}
+                <span className="relative z-10">{item.name}</span>
               </Link>
             ))}
           </nav>
@@ -711,14 +721,21 @@ export default function Layout({ children, currentPageName }) {
                   <Link
                     key={item.page || item.href}
                     to={item.href || createPageUrl(item.page)}
-                    className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
+                    className={`relative isolate flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
                       currentPageName === item.page
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                        ? "text-primary-foreground"
                         : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
-                    <item.icon className={`h-4 w-4 ${currentPageName === item.page ? "text-secondary" : ""}`} />
-                    {item.name}
+                    {currentPageName === item.page ? (
+                      <motion.span
+                        layoutId="user-navbar-active"
+                        className="absolute inset-0 z-0 rounded-full bg-primary shadow-md shadow-primary/20"
+                        transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                      />
+                    ) : null}
+                    <item.icon className={`relative z-10 h-4 w-4 ${currentPageName === item.page ? "text-secondary" : ""}`} />
+                    <span className="relative z-10">{item.name}</span>
                   </Link>
                 ))}
               </nav>
@@ -778,16 +795,23 @@ export default function Layout({ children, currentPageName }) {
                   key={item.page || item.href}
                   to={item.href || createPageUrl(item.page)}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-200 ${
+                  className={`relative isolate flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-200 ${
                     currentPageName === item.page
-                      ? "border-primary/15 bg-primary text-primary-foreground shadow-md shadow-primary/15"
+                      ? "border-primary/15 text-primary-foreground shadow-md shadow-primary/15"
                       : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
                   }`}
                 >
+                  {currentPageName === item.page ? (
+                    <motion.span
+                      layoutId={isAdminMode ? "admin-mobile-active" : "user-mobile-active"}
+                      className="absolute inset-0 z-0 rounded-xl bg-primary"
+                      transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                    />
+                  ) : null}
                   <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${currentPageName === item.page ? "bg-white/15" : "bg-muted/80"}`}>
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className="relative z-10 h-4 w-4" />
                   </span>
-                  {item.name}
+                  <span className="relative z-10">{item.name}</span>
                 </Link>
               ))}
             </div>
@@ -842,7 +866,16 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </aside>
 
-        <main className={`min-h-screen ${isAdminMode ? "pt-16 md:pt-0" : "pt-16"}`}>{children}</main>
+        <main className={`min-h-screen ${isAdminMode ? "pt-16 md:pt-0" : "pt-16"}`}>
+          <motion.div
+            key={location.pathname}
+            initial={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.28, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        </main>
 
         {!isAdminMode ? (
           <>
