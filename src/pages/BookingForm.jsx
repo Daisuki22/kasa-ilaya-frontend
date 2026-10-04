@@ -720,7 +720,13 @@ export default function BookingForm() {
         return;
       }
 
-      const uploadResult = await baseClient.integrations.Core.UploadFile({ file, purpose: "payment_receipt" });
+      const uploadResult = await baseClient.integrations.Core.UploadFile({
+        file,
+        purpose: "payment_receipt",
+        payment_qr_code_id: selectedQrCodeId,
+        payment_number: form.payment_number,
+        payment_reference_number: form.payment_reference_number,
+      });
       if (!uploadResult?.file_url || !uploadResult?.proof_upload_token) {
         throw new Error("The upload service did not return a valid payment proof reference. Please try again.");
       }
@@ -749,8 +755,13 @@ export default function BookingForm() {
       const duplicateNotice = ocr.duplicate_image
         ? " This image matches a previous upload and will receive additional admin review."
         : "";
-      setReceiptValidation({ status: "manual_review", message: `${ocrMessage}${duplicateNotice}` });
-      toast.success("Payment proof uploaded for manual review.");
+      if (uploadResult.validation === "declined") {
+        setReceiptValidation({ status: "rejected", message: uploadResult.message || "Receipt does not match the selected payment details." });
+        toast.error(`Payment proof rejected: ${uploadResult.message || "Receipt details do not match."}`);
+      } else {
+        setReceiptValidation({ status: "manual_review", message: `${ocrMessage}${duplicateNotice}` });
+        toast.success("Payment proof uploaded for manual review.");
+      }
     } catch (error) {
       setReceiptValidation({ status: "rejected", message: error?.message || "Unable to upload payment proof." });
       toast.error(error?.message || "Unable to upload payment proof.");
@@ -1458,9 +1469,15 @@ export default function BookingForm() {
                           ) : null}
                           {receiptUrl ? (
                             <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
-                              <div className="flex items-center gap-2 text-amber-700">
+                              {receiptValidation?.status === "rejected" ? (
+                                <div className="flex items-center gap-2 font-medium text-destructive">
+                                  <ShieldCheck className="h-4 w-4" /> Declined — Receipt Does Not Match
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-amber-700">
                                   <ShieldCheck className="h-4 w-4" /> Sent — Pending Manual Admin Check
-                              </div>
+                                </div>
+                              )}
                               {receiptFileName ? <p className="mt-2 break-all text-xs font-medium text-foreground">Uploaded: {receiptFileName}</p> : null}
                               {receiptValidation?.message ? (
                                 <p className="mt-1 text-xs text-muted-foreground">{receiptValidation.message}</p>

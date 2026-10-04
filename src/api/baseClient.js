@@ -883,7 +883,7 @@ export const baseClient = {
 
   integrations: {
     Core: {
-      async UploadFile({ file, purpose }) {
+      async UploadFile({ file, purpose, payment_qr_code_id, payment_number, payment_reference_number }) {
         const formData = new FormData();
 
         formData.append("file", file);
@@ -891,6 +891,9 @@ export const baseClient = {
         if (purpose) {
           formData.append("purpose", purpose);
         }
+        if (payment_qr_code_id) formData.append("payment_qr_code_id", payment_qr_code_id);
+        if (payment_number) formData.append("payment_number", payment_number);
+        if (payment_reference_number) formData.append("payment_reference_number", payment_reference_number);
 
         return request(
           "/integrations.php?action=upload-file",
