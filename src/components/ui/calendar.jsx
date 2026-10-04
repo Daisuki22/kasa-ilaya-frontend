@@ -2,6 +2,26 @@ import React from 'react';
 import { DayPicker } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 
+export const resortCalendarClassNames = {
+  months: 'flex w-full justify-center',
+  month: 'w-full max-w-[32rem] space-y-4 sm:space-y-5',
+  caption: 'relative flex h-10 items-center justify-center px-10',
+  caption_label: 'font-display text-base font-semibold sm:text-lg',
+  nav: 'absolute inset-x-0 top-0 flex items-center justify-between',
+  nav_button: 'flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground',
+  table: 'w-full table-fixed border-collapse',
+  head_row: 'grid grid-cols-7',
+  head_cell: 'flex h-8 items-center justify-center rounded-md text-xs font-medium text-muted-foreground sm:h-10 sm:text-sm',
+  row: 'grid grid-cols-7 gap-y-1 sm:gap-y-2',
+  cell: 'flex h-10 min-w-0 items-center justify-center p-0 text-center text-sm sm:h-14',
+  day: 'flex h-9 w-9 items-center justify-center rounded-xl p-0 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-selected:opacity-100 sm:h-12 sm:w-12',
+  day_selected: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
+  day_today: 'bg-secondary/10 font-semibold text-secondary ring-1 ring-secondary/40',
+  day_outside: 'day-outside text-muted-foreground/50',
+  day_disabled: 'text-muted-foreground/45 hover:bg-transparent',
+  day_hidden: 'invisible',
+};
+
 export function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
   return (
     <DayPicker

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, resortCalendarClassNames } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -952,34 +952,22 @@ export default function BookingForm() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleDateSelect}
-                  disabled={isDateDisabled}
-                  modifiers={{
-                    reserved: reservedDates,
-                  }}
-                  modifiersClassNames={{
-                    reserved: "bg-destructive/15 text-destructive font-semibold ring-1 ring-destructive/40 line-through",
-                  }}
-                  classNames={{
-                    months: "flex flex-col sm:flex-row justify-center gap-4",
-                    month: "space-y-5",
-                    caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-lg font-semibold",
-                    nav_button: "h-10 w-10 bg-transparent p-0 opacity-60 hover:opacity-100",
-                    head_cell: "text-muted-foreground rounded-md w-10 sm:w-14 font-normal text-sm",
-                    row: "flex w-full mt-2 sm:mt-3",
-                    cell: "h-10 w-10 sm:h-14 sm:w-14 text-center text-sm sm:text-base p-0 relative [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 focus-within:relative focus-within:z-20",
-                    day: "h-9 w-9 sm:h-12 sm:w-12 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-lg",
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                    day_today: "bg-accent text-accent-foreground",
-                    day_outside: "day-outside text-muted-foreground opacity-50",
-                    day_disabled: "text-muted-foreground opacity-60",
-                  }}
-                  className="w-full max-w-[32rem] rounded-lg border p-3 sm:p-6"
-                />
+                <div className="w-full max-w-[32rem] overflow-hidden rounded-xl border border-border bg-background p-2 sm:p-4">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateSelect}
+                    disabled={isDateDisabled}
+                    modifiers={{
+                      reserved: reservedDates,
+                    }}
+                    modifiersClassNames={{
+                      reserved: "bg-destructive/15 text-destructive font-semibold ring-1 ring-inset ring-destructive/40 line-through",
+                    }}
+                    classNames={resortCalendarClassNames}
+                    className="mx-auto w-full p-0"
+                  />
+                </div>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">

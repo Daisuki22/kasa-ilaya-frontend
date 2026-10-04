@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, resortCalendarClassNames } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -967,7 +967,7 @@ export default function MyBookings() {
 
               <div className="space-y-3">
                 <Label htmlFor="rebooking-date">New date</Label>
-                <div className="overflow-hidden rounded-lg border border-border bg-background p-2 sm:p-4">
+                <div className="mx-auto w-full max-w-[32rem] overflow-hidden rounded-xl border border-border bg-background p-2 sm:p-4">
                   <Calendar
                     id="rebooking-date"
                     mode="single"
@@ -986,28 +986,11 @@ export default function MyBookings() {
                       current: bookingToRebook.booking_date ? [createDateFromKey(bookingToRebook.booking_date)] : [],
                     }}
                     modifiersClassNames={{
-                      reserved: "bg-destructive/15 text-destructive font-semibold ring-1 ring-destructive/40 line-through",
-                      manual: "bg-amber-100 text-amber-800 font-semibold ring-1 ring-amber-300 line-through",
-                      current: "bg-primary/10 text-primary font-semibold ring-1 ring-primary/30",
+                      reserved: "bg-destructive/15 text-destructive font-semibold ring-1 ring-inset ring-destructive/40 line-through",
+                      manual: "bg-amber-100 text-amber-800 font-semibold ring-1 ring-inset ring-amber-300 line-through",
+                      current: "bg-primary/10 text-primary font-semibold ring-1 ring-inset ring-primary/30",
                     }}
-                    classNames={{
-                      months: "flex justify-center",
-                      month: "w-full max-w-[22rem] space-y-4",
-                      caption: "relative flex h-9 items-center justify-center px-10",
-                      caption_label: "text-base font-semibold",
-                      nav: "absolute inset-x-0 top-0 flex items-center justify-between",
-                      nav_button: "flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-muted-foreground opacity-80 hover:bg-muted hover:text-foreground hover:opacity-100",
-                      table: "w-full table-fixed border-collapse",
-                      head_row: "grid grid-cols-7",
-                      head_cell: "flex h-8 items-center justify-center rounded-md text-xs font-medium text-muted-foreground",
-                      row: "grid grid-cols-7 gap-y-1",
-                      cell: "flex h-10 items-center justify-center p-0 text-center text-sm",
-                      day: "flex h-9 w-9 items-center justify-center rounded-md p-0 text-sm font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground sm:h-10 sm:w-10",
-                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                      day_today: "bg-transparent font-semibold text-foreground ring-1 ring-border",
-                      day_outside: "day-outside text-muted-foreground opacity-50",
-                      day_disabled: "text-muted-foreground opacity-45 hover:bg-transparent line-through",
-                    }}
+                    classNames={resortCalendarClassNames}
                     className="mx-auto w-full p-0"
                   />
                 </div>
