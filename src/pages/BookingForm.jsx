@@ -724,6 +724,7 @@ export default function BookingForm() {
         file,
         purpose: "payment_receipt",
         payment_qr_code_id: selectedQrCodeId,
+        payment_amount_due: paymentAmountDue,
         payment_number: form.payment_number,
         payment_reference_number: form.payment_reference_number,
       });

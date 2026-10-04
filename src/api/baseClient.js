@@ -883,7 +883,7 @@ export const baseClient = {
 
   integrations: {
     Core: {
-      async UploadFile({ file, purpose, payment_qr_code_id, payment_number, payment_reference_number }) {
+      async UploadFile({ file, purpose, payment_qr_code_id, payment_amount_due, payment_number, payment_reference_number }) {
         const formData = new FormData();
 
         formData.append("file", file);
@@ -892,6 +892,7 @@ export const baseClient = {
           formData.append("purpose", purpose);
         }
         if (payment_qr_code_id) formData.append("payment_qr_code_id", payment_qr_code_id);
+        if (payment_amount_due !== undefined && payment_amount_due !== null) formData.append("payment_amount_due", String(payment_amount_due));
         if (payment_number) formData.append("payment_number", payment_number);
         if (payment_reference_number) formData.append("payment_reference_number", payment_reference_number);
 
