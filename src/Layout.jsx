@@ -570,7 +570,7 @@ export default function Layout({ children, currentPageName }) {
 
   const BrandMark = ({ compact = false }) => (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 sm:h-11 sm:w-11">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 sm:h-16 sm:w-16">
         {siteSettings?.logo_url ? (
           <img src={siteSettings.logo_url} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
         ) : (
@@ -839,7 +839,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="grid gap-8 border-b border-white/15 py-9 sm:py-11 md:grid-cols-[minmax(0,1.4fr)_auto] md:items-center md:gap-10">
                   <div className="flex items-start gap-4">
-                    <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10 p-1.5">
+                    <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-2 sm:h-20 sm:w-20">
                       {siteSettings?.logo_url ? (
                         <img src={resolveAssetUrl(siteSettings.logo_url)} alt={`${siteName} logo`} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
                       ) : (
