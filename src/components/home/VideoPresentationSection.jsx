@@ -57,15 +57,15 @@ export default function VideoPresentationSection() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg border border-border/60 bg-card shadow-[0_20px_60px_rgba(15,23,42,0.12)] lg:origin-center lg:scale-[1.02]">
-          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/45 px-4 py-3 text-xs uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm">
+        <div className="relative min-w-0 overflow-hidden rounded-xl border border-border/60 bg-card shadow-[0_20px_60px_rgba(15,23,42,0.12)] lg:origin-center lg:scale-[1.02]">
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/45 px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] text-white/85 backdrop-blur-sm sm:px-4 sm:py-3 sm:text-xs sm:tracking-[0.2em]">
             <span>Kasa Ilaya Resort & Event Place</span>
           </div>
 
-          <div className="relative aspect-video min-h-[360px] bg-black pt-12 sm:min-h-[420px] lg:min-h-[520px]">
+          <div className="relative aspect-video w-full bg-black">
             {hasEmbed ? (
               <iframe
-                className="h-full w-full"
+                className="absolute inset-0 h-full w-full"
                 src={RESORT_VIDEO.embedUrl}
                 title="Welcome To Kasa Ilaya Resort"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -75,7 +75,7 @@ export default function VideoPresentationSection() {
             ) : (
               <>
                 <video
-                  className="h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-contain"
                   controls
                   preload="metadata"
                   poster={RESORT_VIDEO.posterUrl}

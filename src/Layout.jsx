@@ -569,8 +569,8 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const BrandMark = ({ compact = false }) => (
-    <div className="flex items-center gap-3">
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 sm:h-16 sm:w-16">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 sm:h-16 sm:w-16`}>
         {siteSettings?.logo_url ? (
           <img src={siteSettings.logo_url} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
         ) : (
@@ -587,9 +587,14 @@ export default function Layout({ children, currentPageName }) {
           </span>
         </div>
       ) : (
-        <span className="hidden font-display text-lg font-bold text-foreground tracking-tight sm:inline">
-          {siteName}
-        </span>
+        <div className="min-w-0">
+          <span className="block max-w-[11rem] truncate font-display text-sm font-bold tracking-tight text-foreground sm:max-w-none sm:text-lg">
+            {siteName} Resort
+          </span>
+          <span className="block truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground sm:text-xs sm:tracking-[0.2em]">
+            Official Resort Website
+          </span>
+        </div>
       )}
     </div>
   );
@@ -607,37 +612,40 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className={`min-h-screen bg-background ${isAdminMode ? "md:pl-72" : ""}`}>
       {isAdminMode ? (
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-border bg-card md:flex md:flex-col">
-        <div className="border-b border-border px-6 py-6">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-border/80 bg-gradient-to-b from-card via-card to-primary/[0.04] shadow-[8px_0_36px_-32px_rgba(15,61,47,0.4)] md:flex md:flex-col">
+        <div className="border-b border-border/70 px-6 py-6">
           <Link to={createPageUrl("Home")} className="flex items-center gap-3">
             <BrandMark />
           </Link>
         </div>
 
-        <div className="flex flex-1 flex-col overflow-y-auto px-4 py-5">
-          <nav className="space-y-1">
+        <div className="flex flex-1 flex-col overflow-y-auto px-4 py-6">
+          <nav className="space-y-1.5">
+            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/75">Admin workspace</p>
             {navItems.map((item) => (
               <Link
                 key={item.page || item.href}
                 to={item.href || createPageUrl(item.page)}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition-all duration-200 ${
                   currentPageName === item.page
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "border-primary/15 bg-primary text-primary-foreground shadow-md shadow-primary/15"
+                    : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/80 hover:text-foreground hover:shadow-sm"
                 }`}
               >
-                <item.icon className="h-4 w-4" />
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${currentPageName === item.page ? "bg-white/15" : "bg-muted/70 group-hover:bg-primary/10"}`}>
+                  <item.icon className="h-4 w-4" />
+                </span>
                 {item.name}
               </Link>
             ))}
           </nav>
         </div>
 
-        <div className="border-t border-border px-4 py-4 space-y-3">
+        <div className="space-y-3 border-t border-border/70 bg-background/40 px-4 py-4">
           {user ? (
             <>
               {/* User info */}
-              <div className="flex items-center gap-3 px-2">
+              <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                   {user.profile_image_url ? (
                     <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
@@ -693,23 +701,23 @@ export default function Layout({ children, currentPageName }) {
 
         <header className={`fixed inset-x-0 top-0 z-50 border-b border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 ${isAdminMode ? "md:hidden" : ""}`}>
           <div className={`min-h-16 px-2 sm:px-3 lg:px-4 ${isAdminMode ? "flex items-center justify-between" : "flex items-center justify-between py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 xl:gap-10"}`}>
-            <Link to={createPageUrl("Home")} className="flex items-center gap-3">
+            <Link to={createPageUrl("Home")} className="flex min-w-0 items-center gap-3">
               <BrandMark compact />
             </Link>
 
             {!isAdminMode ? (
-              <nav className="hidden items-center justify-center gap-1.5 rounded-lg border border-border bg-background/70 px-2 py-1.5 shadow-sm lg:flex lg:justify-self-center xl:gap-2 xl:px-3">
+              <nav className="hidden items-center justify-center gap-1 rounded-full border border-border/70 bg-background/75 p-1.5 shadow-[0_8px_28px_-20px_rgba(15,61,47,0.45)] backdrop-blur lg:flex lg:justify-self-center xl:gap-1.5 xl:p-2">
                 {navItems.map((item) => (
                   <Link
                     key={item.page || item.href}
                     to={item.href || createPageUrl(item.page)}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors xl:gap-2.5 xl:px-5 xl:py-2.5 ${
+                    className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
                       currentPageName === item.page
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                        : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className={`h-4 w-4 ${currentPageName === item.page ? "text-secondary" : ""}`} />
                     {item.name}
                   </Link>
                 ))}
@@ -726,7 +734,7 @@ export default function Layout({ children, currentPageName }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={isAdminMode ? "" : "border border-border bg-background text-foreground shadow-sm lg:hidden"}
+                className={isAdminMode ? "rounded-xl border border-border/70 bg-background/80 shadow-sm" : "rounded-xl border border-border/70 bg-background/80 text-foreground shadow-sm lg:hidden"}
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-navigation-drawer"
@@ -762,20 +770,23 @@ export default function Layout({ children, currentPageName }) {
             </Button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-4 py-4">
-            <div className="space-y-1">
+          <nav className="flex-1 overflow-y-auto px-4 py-5">
+            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/75">{isAdminMode ? "Admin workspace" : "Explore Kasa Ilaya"}</p>
+            <div className="space-y-1.5">
               {navItems.map((item) => (
                 <Link
                   key={item.page || item.href}
                   to={item.href || createPageUrl(item.page)}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-200 ${
                     currentPageName === item.page
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "border-primary/15 bg-primary text-primary-foreground shadow-md shadow-primary/15"
+                      : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
                   }`}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${currentPageName === item.page ? "bg-white/15" : "bg-muted/80"}`}>
+                    <item.icon className="h-4 w-4" />
+                  </span>
                   {item.name}
                 </Link>
               ))}
