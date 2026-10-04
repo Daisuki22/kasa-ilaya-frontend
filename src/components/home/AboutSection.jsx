@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CheckCircle2,
   HeartHandshake,
+  Images,
   MapPin,
   ShieldCheck,
   Sparkles,
@@ -255,6 +256,51 @@ export default function AboutSection({ standalone = false }) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-muted/30 py-16 sm:py-20 lg:py-24">
+        <div className="w-full app-content-container px-2 sm:px-3 lg:px-4">
+          <div className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-secondary">
+                <Images className="h-4 w-4" />
+                Resort Gallery
+              </span>
+              <h2 className="mt-3 font-display text-3xl font-bold text-foreground sm:text-4xl">
+                A closer look at Kasa Ilaya
+              </h2>
+              <p className="mt-3 max-w-xl leading-7 text-muted-foreground">
+                Explore the spaces where guests come together to unwind, celebrate, and make memories.
+              </p>
+            </div>
+            <span className="w-fit rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground">
+              {gallery.length} resort photos
+            </span>
+          </div>
+
+          <div className="grid auto-rows-[minmax(12rem,1fr)] grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+            {gallery.map((slide, index) => (
+              <figure
+                key={slide.src}
+                className={`group relative isolate overflow-hidden rounded-xl border border-border bg-card shadow-sm ${index === 0 ? "col-span-2 row-span-2 min-h-[19rem]" : "min-h-[12rem]"}`}
+              >
+                <img
+                  src={slide.src}
+                  alt={slide.title}
+                  loading="lazy"
+                  decoding="async"
+                  onError={handleImageFallback}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 group-focus-within:scale-105 motion-reduce:transform-none"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent transition-colors duration-300 group-hover:from-black/80" />
+                <figcaption className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                  <h3 className="font-display text-lg font-semibold text-white sm:text-xl">{slide.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-white/80">{slide.subtitle}</p>
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
