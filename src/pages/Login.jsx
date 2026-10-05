@@ -464,21 +464,21 @@ export default function Login() {
               Kasa Ilaya Resort & Event Place
             </div>
             <div className="max-w-xl">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-white/75">Guest Portal</p>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-white">Guest Portal</p>
               <h1 className="font-display text-5xl font-bold leading-tight">Plan, book, and manage your resort stay.</h1>
-              <p className="mt-5 max-w-lg text-base leading-7 text-white/82">
+              <p className="mt-5 max-w-lg text-base leading-7 text-white">
                 Access reservations, payment updates, and guest details with a secure Kasa Ilaya account.
               </p>
               <div className="mt-8 grid grid-cols-2 gap-3">
                 <div className="rounded-lg border border-white/20 bg-white/12 p-4 backdrop-blur-md">
                   <CalendarCheck className="mb-3 h-5 w-5 text-white" />
                   <p className="text-sm font-semibold">Booking access</p>
-                  <p className="mt-1 text-xs leading-5 text-white/72">Review reservations and confirmations.</p>
+                  <p className="mt-1 text-xs leading-5 text-white">Review reservations and confirmations.</p>
                 </div>
                 <div className="rounded-lg border border-white/20 bg-white/12 p-4 backdrop-blur-md">
                   <LockKeyhole className="mb-3 h-5 w-5 text-white" />
                   <p className="text-sm font-semibold">Protected account</p>
-                  <p className="mt-1 text-xs leading-5 text-white/72">Email verification and secure sessions.</p>
+                  <p className="mt-1 text-xs leading-5 text-white">Email verification and secure sessions.</p>
                 </div>
               </div>
             </div>

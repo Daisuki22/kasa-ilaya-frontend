@@ -265,7 +265,7 @@ export default function Contact() {
             <h1 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
               Reach out for bookings, events, and resort guest support
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-8 text-white sm:text-lg">
               Ask about package availability, private celebrations, amenities, payment details, or anything you need
               before visiting the resort.
             </p>
@@ -282,7 +282,7 @@ export default function Contact() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm text-white/72">{label}</p>
+                  <p className="text-sm text-white">{label}</p>
                   <p className="mt-1 font-semibold leading-tight text-white">{value}</p>
                 </div>
               </div>

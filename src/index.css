@@ -17,7 +17,7 @@
   --brand-resort-green-rgb: 31 107 87;
   --brand-charcoal-rgb: 36 48 45;
   --brand-border-light: #D8D3C9;
-  --brand-muted-text: #52615D;
+  --brand-muted-text: #414F4B;
   --background: 36 43% 93%;
   --foreground: 165 14% 16%;
   --card: 0 0% 100%;
@@ -29,13 +29,13 @@
   --secondary: 164 55% 27%;
   --secondary-foreground: 0 0% 100%;
   --muted: 36 28% 89%;
-  --muted-foreground: 166 10% 36%;
+  --muted-foreground: 165 14% 29%;
   --accent: 40 50% 57%;
   --accent-foreground: 165 14% 16%;
   --success: 164 55% 27%;
   --success-foreground: 0 0% 100%;
   --warning: 40 57% 35%;
-  --info: 180 39% 40%;
+  --info: 180 45% 30%;
   --destructive: 0 65% 42%;
   --destructive-foreground: 0 0% 100%;
   --border: 36 18% 82%;

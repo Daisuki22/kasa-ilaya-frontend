@@ -17,8 +17,8 @@ export const resortCalendarClassNames = {
   day: 'flex h-9 w-9 items-center justify-center rounded-xl p-0 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-selected:opacity-100 sm:h-12 sm:w-12',
   day_selected: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
   day_today: 'bg-secondary/10 font-semibold text-secondary ring-1 ring-secondary/40',
-  day_outside: 'day-outside text-muted-foreground/50',
-  day_disabled: 'text-muted-foreground/45 hover:bg-transparent',
+  day_outside: 'day-outside text-muted-foreground/70',
+  day_disabled: 'text-muted-foreground/70 hover:bg-transparent',
   day_hidden: 'invisible',
 };
 

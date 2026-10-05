@@ -185,9 +185,9 @@ export default function ResortGallerySlider() {
 
               <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                 <div className="max-w-xl rounded-lg border border-white/10 brand-overlay-panel px-4 py-3 text-white backdrop-blur-md sm:px-5 sm:py-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-white/70 sm:text-xs">Featured Photo</div>
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-white sm:text-xs">Featured Photo</div>
                   <h3 className="mt-1.5 font-display text-xl font-bold sm:text-2xl">{activeSlide.title}</h3>
-                  <p className="mt-1.5 text-xs leading-5 text-white/80 sm:text-sm sm:leading-6">{activeSlide.subtitle}</p>
+                  <p className="mt-1.5 text-xs leading-5 text-white sm:text-sm sm:leading-6">{activeSlide.subtitle}</p>
                 </div>
               </div>
             </div>

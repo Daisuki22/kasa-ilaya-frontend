@@ -191,7 +191,7 @@ export default function Packages() {
             <h1 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
               Packages designed for day tours, overnight stays, and private gatherings
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-8 text-white sm:text-lg">
               Compare resort options, preview inclusions, and choose the schedule that fits your family, friends, or event.
             </p>
           </div>
@@ -208,7 +208,7 @@ export default function Packages() {
                 </div>
                 <div>
                   <p className="text-2xl font-semibold leading-none text-white">{value}</p>
-                  <p className="mt-1 text-sm text-white/72">{label}</p>
+                  <p className="mt-1 text-sm text-white">{label}</p>
                 </div>
               </div>
             ))}

@@ -89,7 +89,7 @@ function FooterRouteLink({ label, page }) {
       <Link
         to={destination}
         onClick={onSamePage ? (event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); } : undefined}
-        className="inline-flex min-h-8 items-center text-sm text-white/75 transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+        className="inline-flex min-h-8 items-center text-sm text-white transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
       >
         {label}
       </Link>
@@ -102,7 +102,7 @@ function FooterLegalLink({ label, type, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(type)}
-      className="inline-flex min-h-8 items-center text-sm text-white/75 transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+      className="inline-flex min-h-8 items-center text-sm text-white transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
     >
       {label}
     </button>
@@ -624,7 +624,7 @@ export default function Layout({ children, currentPageName }) {
 
         <div className="flex flex-1 flex-col overflow-y-auto px-4 py-6">
           <nav className="space-y-1.5">
-            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/75">Admin workspace</p>
+            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Admin workspace</p>
             {navItems.map((item) => (
               <Link
                 key={item.page || item.href}
@@ -788,7 +788,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           <nav className="flex-1 overflow-y-auto px-4 py-5">
-            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/75">{isAdminMode ? "Admin workspace" : "Explore Kasa Ilaya"}</p>
+            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{isAdminMode ? "Admin workspace" : "Explore Kasa Ilaya"}</p>
             <div className="space-y-1.5">
               {navItems.map((item) => (
                 <Link
@@ -892,13 +892,13 @@ export default function Layout({ children, currentPageName }) {
                     </Link>
                     <div className="min-w-0 max-w-xl">
                       <p className="font-display text-xl font-bold tracking-tight sm:text-2xl">{siteName} Resort</p>
-                      <p className="mt-2 text-sm leading-6 text-white/75">
+                      <p className="mt-2 text-sm leading-6 text-white">
                         Kasa Ilaya Resort &amp; Event Place — your destination for relaxing stays, celebrations, and unforgettable moments.
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-col items-start gap-3 md:items-end">
-                    <p className="text-sm text-white/75">Ready to plan your visit?</p>
+                    <p className="text-sm text-white">Ready to plan your visit?</p>
                     <Button asChild className="min-h-11 gap-2 bg-secondary px-5 font-semibold text-secondary-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-secondary/90 hover:shadow-md focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--brand-deep-teal)]">
                       <Link to={createPageUrl("BookingForm")}>
                         <CalendarCheck className="h-4 w-4" aria-hidden="true" />
@@ -926,19 +926,19 @@ export default function Layout({ children, currentPageName }) {
                     <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">Contact</h2>
                     <ul className="mt-4 space-y-3 text-sm">
                       <li>
-                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white/75 transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
+                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
                           <Phone className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
                           <span>{RESORT_CONTACT.phoneDisplay}</span>
                         </a>
                       </li>
                       <li>
-                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white/75 transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
+                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
                           <Mail className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
                           <span>{RESORT_CONTACT.email}</span>
                         </a>
                       </li>
                       <li>
-                        <a href={RESORT_MAP_URL} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white/75 transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
+                        <a href={RESORT_MAP_URL} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
                           <span>{RESORT_CONTACT.address}</span>
                           <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden="true" />
@@ -948,7 +948,7 @@ export default function Layout({ children, currentPageName }) {
                   </div>
                 </nav>
 
-                <div className="flex flex-col gap-3 border-t border-white/15 py-5 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between lg:pr-64">
+                <div className="flex flex-col gap-3 border-t border-white/15 py-5 text-xs text-white sm:flex-row sm:items-center sm:justify-between lg:pr-64">
                   <p>© {new Date().getFullYear()} Kasa Ilaya Resort. All rights reserved.</p>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                     <FooterLegalLink label="Privacy Policy" type="privacy" onOpen={setFooterLegalType} />

@@ -131,7 +131,7 @@ export default function AboutSection({ standalone = false }) {
             <h1 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
               A refined resort setting for rest, gatherings, and meaningful moments
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-8 text-white sm:text-lg">
               Kasa Ilaya Resort & Event Place brings together relaxing resort amenities, private event spaces, and
               practical guest service for families, friends, and celebration planners.
             </p>
@@ -297,7 +297,7 @@ export default function AboutSection({ standalone = false }) {
                 <div className="absolute inset-0 brand-image-overlay transition-opacity duration-300 group-hover:opacity-100" />
                 <figcaption className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                   <h3 className="font-display text-lg font-semibold text-white sm:text-xl">{slide.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-white/80">{slide.subtitle}</p>
+                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-white">{slide.subtitle}</p>
                 </figcaption>
               </figure>
             ))}
@@ -313,7 +313,7 @@ export default function AboutSection({ standalone = false }) {
             <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
               Plan a visit that fits your group
             </h2>
-            <p className="mt-4 max-w-2xl leading-8 text-white/75">
+            <p className="mt-4 max-w-2xl leading-8 text-white">
               Compare resort packages or contact the team for questions about schedules, amenities, and event use.
             </p>
           </div>

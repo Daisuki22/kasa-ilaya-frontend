@@ -116,7 +116,7 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 
 				<div className="absolute bottom-4 left-4 right-4">
 					<h2 className="font-display text-xl font-bold leading-tight text-white sm:text-2xl">{pkg.name}</h2>
-					<div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/85">
+					<div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white">
 						<span className="inline-flex items-center gap-1 rounded-full brand-overlay-control px-2.5 py-1 backdrop-blur">
 							<Users className="h-3.5 w-3.5" />
 							Standard group: {pkg.max_guests || 10} guests; extras allowed

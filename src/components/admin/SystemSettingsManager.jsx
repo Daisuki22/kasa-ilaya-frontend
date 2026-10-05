@@ -538,23 +538,23 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
                             </div>
                             <div>
                               <p className="font-display text-lg font-semibold text-white">{previewSiteName}</p>
-                              <p className="text-xs uppercase tracking-[0.2em] text-white/70">Resort Preview</p>
+                              <p className="text-xs uppercase tracking-[0.2em] text-white">Resort Preview</p>
                             </div>
                           </div>
 
                           <div className="max-w-3xl space-y-4">
-                            <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-white/90 backdrop-blur-sm">
+                            <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-white backdrop-blur-sm">
                               {previewBadge}
                             </div>
                             <div className="space-y-1">
                               <h3 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
                                 {previewTitleLine1}
                               </h3>
-                              <h4 className="font-display text-3xl font-semibold leading-tight text-white/90 sm:text-4xl lg:text-5xl">
+                              <h4 className="font-display text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
                                 {previewTitleLine2}
                               </h4>
                             </div>
-                            <p className="max-w-2xl text-sm leading-7 text-white/80 sm:text-base lg:text-lg">
+                            <p className="max-w-2xl text-sm leading-7 text-white sm:text-base lg:text-lg">
                               {previewDescription}
                             </p>
                             <div className="flex flex-wrap gap-3 pt-2">
