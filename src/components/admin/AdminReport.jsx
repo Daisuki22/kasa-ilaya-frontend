@@ -907,25 +907,6 @@ export default function AdminReport() {
                 <p>(Statement of Income and Expenses)</p>
               </div>
 
-              <div className="profit-report-meta">
-                <div>
-                  <strong>REPORTING PERIOD</strong>
-                  <span>
-                    From: {hasValidDateRange ? format(parseDateKey(selectedRange.start), "MMM d, yyyy") : "__________"}
-                    {"  "}
-                    To: {hasValidDateRange ? format(parseDateKey(selectedRange.end), "MMM d, yyyy") : "__________"}
-                  </span>
-                </div>
-                <div>
-                  <strong>PREPARED BY</strong>
-                  <span>{user?.full_name || user?.name || "Resort Admin"}</span>
-                </div>
-                <div>
-                  <strong>DATE PREPARED</strong>
-                  <span>{preparedDate}</span>
-                </div>
-              </div>
-
               <div className="profit-report-filter-summary">
                 <strong>REPORT FILTERS</strong>
                 <span>Period: {reportPeriodLabel} ({period})</span>
@@ -973,6 +954,25 @@ export default function AdminReport() {
                 <strong>Remarks / Notes:</strong>
                 <p>Booking income includes verified payments only and is grouped by reservation date because payment dates are not stored. Paid additional fees are included under Other Income.</p>
                 <p>Expense, direct cost, and separate event or food sales records are not available in the current system. Profit values are therefore reported as not recorded.</p>
+              </div>
+
+              <div className="profit-report-meta">
+                <div>
+                  <strong>REPORTING PERIOD</strong>
+                  <span>
+                    From: {hasValidDateRange ? format(parseDateKey(selectedRange.start), "MMM d, yyyy") : "__________"}
+                    {"  "}
+                    To: {hasValidDateRange ? format(parseDateKey(selectedRange.end), "MMM d, yyyy") : "__________"}
+                  </span>
+                </div>
+                <div>
+                  <strong>PREPARED BY</strong>
+                  <span>{user?.full_name || user?.name || "Resort Admin"}</span>
+                </div>
+                <div>
+                  <strong>DATE PREPARED</strong>
+                  <span>{preparedDate}</span>
+                </div>
               </div>
 
               <div className="profit-report-signatures">

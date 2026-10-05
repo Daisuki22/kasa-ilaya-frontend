@@ -1103,7 +1103,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   #root .min-h-dvh,
   #root main { min-height: 0 !important; height: auto !important; }
 
-  #root header,
+  #root header:not(.profit-report-letterhead),
   #root nav,
   #root aside,
   #root > footer { display: none !important; }
@@ -1137,15 +1137,15 @@ h1, h2, h3, h4, h5, h6, .font-display {
     flex-direction: column;
     box-sizing: border-box;
     width: 100%;
-    height: auto;
-    min-height: 0;
-    padding: 5mm 10mm 4mm;
+    height: 297mm;
+    min-height: 297mm;
+    padding: 8mm 14mm 8mm;
     overflow: visible;
     border: 1px solid #D8D3C9;
     background: #ffffff !important;
   }
 
-  .profit-report-filter-summary { margin: 0 0 1.5mm; font-size: 8px; }
+  .profit-report-filter-summary { margin: 0 0 3mm; font-size: 9px; }
   .profit-report-statement tr,
   .profit-report-meta,
   .profit-report-signatures { break-inside: avoid; page-break-inside: avoid; }
@@ -1154,10 +1154,10 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-letterhead img {
     display: block;
-    width: 22mm;
-    max-height: 15mm;
+    width: 38mm;
+    max-height: 24mm;
     height: auto;
-    margin: 0.5mm auto;
+    margin: 1mm auto 1.5mm;
     object-fit: contain;
   }
 
@@ -1175,7 +1175,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     line-height: 1.1 !important;
   }
 
-  .profit-report-rule { height: 1px; margin: 0 0 0.5mm; background: #52615D !important; }
+  .profit-report-rule { height: 1px; margin: 0 0 1mm; background: #52615D !important; }
   .profit-report-letterhead .profit-report-rule:last-child { margin: 0.75mm 0 0; }
   .profit-report-title { margin-top: 1.25mm; text-align: center; }
 
@@ -1194,17 +1194,17 @@ h1, h2, h3, h4, h5, h6, .font-display {
     display: grid;
     grid-template-columns: 1.1fr 1fr 1fr;
     gap: 4mm;
-    margin: 2mm 0 1.5mm;
-    padding: 1mm 2mm;
+    margin: auto 0 0;
+    padding: 3mm 2mm;
     background: #ffffff !important;
   }
 
   .profit-report-meta strong,
-  .profit-report-meta span { display: block; color: #24302D !important; font-size: 7px !important; line-height: 1.1 !important; }
-  .profit-report-meta span { margin-top: 0.5mm; border-bottom: 1px solid #D8D3C9; padding-bottom: 0.5mm; }
+  .profit-report-meta span { display: block; color: #24302D !important; font-size: 9px !important; line-height: 1.25 !important; }
+  .profit-report-meta span { margin-top: 1mm; border-bottom: 1px solid #D8D3C9; padding-bottom: 1mm; }
 
-  .profit-report-statement { width: 100%; border: 1px solid #D8D3C9 !important; border-collapse: collapse !important; table-layout: fixed; color: #24302D !important; font-size: 9px !important; }
-  .profit-report-statement td { border: 1px solid #D8D3C9 !important; padding: 0.8mm 1.25mm !important; line-height: 1.15 !important; }
+  .profit-report-statement { width: 100%; border: 1px solid #D8D3C9 !important; border-collapse: collapse !important; table-layout: fixed; color: #24302D !important; font-size: 10px !important; }
+  .profit-report-statement td { border: 1px solid #D8D3C9 !important; padding: 1.45mm 1.5mm !important; line-height: 1.2 !important; }
   .profit-report-statement td:first-child { width: 52%; }
   .profit-report-statement td:last-child { width: 48%; text-align: right !important; }
 
@@ -1218,10 +1218,10 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .profit-report-statement .profit-total td,
   .profit-report-statement .profit-highlight td { background: #F5EFE6 !important; color: #0F4D53 !important; font-weight: 700 !important; }
 
-  .profit-report-notes { min-height: 0; margin-top: 1.5mm; padding-bottom: 1mm; color: #24302D !important; font-size: 8px !important; line-height: 1.2 !important; }
+  .profit-report-notes { min-height: 0; margin-top: 3mm; padding-bottom: 1.5mm; color: #24302D !important; font-size: 8px !important; line-height: 1.2 !important; }
   .profit-report-notes p { margin: 0.75mm 0 0; line-height: 1.1 !important; }
 
-  .profit-report-signatures { margin-top: 5mm; padding-top: 1mm; }
+  .profit-report-signatures { margin-top: 7mm; padding-top: 1mm; }
 
   .profit-report-signatures > div {
     display: grid;
@@ -1237,7 +1237,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     display: flex;
     justify-content: center;
     border-top: 1px solid #D8D3C9;
-    margin-top: 2mm;
+    margin-top: auto;
     padding-top: 1mm;
     color: #52615D !important;
     font-size: 6px !important;
