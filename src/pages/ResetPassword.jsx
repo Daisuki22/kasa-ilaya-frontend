@@ -240,7 +240,7 @@ export default function ResetPassword() {
               ) : null}
               {isCodeVerified ? (
                 <>
-                  <PasswordInput id="reset-password" label="New password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" showRequirements confirmValue={form.confirmPassword} required />
+                  <PasswordInput id="reset-password" label="New password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus confirmValue={form.confirmPassword} required />
                   <PasswordInput id="reset-confirm-password" label="Confirm new password" value={form.confirmPassword} onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={form.password} required />
                   <Button className="w-full" disabled={isSubmitting || !passwordMeetsRequirements(form.password) || form.password !== form.confirmPassword} type="submit">
                     {isSubmitting ? 'Updating password...' : 'Update password'}
