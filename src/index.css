@@ -991,13 +991,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .profit-report-letterhead img {
   display: block;
   width: 38mm;
-  height: 18mm;
+  max-height: 24mm;
   margin: 1mm auto 0;
-  object-fit: cover;
-  object-position: center top;
+  object-fit: contain;
 }
 
-.profit-report-letterhead h2 { margin: -1mm 0 0; font-size: 13px; font-weight: 700; }
+.profit-report-letterhead h2 { margin: -8mm 0 0; font-size: 13px; font-weight: 700; }
 .profit-report-letterhead p { margin: 1mm 0 0; font-size: 11px; }
 .profit-report-rule { height: 1px; margin: 0 0 2mm; background: #52615D; }
 .profit-report-letterhead .profit-report-rule:last-child { margin: 2mm 0 0; }
@@ -1168,14 +1167,13 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .profit-report-letterhead img {
     display: block;
     width: 38mm;
-    height: 18mm;
+    max-height: 24mm;
     margin: 1mm auto 0;
-    object-fit: cover;
-    object-position: center top;
+    object-fit: contain;
   }
 
   .profit-report-letterhead h2 {
-    margin: -1mm 0 0;
+    margin: -8mm 0 0;
     color: #24302D !important;
     font-size: 8px !important;
     font-weight: 700 !important;
