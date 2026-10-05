@@ -992,11 +992,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
   display: block;
   width: 34mm;
   max-height: 23mm;
-  margin: 2mm auto 1mm;
+  margin: 1mm auto 0;
   object-fit: contain;
 }
 
-.profit-report-letterhead h2 { margin: 0; font-size: 13px; font-weight: 700; }
+.profit-report-letterhead h2 { margin: -1mm 0 0; font-size: 13px; font-weight: 700; }
 .profit-report-letterhead p { margin: 1mm 0 0; font-size: 11px; }
 .profit-report-rule { height: 1px; margin: 0 0 2mm; background: #52615D; }
 .profit-report-letterhead .profit-report-rule:last-child { margin: 2mm 0 0; }
