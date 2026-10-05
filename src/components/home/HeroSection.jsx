@@ -111,14 +111,14 @@ export default function HeroSection() {
 
       <div className="hero-content-container relative w-full py-24 sm:py-28 lg:py-36">
         <div className="w-full max-w-[42rem] animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <span className="mb-6 inline-block rounded-full border border-secondary/30 bg-secondary/20 px-4 py-2 text-xs font-medium text-secondary backdrop-blur-sm sm:mb-8 sm:px-5 sm:text-sm">
+          <span className="mb-6 inline-block rounded-full border border-white/30 bg-black/35 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm sm:mb-8 sm:px-5 sm:text-sm">
             {badgeText}
           </span>
           <h1 className="mb-6 max-w-full break-words font-display text-2xl font-bold leading-tight text-white min-[390px]:text-[1.7rem] sm:mb-8 sm:text-5xl lg:text-7xl">
             <span className="block">{titleLine1}</span>
-            <span className="block max-w-full whitespace-normal text-secondary">{titleLine2}</span>
+            <span className="block max-w-full whitespace-normal text-white hero-copy-shadow">{titleLine2}</span>
           </h1>
-          <p className="mb-8 max-w-2xl text-sm leading-7 text-white/80 min-[390px]:text-base sm:mb-10 sm:text-lg sm:leading-8 lg:text-xl">
+          <p className="hero-copy-shadow mb-8 max-w-2xl text-sm font-medium leading-7 text-white min-[390px]:text-base sm:mb-10 sm:text-lg sm:leading-8 lg:text-xl">
             {heroDescription}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-5">
