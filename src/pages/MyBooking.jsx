@@ -44,6 +44,7 @@ import {
 import LeaveReviewDialog from "@/components/mybookings/LeaveReviewDialog.jsx";
 import { addDays, format } from "date-fns";
 import { calendarDaysUntil, getBookingEndDateTime as getBookingEndTime } from "@/lib/bookingTimes";
+import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 import { createPageUrl } from "@/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -368,12 +369,14 @@ export default function MyBookings() {
       return "This is your current reservation date. Please choose a different date.";
     }
 
-    if (rebookingManualScheduleDates.has(dateKey)) {
+    const nextDateKey = format(addDays(date, 1), "yyyy-MM-dd");
+    if (rebookingManualScheduleDates.has(dateKey) || (tourCrossesMidnight(booking.tour_type) && rebookingManualScheduleDates.has(nextDateKey))) {
       return "This date is blocked by a resort schedule or event.";
     }
 
-    const nextDateKey = format(addDays(date, 1), "yyyy-MM-dd");
-    if (rebookingOccupiedDates.has(dateKey) || (booking.tour_type === "22_hours" && rebookingOccupiedDates.has(nextDateKey))) {
+    if (rebookingAvailabilityBookings.some((existingBooking) =>
+      bookingSchedulesOverlap(dateKey, booking.tour_type, existingBooking.booking_date, existingBooking.tour_type)
+    )) {
       return "The selected schedule is unavailable. Please choose another date or time.";
     }
 

@@ -22,8 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { handleImageFallback } from "@/lib/imageFallback";
 import { CANCELLATION_REBOOKING_NOTICE } from "@/lib/resortNotices";
-
-const MAX_BOOKINGS_PER_SLOT = 1;
+import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 
 const tourTypeLabels = {
   day_tour: { label: "Day Tour", time: "8 AM - 6 PM" },
@@ -305,20 +304,12 @@ export default function BookingForm() {
     if (manualScheduleDatesSet.has(dateStr)) return true;
     if (!selectedTour) return false;
 
-    if (selectedTour === '22_hours') {
-      // 22-hour stay needs BOTH the check-in day AND the next day to be free
-      const nextDayStr = format(addDays(date, 1), 'yyyy-MM-dd');
-      const startOccupied = allBookingDatesSet.has(dateStr) || twentyTwoHourBlockedDates.has(dateStr) || manualScheduleDatesSet.has(dateStr);
-      const nextOccupied = allBookingDatesSet.has(nextDayStr) || twentyTwoHourBlockedDates.has(nextDayStr) || manualScheduleDatesSet.has(nextDayStr);
-      return startOccupied || nextOccupied;
-    }
+    const nextDateStr = format(addDays(date, 1), 'yyyy-MM-dd');
+    if (tourCrossesMidnight(selectedTour) && manualScheduleDatesSet.has(nextDateStr)) return true;
 
-    // Day tour / night tour: blocked if a 22-hour stay covers this date, or if any package already reserved the date
-    if (twentyTwoHourBlockedDates.has(dateStr)) return true;
-    const count = existingBookings.filter(
-      b => b.booking_date === dateStr
-    ).length;
-    return count >= MAX_BOOKINGS_PER_SLOT;
+    return existingBookings.some((booking) =>
+      bookingSchedulesOverlap(dateStr, selectedTour, booking.booking_date, booking.tour_type)
+    );
   };
 
   const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
