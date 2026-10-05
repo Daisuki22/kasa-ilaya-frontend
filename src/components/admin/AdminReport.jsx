@@ -708,10 +708,7 @@ export default function AdminReport() {
   const {
     revenueRows,
     totalSales,
-    totalDirectCosts,
-    grossProfit,
     totalOperatingExpenses,
-    netProfit,
   } = calculateProfitReport(filteredBookings);
   const formatReportAmount = (amount) => amount === null ? "Not recorded" : formatCurrency(amount);
   const reportableBookings = filteredBookings.filter((booking) => !["cancelled", "archived"].includes(booking.status));
@@ -925,15 +922,13 @@ export default function AdminReport() {
                   <tr className="profit-section"><td colSpan={2}>SUMMARY</td></tr>
                   <tr><td>Total Revenue</td><td>{formatCurrency(totalSales)}</td></tr>
                   <tr><td>Total Expenses</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
-                  <tr className="profit-highlight"><td>Gross Profit</td><td>{formatReportAmount(grossProfit)}</td></tr>
-                  <tr className="profit-highlight"><td>Net Profit / Loss</td><td>{formatReportAmount(netProfit)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>REVENUE BREAKDOWN</td></tr>
                   {revenueBreakdown.map((row) => (
                     <tr key={`breakdown-${row.label}`}><td>{row.label} ({row.percentage.toFixed(1)}%)</td><td>{formatCurrency(row.amount)}</td></tr>
                   ))}
                   <tr className="profit-section"><td colSpan={2}>PAYMENT SUMMARY</td></tr>
                   {paymentSummary.map((row) => (
-                    <tr key={row.status}><td>{row.status.replace(/_/g, " ")} ({row.count} bookings)</td><td>{formatCurrency(row.amount)}</td></tr>
+                    <tr key={row.status}><td>{row.status.replace(/_/g, " ").replace(/^./, (letter) => letter.toUpperCase())} ({row.count} bookings)</td><td>{formatCurrency(row.amount)}</td></tr>
                   ))}
                   <tr className="profit-section"><td colSpan={2}>BOOKING PERFORMANCE</td></tr>
                   <tr><td>Total bookings</td><td>{totalBookings}</td></tr>
