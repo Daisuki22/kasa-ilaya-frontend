@@ -613,9 +613,9 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className={`min-h-screen bg-background ${isAdminMode ? "md:pl-72" : ""}`}>
+    <div className={`min-h-screen bg-background ${isAdminMode ? "md:pl-64" : ""}`}>
       {isAdminMode ? (
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-border/80 bg-gradient-to-b from-card via-card to-primary/[0.04] shadow-[8px_0_36px_-32px_rgba(15,61,47,0.4)] md:flex md:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border/80 bg-gradient-to-b from-card via-card to-primary/[0.04] shadow-[8px_0_36px_-32px_rgba(15,61,47,0.4)] md:flex md:flex-col">
         <div className="border-b border-border/70 px-6 py-6">
           <Link to={createPageUrl("Home")} className="flex items-center gap-3">
             <BrandMark />
