@@ -30,10 +30,10 @@ export default function CTASection() {
         </div>
       </div>
       <div className="relative w-full app-content-container px-2 text-center sm:px-3 lg:px-4">
-        <h2 className="mb-5 font-display text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
+        <h2 className="mb-5 font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
           Ready to Book Your Stay?
         </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-base leading-7 text-primary-foreground sm:mb-10 sm:text-lg sm:leading-8">
+        <p className="mx-auto mb-8 max-w-2xl text-base leading-7 text-white sm:mb-10 sm:text-lg sm:leading-8">
           Reserve now and create unforgettable memories at Kasa Ilaya Resort
         </p>
         <Link to={isAuthenticated ? packagesPageUrl : loginToPackagesUrl} className="inline-flex w-full justify-center sm:w-auto">
@@ -43,7 +43,7 @@ export default function CTASection() {
         </Link>
         <div className="mt-4">
           <Link to={createPageUrl("Contact")} className="inline-flex w-full justify-center sm:w-auto">
-            <Button size="lg" variant="outline" className="w-full gap-2 border-primary-foreground/30 bg-transparent px-8 text-primary-foreground hover:bg-primary-foreground/10 sm:w-auto">
+            <Button size="lg" variant="outline" className="w-full gap-2 border-white/50 bg-transparent px-8 text-white hover:bg-white/10 sm:w-auto">
               Contact Us
             </Button>
           </Link>
@@ -55,7 +55,7 @@ export default function CTASection() {
             { icon: Mail, text: RESORT_CONTACT.email },
             { icon: MapPin, text: RESORT_CONTACT.address },
           ].map((item, i) => (
-            <div key={i} className="flex flex-col items-center justify-center gap-2 text-center text-sm text-primary-foreground sm:flex-row sm:text-left">
+            <div key={i} className="flex flex-col items-center justify-center gap-2 text-center text-sm text-white sm:flex-row sm:text-left">
               <item.icon className="h-4 w-4" />
               <span className="break-words">{item.text}</span>
             </div>

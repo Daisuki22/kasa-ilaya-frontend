@@ -9,6 +9,7 @@
   --brand-resort-green: #1F6B57;
   --brand-warm-sand: #F5EFE6;
   --brand-soft-gold: #C9A45C;
+  --brand-footer-accent: #E7C46F;
   --brand-charcoal: #24302D;
   --brand-turquoise: #3E8E8E;
   --brand-light-turquoise: #7FC5C3;
@@ -59,13 +60,13 @@
   --card-foreground: 36 43% 93%;
   --popover: 183 48% 17%;
   --popover-foreground: 36 43% 93%;
-  --primary: 180 39% 32%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 164 55% 27%;
+  --primary: 180 50% 42%;
+  --primary-foreground: 165 14% 12%;
+  --secondary: 158 48% 42%;
   --secondary-foreground: 0 0% 100%;
   --muted: 183 30% 24%;
   --muted-foreground: 147 12% 85%;
-  --accent: 40 50% 57%;
+  --accent: 42 78% 64%;
   --accent-foreground: 165 14% 16%;
   --success: 147 42% 64%;
   --success-foreground: 165 14% 16%;
@@ -86,8 +87,9 @@
 
 /* Keep accent-colored text readable against dark surfaces while preserving
    the original primary and secondary colors for buttons and badges. */
-.dark .text-primary { color: hsl(178 48% 70%) !important; }
-.dark .text-secondary { color: hsl(164 48% 70%) !important; }
+.dark .text-primary { color: hsl(178 60% 70%) !important; }
+.dark .text-secondary { color: hsl(154 60% 68%) !important; }
+.dark .bg-secondary.text-secondary-foreground { color: hsl(165 14% 12%) !important; }
 
 body {
   font-family: var(--font-body);

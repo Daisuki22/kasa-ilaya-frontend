@@ -16,6 +16,10 @@ export default {
         success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
         warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
         info: "hsl(var(--info))",
+        brand: {
+          accent: "var(--brand-footer-accent)",
+          charcoal: "var(--brand-charcoal)",
+        },
         destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
