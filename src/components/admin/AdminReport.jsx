@@ -945,12 +945,6 @@ export default function AdminReport() {
                 </tbody>
               </table>
 
-              <div className="profit-report-notes">
-                <strong>Remarks / Notes:</strong>
-                <p>Booking income includes verified payments only and is grouped by reservation date because payment dates are not stored. Paid additional fees are included under Other Income.</p>
-                <p>Expense, direct cost, and separate event or food sales records are not available in the current system. Profit values are therefore reported as not recorded.</p>
-              </div>
-
               <div className="profit-report-meta">
                 <div>
                   <strong>REPORTING PERIOD</strong>

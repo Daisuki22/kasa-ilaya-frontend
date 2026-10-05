@@ -1049,16 +1049,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .profit-report-statement .profit-total td,
 .profit-report-statement .profit-highlight td { font-weight: 700; }
 
-.profit-report-notes {
-  min-height: 24mm;
-  margin-top: 6mm;
-  border-bottom: 1px solid #D8D3C9;
-  padding-bottom: 3mm;
-  font-size: 10px;
-}
-
-.profit-report-notes p { margin: 2mm 0 0; line-height: 1.35; }
-
 .profit-report-signatures > div {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1228,9 +1218,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-statement .profit-total td,
   .profit-report-statement .profit-highlight td { background: #F5EFE6 !important; color: #0F4D53 !important; font-weight: 700 !important; }
-
-  .profit-report-notes { min-height: 0; margin-top: 3mm; padding-bottom: 1.5mm; color: #24302D !important; font-size: 8px !important; line-height: 1.2 !important; }
-  .profit-report-notes p { margin: 0.75mm 0 0; line-height: 1.1 !important; }
 
   .profit-report-signatures { margin-top: 7mm; padding-top: 1mm; }
 

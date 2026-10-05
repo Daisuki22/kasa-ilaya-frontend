@@ -467,10 +467,10 @@ export default function Layout({ children, currentPageName }) {
     : `${activeTheme.label} mode`;
 
   const ThemeModeIndicator = ({ compact = false } = {}) => (
-    <div className={`flex items-center gap-2 rounded-lg border border-border bg-background/70 text-muted-foreground ${compact ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"}`}>
-      <ActiveThemeIcon className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
-      <span className="font-semibold text-foreground">{compact ? activeTheme.label : "Appearance"}</span>
-      <span className="text-muted-foreground">{compact ? (theme === "system" ? resolvedThemeLabel : "mode") : themeModeLabel}</span>
+    <div className={`flex flex-nowrap items-center gap-1 rounded-lg border border-border bg-background/70 text-muted-foreground ${compact ? "px-2 py-1.5 text-xs" : "px-2 py-2 text-xs"}`}>
+      <ActiveThemeIcon className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} shrink-0`} />
+      <span className="shrink-0 whitespace-nowrap font-semibold text-foreground">{compact ? activeTheme.label : "Appearance"}</span>
+      <span className="shrink-0 whitespace-nowrap text-muted-foreground">{compact ? (theme === "system" ? resolvedThemeLabel : "mode") : themeModeLabel}</span>
     </div>
   );
 
