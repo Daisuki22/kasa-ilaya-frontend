@@ -1246,6 +1246,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 
 @layer utilities {
+ .hero-image-overlay { background: linear-gradient(to right, rgb(var(--brand-charcoal-rgb) / 0.44), rgb(var(--brand-charcoal-rgb) / 0.18) 40%, transparent 68%); }
  .brand-image-overlay { background: linear-gradient(to top, rgb(var(--brand-deep-teal-rgb) / 0.88), rgb(var(--brand-deep-teal-rgb) / 0.36) 48%, transparent 100%); }
  .brand-image-overlay-horizontal { background: linear-gradient(to right, rgb(var(--brand-deep-teal-rgb) / 0.88), rgb(var(--brand-deep-teal-rgb) / 0.52) 48%, transparent 100%); }
  .brand-image-overlay-vertical { background: linear-gradient(to bottom, rgb(var(--brand-deep-teal-rgb) / 0.28), rgb(var(--brand-deep-teal-rgb) / 0.42) 48%, rgb(var(--brand-deep-teal-rgb) / 0.86)); }
