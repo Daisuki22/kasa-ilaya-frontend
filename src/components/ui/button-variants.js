@@ -18,7 +18,7 @@ const sizes = {
 
 export function buttonVariants({ variant = 'default', size = 'default', className } = {}) {
   return cn(
-    'inline-flex min-w-0 items-center justify-center gap-2 rounded-lg text-center text-sm font-medium leading-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ring-offset-background',
+    'inline-flex min-w-0 items-center justify-center gap-2 rounded-lg text-center text-sm font-medium leading-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-85 ring-offset-background',
     variants[variant] ?? variants.default,
     sizes[size] ?? sizes.default,
     className

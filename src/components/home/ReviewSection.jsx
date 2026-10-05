@@ -41,7 +41,7 @@ export default function ReviewsSection() {
             <Card key={review.id} className="relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <CardContent className="p-8">
                 <Quote className="mb-4 h-8 w-8 text-primary/20" />
-                <p className="mb-6 line-clamp-4 text-sm leading-7 text-foreground/80">
+                <p className="mb-6 line-clamp-4 text-sm leading-7 text-foreground">
                   "{review.review_text}"
                 </p>
                 <div className="flex items-center justify-between">

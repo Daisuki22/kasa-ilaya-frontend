@@ -321,7 +321,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                     head_cell: "text-muted-foreground rounded-md w-12 sm:w-14 font-normal text-sm",
                     cell: "h-12 w-12 sm:h-14 sm:w-14 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md focus-within:relative focus-within:z-20",
                     day: "h-12 w-12 sm:h-14 sm:w-14 p-0 text-sm sm:text-base font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md",
-                    day_disabled: "text-muted-foreground opacity-35 pointer-events-none hover:bg-transparent hover:text-muted-foreground",
+                    day_disabled: "text-muted-foreground pointer-events-none hover:bg-transparent hover:text-muted-foreground",
                   }}
                 />
               </div>

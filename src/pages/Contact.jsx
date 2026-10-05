@@ -549,7 +549,7 @@ export default function Contact() {
                               : "border border-border bg-background text-foreground"
                           }`}
                         >
-                          <div className="flex items-center gap-2 text-xs opacity-80">
+                          <div className="flex items-center gap-2 text-xs">
                             <MessageSquareMore className="h-3.5 w-3.5" />
                             <span>{message.sender_name}</span>
                             <span>

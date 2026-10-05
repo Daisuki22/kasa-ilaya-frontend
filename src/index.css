@@ -82,6 +82,11 @@
   --chart-5: 0 69% 64%;
 }
 
+/* Keep accent-colored text readable against dark surfaces while preserving
+   the original primary and secondary colors for buttons and badges. */
+.dark .text-primary { color: hsl(178 48% 70%) !important; }
+.dark .text-secondary { color: hsl(164 48% 70%) !important; }
+
 body {
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;

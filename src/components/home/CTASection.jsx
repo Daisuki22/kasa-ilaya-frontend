@@ -33,7 +33,7 @@ export default function CTASection() {
         <h2 className="mb-5 font-display text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
           Ready to Book Your Stay?
         </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-base leading-7 text-primary-foreground/80 sm:mb-10 sm:text-lg sm:leading-8">
+        <p className="mx-auto mb-8 max-w-2xl text-base leading-7 text-primary-foreground sm:mb-10 sm:text-lg sm:leading-8">
           Reserve now and create unforgettable memories at Kasa Ilaya Resort
         </p>
         <Link to={isAuthenticated ? packagesPageUrl : loginToPackagesUrl} className="inline-flex w-full justify-center sm:w-auto">
@@ -55,7 +55,7 @@ export default function CTASection() {
             { icon: Mail, text: RESORT_CONTACT.email },
             { icon: MapPin, text: RESORT_CONTACT.address },
           ].map((item, i) => (
-            <div key={i} className="flex flex-col items-center justify-center gap-2 text-center text-sm text-primary-foreground/80 sm:flex-row sm:text-left">
+            <div key={i} className="flex flex-col items-center justify-center gap-2 text-center text-sm text-primary-foreground sm:flex-row sm:text-left">
               <item.icon className="h-4 w-4" />
               <span className="break-words">{item.text}</span>
             </div>

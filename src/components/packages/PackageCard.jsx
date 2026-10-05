@@ -191,7 +191,7 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 				{Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0 ? (
 					<div className="space-y-2 border-t border-border pt-4">
 						{pkg.inclusions.slice(0, 4).map((item) => (
-							<div key={item} className="flex items-start gap-2 text-sm text-foreground/85">
+							<div key={item} className="flex items-start gap-2 text-sm text-foreground">
 								<Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
 								<span>{item}</span>
 							</div>
