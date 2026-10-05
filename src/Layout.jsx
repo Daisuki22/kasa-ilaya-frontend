@@ -65,7 +65,7 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
 function FooterLinkColumn({ title, links, onLegalOpen }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">{title}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white">{title}</h2>
       <ul className="mt-4 space-y-2.5">
         {links.map((item) => (
           item.type ? (
@@ -89,7 +89,7 @@ function FooterRouteLink({ label, page }) {
       <Link
         to={destination}
         onClick={onSamePage ? (event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); } : undefined}
-        className="inline-flex min-h-8 items-center text-sm text-white transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+        className="inline-flex min-h-8 items-center text-sm text-white transition-colors duration-200 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
       >
         {label}
       </Link>
@@ -102,7 +102,7 @@ function FooterLegalLink({ label, type, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(type)}
-      className="inline-flex min-h-8 items-center text-sm text-white transition-colors duration-200 hover:text-secondary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+      className="inline-flex min-h-8 items-center text-sm text-white transition-colors duration-200 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
     >
       {label}
     </button>
@@ -887,7 +887,7 @@ export default function Layout({ children, currentPageName }) {
                       {siteSettings?.logo_url ? (
                         <img src={resolveAssetUrl(siteSettings.logo_url)} alt={`${siteName} logo`} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
                       ) : (
-                        <TreePalm className="h-8 w-8 text-secondary" aria-hidden="true" />
+                        <TreePalm className="h-8 w-8 text-white" aria-hidden="true" />
                       )}
                     </Link>
                     <div className="min-w-0 max-w-xl">
@@ -913,7 +913,7 @@ export default function Layout({ children, currentPageName }) {
                   <FooterLinkColumn title="Quick Links" links={footerQuickLinks} />
                   <FooterLinkColumn title="Booking" links={footerBookingLinks} onLegalOpen={setFooterLegalType} />
                   <div>
-                    <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">Information</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white">Information</h2>
                     <ul className="mt-4 space-y-2.5">
                       <FooterRouteLink label="About Kasa Ilaya" page="About" />
                       <FooterRouteLink label="FAQs & Guest Help" page="Contact" />
@@ -923,25 +923,25 @@ export default function Layout({ children, currentPageName }) {
                     </ul>
                   </div>
                   <div>
-                    <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">Contact</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white">Contact</h2>
                     <ul className="mt-4 space-y-3 text-sm">
                       <li>
-                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
-                          <Phone className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                          <Phone className="h-4 w-4 shrink-0 text-white" aria-hidden="true" />
                           <span>{RESORT_CONTACT.phoneDisplay}</span>
                         </a>
                       </li>
                       <li>
-                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
-                          <Mail className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                          <Mail className="h-4 w-4 shrink-0 text-white" aria-hidden="true" />
                           <span>{RESORT_CONTACT.email}</span>
                         </a>
                       </li>
                       <li>
-                        <a href={RESORT_MAP_URL} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">
-                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                        <a href={RESORT_MAP_URL} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden="true" />
                           <span>{RESORT_CONTACT.address}</span>
-                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden="true" />
+                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white" aria-hidden="true" />
                         </a>
                       </li>
                     </ul>
