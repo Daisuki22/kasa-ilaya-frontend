@@ -5,7 +5,7 @@ export default function RotatingBannerBackground({
   images,
   alt = "Page banner",
   intervalMs = 9000,
-  overlayClassName = "bg-gradient-to-r from-black/75 via-black/45 to-transparent",
+  overlayClassName = "brand-image-overlay-horizontal",
 }) {
   const bannerImages = Array.isArray(images) && images.length > 0 ? images : ["/img/room_Resort%20View.jpg"];
   const [activeIndex, setActiveIndex] = useState(0);
@@ -52,7 +52,7 @@ export default function RotatingBannerBackground({
           className="h-full w-full object-cover"
         />
       </div>
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 brand-image-overlay-scrim" />
       <div className={`absolute inset-0 ${overlayClassName}`} />
 
       {showControls ? (
@@ -60,7 +60,7 @@ export default function RotatingBannerBackground({
           <button
             type="button"
             onClick={showPrevious}
-            className="absolute left-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/55 sm:flex"
+            className="absolute left-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 brand-overlay-control text-white backdrop-blur-sm transition  sm:flex"
             aria-label="Show previous banner image"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -68,12 +68,12 @@ export default function RotatingBannerBackground({
           <button
             type="button"
             onClick={showNext}
-            className="absolute right-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/55 sm:flex"
+            className="absolute right-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 brand-overlay-control text-white backdrop-blur-sm transition  sm:flex"
             aria-label="Show next banner image"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
-          <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm">
+          <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full border border-white/10 brand-overlay-panel px-3 py-2 backdrop-blur-sm">
             {bannerImages.map((_, index) => (
               <button
                 key={`banner-dot-${index}`}

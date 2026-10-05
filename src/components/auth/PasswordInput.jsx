@@ -76,7 +76,7 @@ export default function PasswordInput({
             <p className="mb-2 text-xs font-medium text-foreground">Password must contain:</p>
             <ul className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2">
               {checkLabels.map(([key, text]) => (
-                <li key={key} className={checks[key] ? "flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400" : "flex items-center gap-1.5 text-muted-foreground"}>
+                <li key={key} className={checks[key] ? "flex items-center gap-1.5 text-success dark:text-success" : "flex items-center gap-1.5 text-muted-foreground"}>
                   {checks[key] ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
                   {text}
                 </li>
@@ -87,7 +87,7 @@ export default function PasswordInput({
         ) : null}
       </div>
       {showMatch && hasConfirmation && confirmValue.length > 0 ? (
-        <p className={passwordsMatch ? "text-xs text-emerald-700 dark:text-emerald-400" : "text-xs text-destructive"} aria-live="polite">
+        <p className={passwordsMatch ? "text-xs text-success dark:text-success" : "text-xs text-destructive"} aria-live="polite">
           {passwordsMatch ? "✓ Passwords match" : "✕ Passwords do not match"}
         </p>
       ) : null}

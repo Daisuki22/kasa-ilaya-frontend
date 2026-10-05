@@ -5,55 +5,81 @@
 @tailwind utilities;
 
 :root {
-  --background: 40 30% 98%;
-  --foreground: 220 20% 12%;
+  --brand-deep-teal: #0F4D53;
+  --brand-resort-green: #1F6B57;
+  --brand-warm-sand: #F5EFE6;
+  --brand-soft-gold: #C9A45C;
+  --brand-charcoal: #24302D;
+  --brand-turquoise: #3E8E8E;
+  --brand-light-turquoise: #7FC5C3;
+  --brand-secondary-text: #D5DED9;
+  --brand-deep-teal-rgb: 15 77 83;
+  --brand-resort-green-rgb: 31 107 87;
+  --brand-charcoal-rgb: 36 48 45;
+  --brand-border-light: #D8D3C9;
+  --brand-muted-text: #52615D;
+  --background: 36 43% 93%;
+  --foreground: 165 14% 16%;
   --card: 0 0% 100%;
-  --card-foreground: 220 20% 12%;
+  --card-foreground: 165 14% 16%;
   --popover: 0 0% 100%;
-  --popover-foreground: 220 20% 12%;
-  --primary: 152 45% 32%;
+  --popover-foreground: 165 14% 16%;
+  --primary: 185 69% 19%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 36 60% 50%;
+  --secondary: 164 55% 27%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 40 20% 94%;
-  --muted-foreground: 220 10% 46%;
-  --accent: 36 60% 50%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 72% 51%;
+  --muted: 36 28% 89%;
+  --muted-foreground: 166 10% 36%;
+  --accent: 40 50% 57%;
+  --accent-foreground: 165 14% 16%;
+  --success: 164 55% 27%;
+  --success-foreground: 0 0% 100%;
+  --warning: 40 57% 35%;
+  --info: 180 39% 40%;
+  --destructive: 0 65% 42%;
   --destructive-foreground: 0 0% 100%;
-  --border: 40 15% 88%;
-  --input: 40 15% 88%;
-  --ring: 152 45% 32%;
-  --radius: 0.5rem;
-  --chart-1: 152 45% 32%;
-  --chart-2: 36 60% 50%;
-  --chart-3: 200 50% 45%;
-  --chart-4: 280 40% 50%;
-  --chart-5: 0 60% 50%;
+  --border: 36 18% 82%;
+  --input: 36 18% 78%;
+  --ring: 180 39% 40%;
+  --radius: 0.65rem;
+  --chart-1: 185 69% 19%;
+  --chart-2: 40 50% 57%;
+  --chart-3: 180 39% 40%;
+  --chart-4: 164 55% 27%;
+  --chart-5: 0 65% 45%;
   --font-body: 'Inter', sans-serif;
   --font-heading: 'Playfair Display', serif;
 }
 
 .dark {
-  --background: 220 20% 8%;
-  --foreground: 40 20% 95%;
-  --card: 220 18% 12%;
-  --card-foreground: 40 20% 95%;
-  --popover: 220 18% 12%;
-  --popover-foreground: 40 20% 95%;
-  --primary: 152 45% 40%;
+  --background: 185 52% 13%;
+  --foreground: 36 43% 93%;
+  --card: 180 45% 19%;
+  --card-foreground: 36 43% 93%;
+  --popover: 183 48% 17%;
+  --popover-foreground: 36 43% 93%;
+  --primary: 180 39% 40%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 36 60% 55%;
+  --secondary: 164 55% 27%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 220 15% 18%;
-  --muted-foreground: 220 10% 60%;
-  --accent: 36 60% 55%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 72% 51%;
+  --muted: 183 30% 24%;
+  --muted-foreground: 147 12% 85%;
+  --accent: 40 50% 57%;
+  --accent-foreground: 165 14% 16%;
+  --success: 147 42% 64%;
+  --success-foreground: 165 14% 16%;
+  --warning: 40 50% 57%;
+  --info: 178 38% 64%;
+  --destructive: 0 72% 68%;
   --destructive-foreground: 0 0% 100%;
-  --border: 220 15% 20%;
-  --input: 220 15% 20%;
-  --ring: 152 45% 40%;
+  --border: 180 20% 30%;
+  --input: 180 20% 34%;
+  --ring: 178 38% 64%;
+  --chart-1: 178 38% 64%;
+  --chart-2: 40 50% 57%;
+  --chart-3: 164 55% 45%;
+  --chart-4: 180 39% 40%;
+  --chart-5: 0 69% 64%;
 }
 
 body {
@@ -163,7 +189,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   place-items: center;
   min-height: 100dvh;
   overflow: hidden;
-  background: #0f241c;
+  background: var(--brand-deep-teal);
   color: #ffffff;
   isolation: isolate;
   animation: welcome-intro-arrive 0.5s ease-out both;
@@ -244,7 +270,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border-radius: 999px;
   background: rgb(255 255 255 / 0.16);
   box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.34), inset 0 1px 0 rgb(255 255 255 / 0.24);
-  color: #f6c56b;
+  color: var(--brand-soft-gold);
   backdrop-filter: blur(18px);
   animation: welcome-intro-mark 1.45s 0.28s ease-out both;
 }
@@ -296,13 +322,13 @@ h1, h2, h3, h4, h5, h6, .font-display {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, transparent, #f6c56b, #ffffff, transparent);
+  background: linear-gradient(90deg, transparent, var(--brand-soft-gold), #ffffff, transparent);
   transform: translateX(-100%);
   animation: welcome-intro-line 1.35s 1s ease-out both;
 }
 
 .welcome-intro__subtitle {
-  color: #f6c56b;
+  color: var(--brand-soft-gold);
   animation: welcome-intro-text 0.72s 1.12s ease-out both;
 }
 
@@ -677,7 +703,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     max-width: none !important;
     overflow: hidden !important;
     background: #ffffff !important;
-    color: #111827 !important;
+    color: #24302D !important;
   }
 
   #root {
@@ -686,7 +712,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     max-width: none !important;
     overflow: visible !important;
     background: #ffffff !important;
-    color: #111827 !important;
+    color: #24302D !important;
   }
 
   body * {
@@ -705,7 +731,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    color: #111827 !important;
+    color: #24302D !important;
     background: #ffffff !important;
   }
 
@@ -719,7 +745,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   }
 
   .report-print-header {
-    border-bottom: 2px solid #111827;
+    border-bottom: 2px solid #24302D;
     margin-bottom: 14px;
     padding-bottom: 10px;
   }
@@ -731,7 +757,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-weight: 700;
     letter-spacing: 0;
     text-transform: uppercase;
-    color: #374151;
+    color: #52615D;
   }
 
   .report-print-header h1 {
@@ -740,7 +766,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-size: 22px;
     font-weight: 700;
     line-height: 1.2;
-    color: #111827;
+    color: #24302D;
   }
 
   .report-print-meta {
@@ -751,7 +777,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-family: Arial, sans-serif;
     font-size: 10px;
     line-height: 1.35;
-    color: #374151;
+    color: #52615D;
   }
 
   .report-print-summary {
@@ -764,7 +790,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .report-print-summary > div,
   .report-print-table {
     break-inside: avoid;
-    border: 1px solid #d1d5db !important;
+    border: 1px solid #D8D3C9 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     background: #ffffff !important;
@@ -777,12 +803,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .report-print-summary p {
     margin: 0 !important;
     font-family: Arial, sans-serif;
-    color: #111827 !important;
+    color: #24302D !important;
   }
 
   .report-print-summary p:first-child {
     font-size: 9px !important;
-    color: #4b5563 !important;
+    color: #52615D !important;
   }
 
   .report-print-summary p:nth-child(2) {
@@ -794,7 +820,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .report-print-summary p:nth-child(3) {
     margin-top: 2px !important;
     font-size: 9px !important;
-    color: #4b5563 !important;
+    color: #52615D !important;
   }
 
   .report-print-table {
@@ -828,19 +854,19 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .report-print-table th,
   .report-print-table td {
     height: auto !important;
-    border: 1px solid #d1d5db !important;
+    border: 1px solid #D8D3C9 !important;
     padding: 4px 5px !important;
     text-align: left !important;
     vertical-align: middle !important;
     white-space: normal !important;
     overflow-wrap: break-word !important;
     word-break: normal !important;
-    color: #111827 !important;
+    color: #24302D !important;
     line-height: 1.25 !important;
   }
 
   .report-print-table th {
-    background: #f3f4f6 !important;
+    background: #F5EFE6 !important;
     font-size: 7.5px !important;
     font-weight: 700 !important;
     text-transform: uppercase;
@@ -939,9 +965,9 @@ h1, h2, h3, h4, h5, h6, .font-display {
   min-height: 276mm;
   margin: 0 auto;
   padding: 14mm 17mm 16mm;
-  border: 1px solid #cbd5ce;
+  border: 1px solid #D8D3C9;
   background: #ffffff;
-  color: #17241c;
+  color: #24302D;
   font-family: "Times New Roman", Times, serif;
   box-shadow: 0 8px 28px rgb(15 23 42 / 10%);
 }
@@ -963,7 +989,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-letterhead h2 { margin: 0; font-size: 13px; font-weight: 700; }
 .profit-report-letterhead p { margin: 1mm 0 0; font-size: 11px; }
-.profit-report-rule { height: 1px; margin: 0 0 2mm; background: #374151; }
+.profit-report-rule { height: 1px; margin: 0 0 2mm; background: #52615D; }
 .profit-report-letterhead .profit-report-rule:last-child { margin: 2mm 0 0; }
 .profit-report-title { margin-top: 4mm; text-align: center; }
 .profit-report-title h1 { margin: 0; font-size: 20px; font-weight: 700; }
@@ -975,8 +1001,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
   gap: 5mm;
   margin: 7mm 0 5mm;
   padding: 3mm 0;
-  border-top: 1px solid #9ca3af;
-  border-bottom: 1px solid #9ca3af;
+  border-top: 1px solid #D8D3C9;
+  border-bottom: 1px solid #D8D3C9;
 }
 
 .profit-report-meta strong,
@@ -997,12 +1023,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  color: #111827;
+  color: #24302D;
   font-size: 10px;
 }
 
 .profit-report-statement td {
-  border: 1px solid #9ca3af;
+  border: 1px solid #D8D3C9;
   padding: 2mm 2.5mm;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -1010,14 +1036,14 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-statement td:first-child { width: 74%; }
 .profit-report-statement td:last-child { width: 26%; text-align: right; }
-.profit-report-statement .profit-section td { background: #f0f2f0; font-weight: 700; }
+.profit-report-statement .profit-section td { background: #F5EFE6; font-weight: 700; }
 .profit-report-statement .profit-total td,
 .profit-report-statement .profit-highlight td { font-weight: 700; }
 
 .profit-report-notes {
   min-height: 24mm;
   margin-top: 6mm;
-  border-bottom: 1px solid #9ca3af;
+  border-bottom: 1px solid #D8D3C9;
   padding-bottom: 3mm;
   font-size: 10px;
 }
@@ -1033,7 +1059,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-signatures span {
   min-height: 10mm;
-  border-top: 1px solid #111827;
+  border-top: 1px solid #24302D;
   padding-top: 2mm;
   font-size: 9px;
   text-align: center;
@@ -1044,9 +1070,9 @@ h1, h2, h3, h4, h5, h6, .font-display {
   right: 0;
   bottom: 0;
   left: 0;
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid #D8D3C9;
   padding-top: 2mm;
-  color: #6b7280;
+  color: #52615D;
   font-size: 8px;
   text-align: center;
 }
@@ -1099,7 +1125,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     box-sizing: border-box !important;
     border: 0 !important;
     box-shadow: none !important;
-    color: #111827 !important;
+    color: #24302D !important;
     font-family: "Times New Roman", Times, serif !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -1115,7 +1141,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     min-height: 0;
     padding: 5mm 10mm 4mm;
     overflow: visible;
-    border: 1px solid #bfc7c1;
+    border: 1px solid #D8D3C9;
     background: #ffffff !important;
   }
 
@@ -1124,7 +1150,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   .profit-report-meta,
   .profit-report-signatures { break-inside: avoid; page-break-inside: avoid; }
 
-  .profit-report-letterhead { text-align: center; color: #111827 !important; }
+  .profit-report-letterhead { text-align: center; color: #24302D !important; }
 
   .profit-report-letterhead img {
     display: block;
@@ -1137,7 +1163,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-letterhead h2 {
     margin: 0;
-    color: #111827 !important;
+    color: #24302D !important;
     font-size: 8px !important;
     font-weight: 700 !important;
     line-height: 1.1 !important;
@@ -1149,7 +1175,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     line-height: 1.1 !important;
   }
 
-  .profit-report-rule { height: 1px; margin: 0 0 0.5mm; background: #374151 !important; }
+  .profit-report-rule { height: 1px; margin: 0 0 0.5mm; background: #52615D !important; }
   .profit-report-letterhead .profit-report-rule:last-child { margin: 0.75mm 0 0; }
   .profit-report-title { margin-top: 1.25mm; text-align: center; }
 
@@ -1159,10 +1185,10 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-size: 16px !important;
     font-weight: 700 !important;
     line-height: 1.1 !important;
-    color: #111827 !important;
+    color: #24302D !important;
   }
 
-  .profit-report-title p { margin: 0; font-size: 8px !important; line-height: 1.1 !important; font-style: italic; color: #111827 !important; }
+  .profit-report-title p { margin: 0; font-size: 8px !important; line-height: 1.1 !important; font-style: italic; color: #24302D !important; }
 
   .profit-report-meta {
     display: grid;
@@ -1174,25 +1200,25 @@ h1, h2, h3, h4, h5, h6, .font-display {
   }
 
   .profit-report-meta strong,
-  .profit-report-meta span { display: block; color: #111827 !important; font-size: 7px !important; line-height: 1.1 !important; }
-  .profit-report-meta span { margin-top: 0.5mm; border-bottom: 1px solid #9ca3af; padding-bottom: 0.5mm; }
+  .profit-report-meta span { display: block; color: #24302D !important; font-size: 7px !important; line-height: 1.1 !important; }
+  .profit-report-meta span { margin-top: 0.5mm; border-bottom: 1px solid #D8D3C9; padding-bottom: 0.5mm; }
 
-  .profit-report-statement { width: 100%; border: 1px solid #8b96a3 !important; border-collapse: collapse !important; table-layout: fixed; color: #111827 !important; font-size: 9px !important; }
-  .profit-report-statement td { border: 1px solid #8b96a3 !important; padding: 0.8mm 1.25mm !important; line-height: 1.15 !important; }
+  .profit-report-statement { width: 100%; border: 1px solid #D8D3C9 !important; border-collapse: collapse !important; table-layout: fixed; color: #24302D !important; font-size: 9px !important; }
+  .profit-report-statement td { border: 1px solid #D8D3C9 !important; padding: 0.8mm 1.25mm !important; line-height: 1.15 !important; }
   .profit-report-statement td:first-child { width: 52%; }
   .profit-report-statement td:last-child { width: 48%; text-align: right !important; }
 
   .profit-report-statement .profit-section td {
-    background: #e6f0e8 !important;
-    color: #245b3d !important;
+    background: #F5EFE6 !important;
+    color: #0F4D53 !important;
     font-weight: 700 !important;
     text-align: right !important;
   }
 
   .profit-report-statement .profit-total td,
-  .profit-report-statement .profit-highlight td { background: #eaf3ec !important; color: #173d2b !important; font-weight: 700 !important; }
+  .profit-report-statement .profit-highlight td { background: #F5EFE6 !important; color: #0F4D53 !important; font-weight: 700 !important; }
 
-  .profit-report-notes { min-height: 0; margin-top: 1.5mm; padding-bottom: 1mm; color: #111827 !important; font-size: 8px !important; line-height: 1.2 !important; }
+  .profit-report-notes { min-height: 0; margin-top: 1.5mm; padding-bottom: 1mm; color: #24302D !important; font-size: 8px !important; line-height: 1.2 !important; }
   .profit-report-notes p { margin: 0.75mm 0 0; line-height: 1.1 !important; }
 
   .profit-report-signatures { margin-top: 5mm; padding-top: 1mm; }
@@ -1204,16 +1230,27 @@ h1, h2, h3, h4, h5, h6, .font-display {
     margin-top: 0;
   }
 
-  .profit-report-signatures span { min-height: 8mm; border-top: 1px solid #111827; padding-top: 1mm; color: #111827 !important; font-size: 7px !important; }
+  .profit-report-signatures span { min-height: 8mm; border-top: 1px solid #24302D; padding-top: 1mm; color: #24302D !important; font-size: 7px !important; }
 
   .profit-report-footer {
     position: static;
     display: flex;
     justify-content: center;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid #D8D3C9;
     margin-top: 2mm;
     padding-top: 1mm;
-    color: #6b7280 !important;
+    color: #52615D !important;
     font-size: 6px !important;
   }
+}
+
+
+@layer utilities {
+ .brand-image-overlay { background: linear-gradient(to top, rgb(var(--brand-deep-teal-rgb) / 0.88), rgb(var(--brand-deep-teal-rgb) / 0.36) 48%, transparent 100%); }
+ .brand-image-overlay-horizontal { background: linear-gradient(to right, rgb(var(--brand-deep-teal-rgb) / 0.88), rgb(var(--brand-deep-teal-rgb) / 0.52) 48%, transparent 100%); }
+ .brand-image-overlay-vertical { background: linear-gradient(to bottom, rgb(var(--brand-deep-teal-rgb) / 0.28), rgb(var(--brand-deep-teal-rgb) / 0.42) 48%, rgb(var(--brand-deep-teal-rgb) / 0.86)); }
+ .brand-image-overlay-scrim { background-color: rgb(var(--brand-deep-teal-rgb) / 0.58); }
+ .brand-overlay-panel { background-color: rgb(var(--brand-deep-teal-rgb) / 0.62); }
+ .brand-overlay-control { background-color: rgb(var(--brand-deep-teal-rgb) / 0.48); transition: background-color 160ms ease; }
+ .brand-overlay-control:hover { background-color: rgb(var(--brand-deep-teal-rgb) / 0.86); }
 }

@@ -44,9 +44,9 @@ const statusOptions = [
 const statusClasses = {
   open: "bg-accent/20 text-accent-foreground border-accent/30",
   in_progress: "bg-primary/10 text-primary border-primary/20",
-  resolved: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  resolved: "bg-success/10 text-success border-success/30",
   closed: "bg-muted text-muted-foreground border-border",
-  archived: "bg-amber-500/10 text-amber-700 border-amber-500/30",
+  archived: "bg-warning/10 text-warning border-warning/30",
 };
 
 const statusChartColors = {
@@ -390,7 +390,7 @@ export default function AdminInquiries() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
+                          className="text-warning hover:bg-warning hover:text-warning"
                           title="Archive inquiry"
                           disabled={inquiry.status === "archived"}
                           onClick={(event) => {
@@ -534,7 +534,7 @@ export default function AdminInquiries() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isArchiving}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive} className="bg-amber-600 text-white hover:bg-amber-700" disabled={isArchiving}>
+            <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isArchiving}>
               {isArchiving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Archive"}
             </AlertDialogAction>
           </AlertDialogFooter>

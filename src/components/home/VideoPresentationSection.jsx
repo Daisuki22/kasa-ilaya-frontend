@@ -57,8 +57,8 @@ export default function VideoPresentationSection() {
           </div>
         </div>
 
-        <div className="relative min-w-0 overflow-hidden rounded-xl border border-border/60 bg-card shadow-[0_20px_60px_rgba(15,23,42,0.12)] lg:origin-center lg:scale-[1.02]">
-          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/45 px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] text-white/85 backdrop-blur-sm sm:px-4 sm:py-3 sm:text-xs sm:tracking-[0.2em]">
+        <div className="relative min-w-0 overflow-hidden rounded-xl border border-border/60 bg-card shadow-[0_20px_60px_rgb(var(--brand-deep-teal-rgb) / 0.12)] lg:origin-center lg:scale-[1.02]">
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-white/10 brand-overlay-panel px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] text-white/85 backdrop-blur-sm sm:px-4 sm:py-3 sm:text-xs sm:tracking-[0.2em]">
             <span>Kasa Ilaya Resort & Event Place</span>
           </div>
 
@@ -86,7 +86,7 @@ export default function VideoPresentationSection() {
                 </video>
 
                 {loadFailed ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 px-6 text-center text-white backdrop-blur-sm">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 brand-image-overlay-scrim px-6 text-center text-white backdrop-blur-sm">
                     <PlayCircle className="h-12 w-12 text-secondary" />
                     <div>
                       <p className="text-lg font-semibold">Presentation video unavailable</p>

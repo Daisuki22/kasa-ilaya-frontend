@@ -35,18 +35,18 @@ import { format } from "date-fns";
 import FullCalendarView from "@/components/admin/FullCalendarView";
 
 const statusColors = {
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  pending: "border-warning/30 bg-warning/10 text-warning",
+  confirmed: "border-success/30 bg-success/10 text-success",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
   rejected: "border-destructive/20 bg-destructive/10 text-destructive",
-  completed: "border-slate-200 bg-slate-100 text-slate-700",
+  completed: "border-border bg-background text-foreground",
   expired: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
 const paymentColors = {
   unpaid: "border-destructive/20 bg-destructive/10 text-destructive",
-  pending_verification: "border-sky-200 bg-sky-50 text-sky-700",
-  paid: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  pending_verification: "border-info/30 bg-info/10 text-primary",
+  paid: "border-success/30 bg-success/10 text-success",
   declined: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
@@ -401,11 +401,11 @@ export default function AdminCalendar() {
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-md bg-muted/50 p-3">
                   <p className="text-muted-foreground">Needs review</p>
-                  <p className="mt-1 font-semibold text-amber-700">{metrics.pending}</p>
+                  <p className="mt-1 font-semibold text-warning">{metrics.pending}</p>
                 </div>
                 <div className="rounded-md bg-muted/50 p-3">
                   <p className="text-muted-foreground">Payment checks</p>
-                  <p className="mt-1 font-semibold text-sky-700">{metrics.pendingPayments}</p>
+                  <p className="mt-1 font-semibold text-primary">{metrics.pendingPayments}</p>
                 </div>
               </div>
             </div>
@@ -418,21 +418,21 @@ export default function AdminCalendar() {
             label="Pending"
             value={metrics.pending}
             helper="Awaiting resort review"
-            tone="text-amber-600"
+            tone="text-warning"
           />
           <MetricCard
             icon={ShieldCheck}
             label="Approved"
             value={metrics.confirmed}
             helper="Approved active bookings"
-            tone="text-emerald-600"
+            tone="text-success"
           />
           <MetricCard
             icon={CheckCheck}
             label="Completed"
             value={metrics.completed}
             helper="Finished guest stays"
-            tone="text-slate-600"
+            tone="text-muted-foreground"
           />
           <MetricCard
             icon={CreditCard}
@@ -449,7 +449,7 @@ export default function AdminCalendar() {
               <h2 className="font-display text-xl font-bold text-foreground">Reschedule Requests</h2>
               <p className="mt-1 text-sm text-muted-foreground">Customer requests wait for approval; the existing reservation stays active until then.</p>
             </div>
-            <Badge variant="outline" className={pendingRescheduleRequests.length ? "border-amber-200 bg-amber-50 text-amber-700" : "border-border bg-muted text-muted-foreground"}>
+            <Badge variant="outline" className={pendingRescheduleRequests.length ? "border-warning/30 bg-warning/10 text-warning" : "border-border bg-muted text-muted-foreground"}>
               {pendingRescheduleRequests.length} pending
             </Badge>
           </div>
@@ -588,7 +588,7 @@ export default function AdminCalendar() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="text-emerald-600 hover:text-emerald-700"
+                                  className="text-success hover:text-success"
                                   title="Mark as completed"
                                   onClick={() => updateStatus(booking.id, "completed")}
                                 >

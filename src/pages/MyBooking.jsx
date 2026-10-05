@@ -49,7 +49,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const statusColors = {
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
+  pending: "border-warning/30 bg-warning/10 text-warning",
   confirmed: "border-primary/20 bg-primary/10 text-primary",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
   rejected: "border-destructive/20 bg-destructive/10 text-destructive",
@@ -59,7 +59,7 @@ const statusColors = {
 
 const paymentColors = {
   unpaid: "bg-destructive/10 text-destructive",
-  pending_verification: "bg-amber-100 text-amber-800",
+  pending_verification: "bg-warning/10 text-warning",
   paid: "bg-primary/10 text-primary",
   declined: "bg-destructive/10 text-destructive",
   cancelled: "bg-destructive/10 text-destructive",
@@ -632,7 +632,7 @@ export default function MyBookings() {
             {[
               { label: "Total bookings", value: summary.total, helper: "All reservations", icon: Package, tone: "text-foreground" },
               { label: "Upcoming", value: summary.upcoming, helper: "Pending or confirmed", icon: CalendarCheck, tone: "text-primary" },
-              { label: "Completed", value: summary.completed, helper: "Finished stays", icon: CheckCircle2, tone: "text-emerald-700" },
+              { label: "Completed", value: summary.completed, helper: "Finished stays", icon: CheckCircle2, tone: "text-success" },
               { label: "Total booked value", value: formatMoney(summary.totalSpend), helper: `${summary.paid} paid`, icon: CreditCard, tone: "text-secondary" },
             ].map(({ label, value, helper, icon: Icon, tone }) => (
               <div key={label} className="rounded-lg border border-border bg-background p-4">
@@ -772,12 +772,12 @@ export default function MyBookings() {
                         </Button>
                       ) : null}
                       {booking.payment_status === "paid" && canCancelBooking(booking) ? (
-                        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs leading-5 text-amber-900 dark:text-amber-100">
+                        <p className="rounded-md border border-warning/30 bg-warning/10 p-2 text-xs leading-5 text-warning">
                           Payment is non-refundable.
                         </p>
                       ) : null}
                       {getCancellationLockedReason(booking) ? (
-                        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs leading-5 text-amber-900 dark:text-amber-100">
+                        <p className="rounded-md border border-warning/30 bg-warning/10 p-2 text-xs leading-5 text-warning">
                           {getCancellationLockedReason(booking)}
                         </p>
                       ) : null}
@@ -888,12 +888,12 @@ export default function MyBookings() {
               ) : null}
 
               {getCancellationLockedReason(selectedBooking) ? (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
                   {getCancellationLockedReason(selectedBooking)}
                 </div>
               ) : null}
               {selectedBooking.payment_status === "paid" && canCancelBooking(selectedBooking) ? (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
                   Payment is non-refundable.
                 </div>
               ) : null}
@@ -956,7 +956,7 @@ export default function MyBookings() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm leading-6 text-warning">
                 <p className="font-semibold">Reschedule Policy</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   <li>One reschedule request is allowed per active reservation, subject to resort approval and schedule availability.</li>
@@ -987,7 +987,7 @@ export default function MyBookings() {
                     }}
                     modifiersClassNames={{
                       reserved: "bg-destructive/15 text-destructive font-semibold ring-1 ring-inset ring-destructive/40 line-through",
-                      manual: "bg-amber-100 text-amber-800 font-semibold ring-1 ring-inset ring-amber-300 line-through",
+                      manual: "bg-warning/10 text-warning font-semibold ring-1 ring-inset ring-warning/30 line-through",
                       current: "bg-primary/10 text-primary font-semibold ring-1 ring-inset ring-primary/30",
                     }}
                     classNames={resortCalendarClassNames}
@@ -1000,7 +1000,7 @@ export default function MyBookings() {
                     Reserved
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-amber-100 ring-1 ring-amber-300" />
+                    <span className="h-3 w-3 rounded-full bg-warning/10 ring-1 ring-warning/30" />
                     Resort schedule
                   </span>
                   <span className="inline-flex items-center gap-2">

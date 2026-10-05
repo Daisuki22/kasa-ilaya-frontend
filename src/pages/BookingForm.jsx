@@ -502,10 +502,10 @@ export default function BookingForm() {
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#f4f1ec;font-family:'Georgia',serif;">
+<body style="margin:0;padding:0;background:#F5EFE6;font-family:'Georgia',serif;">
   <div style="max-width:600px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#2d7a4f,#1e5c39);padding:40px 32px;text-align:center;">
+    <div style="background:linear-gradient(135deg,#0F4D53,#1F6B57);padding:40px 32px;text-align:center;">
       <div style="font-size:28px;font-weight:bold;color:#ffffff;letter-spacing:1px;">🌴 Kasa Ilaya</div>
       <div style="color:rgba(255,255,255,0.8);font-size:13px;margin-top:4px;">Resort & Event Place</div>
       <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:16px 24px;margin-top:24px;display:inline-block;">
@@ -515,101 +515,101 @@ export default function BookingForm() {
     </div>
 
     <!-- Status Banner -->
-    <div style="background:#fff8e6;border-left:4px solid #f59e0b;padding:14px 32px;font-size:13px;color:#92400e;">
+    <div style="background:#F5EFE6;border-left:4px solid #C9A45C;padding:14px 32px;font-size:13px;color:#24302D;">
       ⏳ <strong>Pending Verification</strong> — Our team will verify your ${PAYMENT_TYPE_LABELS[paymentType].toLowerCase()} payment within 24 hours and send you a confirmation.
     </div>
 
     <!-- Body -->
     <div style="padding:32px;">
-      <p style="margin:0 0 24px;font-size:16px;color:#374151;">Dear <strong>${form.customer_name}</strong>,</p>
-      <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+      <p style="margin:0 0 24px;font-size:16px;color:#24302D;">Dear <strong>${form.customer_name}</strong>,</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#52615D;line-height:1.6;">
         Thank you for choosing Kasa Ilaya Resort & Event Place. We've received your booking request. Here are your booking details:
       </p>
 
-      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:10px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:#9a3412;line-height:1.7;">
+      <div style="background:#F5EFE6;border:1px solid #C9A45C;border-radius:10px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:#24302D;line-height:1.7;">
         <strong>Payment Policy:</strong> {PAYMENT_POLICY_NOTICE}
       </div>
 
       <!-- Details Table -->
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;width:40%;">Package</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${pkg?.name}</td>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;width:40%;">Package</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${pkg?.name}</td>
         </tr>
         <tr>
-          <td style="padding:12px 16px;color:#6b7280;">Tour Type</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${tourTypeLabels[tourType]?.label} (${tourTypeLabels[tourType]?.time})</td>
+          <td style="padding:12px 16px;color:#52615D;">Tour Type</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${tourTypeLabels[tourType]?.label} (${tourTypeLabels[tourType]?.time})</td>
         </tr>
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;">Check-in</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${format(selectedDate, "EEEE, MMMM d, yyyy")}</td>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;">Check-in</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${format(selectedDate, "EEEE, MMMM d, yyyy")}</td>
         </tr>
         ${tourType === '22_hours' ? `<tr>
-          <td style="padding:12px 16px;color:#6b7280;">Check-out</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${format(addDays(selectedDate, 1), "EEEE, MMMM d, yyyy")}</td>
+          <td style="padding:12px 16px;color:#52615D;">Check-out</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${format(addDays(selectedDate, 1), "EEEE, MMMM d, yyyy")}</td>
         </tr>` : ''}
         <tr>
-          <td style="padding:12px 16px;color:#6b7280;">Total Guests</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${form.guest_count} guest(s)</td>
+          <td style="padding:12px 16px;color:#52615D;">Total Guests</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${form.guest_count} guest(s)</td>
         </tr>
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;">Additional Guests</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${additionalGuestCount} guest(s) x ₱${ADDITIONAL_GUEST_RATE.toLocaleString()}</td>
-        </tr>
-        <tr>
-          <td style="padding:12px 16px;color:#6b7280;">Guest Name</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${form.customer_name}</td>
-        </tr>
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;">Phone</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${form.customer_phone}</td>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;">Additional Guests</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${additionalGuestCount} guest(s) x ₱${ADDITIONAL_GUEST_RATE.toLocaleString()}</td>
         </tr>
         <tr>
-          <td style="padding:12px 16px;color:#6b7280;">Booking Status</td>
-          <td style="padding:12px 16px;"><span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Pending Confirmation</span></td>
+          <td style="padding:12px 16px;color:#52615D;">Guest Name</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${form.customer_name}</td>
         </tr>
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;">Additional Guest Fee</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">₱${additionalGuestAmount.toLocaleString()} (₱${ADDITIONAL_GUEST_RATE.toLocaleString()} per person)</td>
-        </tr>
-        <tr>
-          <td style="padding:12px 16px;color:#6b7280;">Reservation Fee</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">₱${reservationFee.toLocaleString()} (15%)</td>
-        </tr>
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;">Payment Type</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${PAYMENT_TYPE_LABELS[paymentType]}</td>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;">Phone</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${form.customer_phone}</td>
         </tr>
         <tr>
-          <td style="padding:12px 16px;color:#6b7280;">Amount for Verification</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">PHP ${paymentAmountDue.toLocaleString()}</td>
+          <td style="padding:12px 16px;color:#52615D;">Booking Status</td>
+          <td style="padding:12px 16px;"><span style="background:#F5EFE6;color:#24302D;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Pending Confirmation</span></td>
         </tr>
-        <tr style="background:#f9f7f4;">
-          <td style="padding:12px 16px;color:#6b7280;">Payment Channel</td>
-          <td style="padding:12px 16px;font-weight:600;color:#111827;">${selectedQrCode?.label || "QR Payment"}</td>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;">Additional Guest Fee</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">₱${additionalGuestAmount.toLocaleString()} (₱${ADDITIONAL_GUEST_RATE.toLocaleString()} per person)</td>
         </tr>
-        <tr style="border-top:2px solid #2d7a4f;">
-          <td style="padding:16px;font-weight:bold;font-size:16px;color:#111827;">Total Amount</td>
-          <td style="padding:16px;font-weight:bold;font-size:20px;color:#c47a1e;">₱${selectedPrice.toLocaleString()}</td>
+        <tr>
+          <td style="padding:12px 16px;color:#52615D;">Reservation Fee</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">₱${reservationFee.toLocaleString()} (15%)</td>
+        </tr>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;">Payment Type</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${PAYMENT_TYPE_LABELS[paymentType]}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;color:#52615D;">Amount for Verification</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">PHP ${paymentAmountDue.toLocaleString()}</td>
+        </tr>
+        <tr style="background:#F5EFE6;">
+          <td style="padding:12px 16px;color:#52615D;">Payment Channel</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${selectedQrCode?.label || "QR Payment"}</td>
+        </tr>
+        <tr style="border-top:2px solid #0F4D53;">
+          <td style="padding:16px;font-weight:bold;font-size:16px;color:#24302D;">Total Amount</td>
+          <td style="padding:16px;font-weight:bold;font-size:20px;color:#0F4D53;">₱${selectedPrice.toLocaleString()}</td>
         </tr>
       </table>
 
-      ${form.special_requests ? `<div style="background:#f0fdf4;border-radius:8px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:#374151;"><strong>Special Requests:</strong> ${form.special_requests}</div>` : ""}
+      ${form.special_requests ? `<div style="background:#F5EFE6;border-radius:8px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:#24302D;"><strong>Special Requests:</strong> ${form.special_requests}</div>` : ""}
 
-      <div style="background:#f0fdf4;border-radius:10px;padding:20px;margin-bottom:24px;text-align:center;">
-        <div style="font-size:13px;color:#374151;line-height:1.7;">
+      <div style="background:#F5EFE6;border-radius:10px;padding:20px;margin-bottom:24px;text-align:center;">
+        <div style="font-size:13px;color:#24302D;line-height:1.7;">
           📍 Kasa Ilaya Resort & Event Place<br>
           Keep this email for your booking reference.<br>
-          Present your reference code <strong style="color:#2d7a4f;">${ref}</strong> upon arrival.
+          Present your reference code <strong style="color:#0F4D53;">${ref}</strong> upon arrival.
         </div>
       </div>
 
-      <p style="font-size:13px;color:#9ca3af;text-align:center;margin:0;">Questions? Reply to this email or contact us directly.</p>
+      <p style="font-size:13px;color:#52615D;text-align:center;margin:0;">Questions? Reply to this email or contact us directly.</p>
     </div>
 
     <!-- Footer -->
-    <div style="background:#f9f7f4;padding:20px 32px;text-align:center;border-top:1px solid #e5e7eb;">
-      <div style="font-size:12px;color:#9ca3af;">© 2024 Kasa Ilaya Resort & Event Place. All rights reserved.</div>
+    <div style="background:#F5EFE6;padding:20px 32px;text-align:center;border-top:1px solid #D8D3C9;">
+      <div style="font-size:12px;color:#52615D;">© 2024 Kasa Ilaya Resort & Event Place. All rights reserved.</div>
       <div style="font-size:20px;margin-top:8px;">🌴</div>
     </div>
   </div>
@@ -856,7 +856,7 @@ export default function BookingForm() {
                 </p>
               )}
               {!bookingComplete.email_sent && bookingComplete.email_error ? (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+                <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2 mb-4">
                   {bookingComplete.email_error}
                 </p>
               ) : null}
@@ -1351,7 +1351,7 @@ export default function BookingForm() {
                           <Loader2 className="h-6 w-6 animate-spin text-primary" />
                         </div>
                       ) : activeQrCodes.length === 0 ? (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                        <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
                           No active payment QR code is available right now. Please contact the resort before submitting your reservation.
                         </div>
                       ) : (
@@ -1463,7 +1463,7 @@ export default function BookingForm() {
                                   <ShieldCheck className="h-4 w-4" /> {receiptValidation?.message?.startsWith("Receipt is outdated.") ? "Declined — Outdated Receipt" : receiptValidation?.message?.startsWith("Receipt date is invalid.") ? "Declined — Invalid Receipt Date" : "Declined — Receipt Does Not Match"}
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-2 text-amber-700">
+                                <div className="flex items-center gap-2 text-warning">
                                   <ShieldCheck className="h-4 w-4" /> Sent — Pending Manual Admin Check
                                 </div>
                               )}
@@ -1490,7 +1490,7 @@ export default function BookingForm() {
                               : "Upload a readable payment proof before continuing."}
                           </span>
                           <span className="flex items-center gap-2">
-                            {receiptValidation?.status === "manual_review" ? <ShieldCheck className="h-4 w-4 text-amber-700" /> : null}
+                            {receiptValidation?.status === "manual_review" ? <ShieldCheck className="h-4 w-4 text-warning" /> : null}
                           </span>
                         </div>
                       </div>
@@ -1511,7 +1511,7 @@ export default function BookingForm() {
               {modalStep === 4 && (
                 <motion.div key="modal-step-terms" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="space-y-5">
-                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-6 text-amber-900">
+                    <div className="rounded-lg border border-warning/30 bg-warning p-4 text-sm leading-6 text-warning">
                       <p className="font-semibold">Payment Policy</p>
                       <p className="mt-1">{PAYMENT_POLICY_NOTICE}</p>
                     </div>
@@ -1519,7 +1519,7 @@ export default function BookingForm() {
                     {isLoadingLegalDocuments ? (
                       <div className="flex items-center justify-center gap-2 rounded-lg border p-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading current legal documents…</div>
                     ) : isLegalDocumentsError || !hasPublishedLegalDocuments ? (
-                      <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">The current Terms and Conditions and Privacy Notice are not available. Booking submission is disabled until both documents are published.</div>
+                      <div role="alert" className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">The current Terms and Conditions and Privacy Notice are not available. Booking submission is disabled until both documents are published.</div>
                     ) : (
                       <div className="space-y-4">
                         <section className="rounded-lg border border-border bg-card p-4">

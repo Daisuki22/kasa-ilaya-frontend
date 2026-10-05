@@ -124,8 +124,8 @@ export default function AdminLegalSettings() {
                 <CardContent>
                   {published ? <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                     <div><p className="font-semibold">{published.title} <span className="text-muted-foreground">v{published.version}</span></p><p className="mt-1 text-muted-foreground">Published {published.published_at ? new Date(published.published_at).toLocaleString() : "date unavailable"}</p></div>
-                    <span className="rounded-full bg-green-100 px-3 py-1 font-medium text-green-800">Live for new bookings</span>
-                  </div> : <p className="text-sm text-amber-800">No version is published yet. Save and publish a draft to enable booking acknowledgments.</p>}
+                    <span className="rounded-full bg-success/10 px-3 py-1 font-medium text-success">Live for new bookings</span>
+                  </div> : <p className="text-sm text-warning">No version is published yet. Save and publish a draft to enable booking acknowledgments.</p>}
                 </CardContent>
               </Card>
 
@@ -146,7 +146,7 @@ export default function AdminLegalSettings() {
                   </div>
                 </CardContent>
               </Card>
-              {draft ? <div className="flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold text-amber-950">Draft ready: v{draft.version}</p><p className="text-sm text-amber-900">Publishing makes this the current version and archives the previous published version.</p></div><Button type="button" onClick={() => setPublishTarget(draft)} disabled={saveMutation.isPending || publishMutation.isPending || editingId !== draft.id}><FileText className="mr-2 h-4 w-4" />Publish version</Button></div> : null}
+              {draft ? <div className="flex flex-col gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold text-warning">Draft ready: v{draft.version}</p><p className="text-sm text-warning">Publishing makes this the current version and archives the previous published version.</p></div><Button type="button" onClick={() => setPublishTarget(draft)} disabled={saveMutation.isPending || publishMutation.isPending || editingId !== draft.id}><FileText className="mr-2 h-4 w-4" />Publish version</Button></div> : null}
             </> : null}
           </TabsContent>
         ))}

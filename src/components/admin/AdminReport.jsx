@@ -271,7 +271,7 @@ const buildCellXml = ({ column, row, value, style }) => {
   return `<c r="${reference}" t="inlineStr"${styleAttribute}><is><t>${escapeXml(value)}</t></is></c>`;
 };
 
-const buildSheetXml = ({ rows, columns = [], drawingRelId }) => {
+const buildSheetXml = ({ rows, columns = [] }) => {
   const sortedRows = [...rows.entries()].sort((left, right) => left[0] - right[0]);
   const columnXml = columns.length
     ? `<cols>${columns.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`).join("")}</cols>`
@@ -288,7 +288,6 @@ const buildSheetXml = ({ rows, columns = [], drawingRelId }) => {
         .join("")}</row>`
     )).join("")}
   </sheetData>
-  ${drawingRelId ? `<drawing r:id="${drawingRelId}"/>` : ""}
 </worksheet>`;
 };
 
@@ -300,10 +299,6 @@ const buildContentTypesXml = () => `<?xml version="1.0" encoding="UTF-8" standal
   <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  <Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>
-  <Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>
-  <Override PartName="/xl/charts/chart2.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>
-  <Override PartName="/xl/charts/chart3.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>
   <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
   <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>`;
@@ -337,18 +332,18 @@ const buildStylesXml = () => `<?xml version="1.0" encoding="UTF-8" standalone="y
     <numFmt numFmtId="165" formatCode="#,##0"/>
   </numFmts>
   <fonts count="5">
-    <font><sz val="11"/><color rgb="FF111827"/><name val="Arial"/></font>
+    <font><sz val="11"/><color rgb="FF24302D"/><name val="Arial"/></font>
     <font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Arial"/></font>
     <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font>
-    <font><b/><sz val="12"/><color rgb="FF14532D"/><name val="Arial"/></font>
-    <font><b/><sz val="14"/><color rgb="FF111827"/><name val="Arial"/></font>
+    <font><b/><sz val="12"/><color rgb="FF0F4D53"/><name val="Arial"/></font>
+    <font><b/><sz val="14"/><color rgb="FF24302D"/><name val="Arial"/></font>
   </fonts>
   <fills count="6">
     <fill><patternFill patternType="none"/></fill>
     <fill><patternFill patternType="gray125"/></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FF14532D"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFE7F5EE"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFC"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF0F4D53"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF5EFE6"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF5EFE6"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/><bgColor indexed="64"/></patternFill></fill>
   </fills>
   <borders count="2">
@@ -373,100 +368,6 @@ const buildStylesXml = () => `<?xml version="1.0" encoding="UTF-8" standalone="y
     <xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1"/>
   </cellXfs>
 </styleSheet>`;
-
-const sheetReference = (sheetName, startCol, startRow, endCol, endRow) =>
-  `'${sheetName}'!$${columnName(startCol)}$${startRow}:$${columnName(endCol)}$${endRow}`;
-
-const buildLineChartXml = ({ title, categoryRef, revenueRef, bookingsRef }) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <c:chart>
-    <c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXml(title)}</a:t></a:r></a:p></c:rich></c:tx><c:layout/></c:title>
-    <c:plotArea>
-      <c:layout/>
-      <c:lineChart>
-        <c:grouping val="standard"/>
-        <c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Revenue</c:v></c:tx><c:cat><c:strRef><c:f>${categoryRef}</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>${revenueRef}</c:f></c:numRef></c:val></c:ser>
-        <c:ser><c:idx val="1"/><c:order val="1"/><c:tx><c:v>Bookings</c:v></c:tx><c:cat><c:strRef><c:f>${categoryRef}</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>${bookingsRef}</c:f></c:numRef></c:val></c:ser>
-        <c:axId val="1001"/><c:axId val="1002"/>
-      </c:lineChart>
-      <c:catAx><c:axId val="1001"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="1002"/></c:catAx>
-      <c:valAx><c:axId val="1002"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:axPos val="l"/><c:majorGridlines/><c:tickLblPos val="nextTo"/><c:crossAx val="1001"/></c:valAx>
-    </c:plotArea>
-    <c:legend><c:legendPos val="b"/><c:layout/></c:legend>
-    <c:plotVisOnly val="1"/>
-  </c:chart>
-</c:chartSpace>`;
-
-const buildBarChartXml = ({ title, categoryRef, valueRef }) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <c:chart>
-    <c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXml(title)}</a:t></a:r></a:p></c:rich></c:tx><c:layout/></c:title>
-    <c:plotArea>
-      <c:layout/>
-      <c:barChart>
-        <c:barDir val="col"/><c:grouping val="clustered"/>
-        <c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Revenue</c:v></c:tx><c:cat><c:strRef><c:f>${categoryRef}</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>${valueRef}</c:f></c:numRef></c:val></c:ser>
-        <c:axId val="2001"/><c:axId val="2002"/>
-      </c:barChart>
-      <c:catAx><c:axId val="2001"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="2002"/></c:catAx>
-      <c:valAx><c:axId val="2002"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:axPos val="l"/><c:majorGridlines/><c:tickLblPos val="nextTo"/><c:crossAx val="2001"/></c:valAx>
-    </c:plotArea>
-    <c:legend><c:legendPos val="b"/><c:layout/></c:legend>
-    <c:plotVisOnly val="1"/>
-  </c:chart>
-</c:chartSpace>`;
-
-const buildPieChartXml = ({ title, categoryRef, valueRef }) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <c:chart>
-    <c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXml(title)}</a:t></a:r></a:p></c:rich></c:tx><c:layout/></c:title>
-    <c:plotArea>
-      <c:layout/>
-      <c:pieChart>
-        <c:varyColors val="1"/>
-        <c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Status</c:v></c:tx><c:cat><c:strRef><c:f>${categoryRef}</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>${valueRef}</c:f></c:numRef></c:val></c:ser>
-      </c:pieChart>
-    </c:plotArea>
-    <c:legend><c:legendPos val="r"/><c:layout/></c:legend>
-    <c:plotVisOnly val="1"/>
-  </c:chart>
-</c:chartSpace>`;
-
-const buildDrawingXml = () => {
-  const anchors = [
-    { id: 1, name: "Revenue Trend", rel: "rId1", fromCol: 4, fromRow: 8, toCol: 12, toRow: 23 },
-    { id: 2, name: "Package Performance", rel: "rId2", fromCol: 4, fromRow: 25, toCol: 12, toRow: 40 },
-    { id: 3, name: "Booking Status", rel: "rId3", fromCol: 4, fromRow: 42, toCol: 12, toRow: 57 },
-  ];
-
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  ${anchors.map((anchor) => `
-    <xdr:twoCellAnchor>
-      <xdr:from><xdr:col>${anchor.fromCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${anchor.fromRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>
-      <xdr:to><xdr:col>${anchor.toCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${anchor.toRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>
-      <xdr:graphicFrame macro="">
-        <xdr:nvGraphicFramePr><xdr:cNvPr id="${anchor.id}" name="${escapeXml(anchor.name)}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>
-        <xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>
-        <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart r:id="${anchor.rel}"/></a:graphicData></a:graphic>
-      </xdr:graphicFrame>
-      <xdr:clientData/>
-    </xdr:twoCellAnchor>
-  `).join("")}
-</xdr:wsDr>`;
-};
-
-const buildDrawingRelsXml = () => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart2.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart3.xml"/>
-</Relationships>`;
-
-const buildSheetDrawingRelsXml = () => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>
-</Relationships>`;
 
 const buildCoreXml = () => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -689,9 +590,6 @@ const downloadExcelReport = ({
     addCell(bookingsRows, row, 7, booking.status || "");
   });
 
-  const timelineEnd = Math.max(timelineDataStart, timelineDataStart + timelineData.length - 1);
-  const packageEnd = Math.max(packageDataStart, packageDataStart + packageChartData.length - 1);
-  const statusEnd = Math.max(statusDataStart, statusDataStart + statusChartData.length - 1);
   const files = [
     { name: "[Content_Types].xml", content: buildContentTypesXml() },
     { name: "_rels/.rels", content: buildRootRelsXml() },
@@ -705,42 +603,13 @@ const downloadExcelReport = ({
       content: buildSheetXml({
         rows: dashboardRows,
         columns: [22, 16, 14, 26, 16, 18, 16, 16, 16, 16, 16, 16],
-        drawingRelId: "rId1",
       }),
     },
-    { name: "xl/worksheets/_rels/sheet1.xml.rels", content: buildSheetDrawingRelsXml() },
     {
       name: "xl/worksheets/sheet2.xml",
       content: buildSheetXml({
         rows: bookingsRows,
         columns: [24, 26, 26, 16, 14, 14, 16],
-      }),
-    },
-    { name: "xl/drawings/drawing1.xml", content: buildDrawingXml() },
-    { name: "xl/drawings/_rels/drawing1.xml.rels", content: buildDrawingRelsXml() },
-    {
-      name: "xl/charts/chart1.xml",
-      content: buildLineChartXml({
-        title: "Revenue Trend",
-        categoryRef: sheetReference("Dashboard", 1, timelineDataStart, 1, timelineEnd),
-        revenueRef: sheetReference("Dashboard", 2, timelineDataStart, 2, timelineEnd),
-        bookingsRef: sheetReference("Dashboard", 3, timelineDataStart, 3, timelineEnd),
-      }),
-    },
-    {
-      name: "xl/charts/chart2.xml",
-      content: buildBarChartXml({
-        title: "Package Performance",
-        categoryRef: sheetReference("Dashboard", 1, packageDataStart, 1, packageEnd),
-        valueRef: sheetReference("Dashboard", 2, packageDataStart, 2, packageEnd),
-      }),
-    },
-    {
-      name: "xl/charts/chart3.xml",
-      content: buildPieChartXml({
-        title: "Booking Status",
-        categoryRef: sheetReference("Dashboard", 1, statusDataStart, 1, statusEnd),
-        valueRef: sheetReference("Dashboard", 2, statusDataStart, 2, statusEnd),
       }),
     },
   ];

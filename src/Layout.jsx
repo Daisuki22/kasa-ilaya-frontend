@@ -879,7 +879,7 @@ export default function Layout({ children, currentPageName }) {
 
         {!isAdminMode ? (
           <>
-            <footer id="site-footer" className="border-t border-white/10 bg-[#173d32] text-white">
+            <footer id="site-footer" className="border-t border-white/10 bg-[var(--brand-deep-teal)] text-white">
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="grid gap-8 border-b border-white/15 py-9 sm:py-11 md:grid-cols-[minmax(0,1.4fr)_auto] md:items-center md:gap-10">
                   <div className="flex items-start gap-4">
@@ -899,7 +899,7 @@ export default function Layout({ children, currentPageName }) {
                   </div>
                   <div className="flex flex-col items-start gap-3 md:items-end">
                     <p className="text-sm text-white/75">Ready to plan your visit?</p>
-                    <Button asChild className="min-h-11 gap-2 bg-secondary px-5 font-semibold text-secondary-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-secondary/90 hover:shadow-md focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-[#173d32]">
+                    <Button asChild className="min-h-11 gap-2 bg-secondary px-5 font-semibold text-secondary-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-secondary/90 hover:shadow-md focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--brand-deep-teal)]">
                       <Link to={createPageUrl("BookingForm")}>
                         <CalendarCheck className="h-4 w-4" aria-hidden="true" />
                         Book Now

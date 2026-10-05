@@ -31,7 +31,7 @@ import PaginationControls from "@/components/admin/PaginationControls";
 
 const paymentColors = {
   unpaid: "bg-destructive/10 text-destructive",
-  pending_verification: "bg-accent/20 text-accent-foreground-black",
+  pending_verification: "bg-info/10 text-primary",
   paid: "bg-primary/10 text-primary",
   declined: "bg-destructive/10 text-destructive",
 };
@@ -764,7 +764,7 @@ export default function AdminPaymentMonitoring() {
               {selectedBooking.receipt_url ? (
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">Payment Proof</span>
-                  <div className={`rounded-lg border p-3 text-sm ${selectedBooking.payment_proof_review === "duplicate_needs_review" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-amber-500/30 bg-amber-500/5 text-amber-800"}`}>
+                  <div className={`rounded-lg border p-3 text-sm ${selectedBooking.payment_proof_review === "duplicate_needs_review" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-warning/30 bg-warning/10 text-warning"}`}>
                     {selectedBooking.payment_proof_review === "auto_declined"
                       ? `Automatically declined: ${selectedBooking.rejection_reason || "The payment details did not match the booking."}`
                       : selectedBooking.payment_proof_review === "duplicate_needs_review"
@@ -852,14 +852,14 @@ export default function AdminPaymentMonitoring() {
       </Dialog>
 
       <Dialog open={!!feeDialogBooking} onOpenChange={(open) => !open && setFeeDialogBooking(null)}>
-        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[42rem] overflow-y-auto border-border bg-card p-0 text-foreground shadow-2xl shadow-black/20 dark:border-neutral-800 dark:bg-[#080808] dark:text-white dark:shadow-black/60 sm:max-h-[92vh]">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[42rem] overflow-y-auto border-border bg-card p-0 text-foreground shadow-2xl shadow-black/20 sm:max-h-[92vh]">
           {feeDialogBooking ? (
             <div className="p-6 sm:p-8">
               <DialogHeader className="space-y-1 text-left">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <DialogTitle className="font-display text-xl font-bold text-foreground dark:text-white">Damage billing</DialogTitle>
-                    <p className="mt-1 text-sm font-semibold text-muted-foreground dark:text-neutral-300">Add charges for property damage caused during the guest's stay.</p>
+                    <DialogTitle className="font-display text-xl font-bold text-foreground">Damage billing</DialogTitle>
+                    <p className="mt-1 text-sm font-semibold text-muted-foreground">Add charges for property damage caused during the guest's stay.</p>
                   </div>
                   <Badge className={`rounded-full px-3 py-1 ${additionalFeeStatusColors[feeForm.status] || additionalFeeStatusColors.unpaid}`}>
                     {additionalFeeStatusLabels[feeForm.status] || "Unpaid"}
@@ -867,26 +867,26 @@ export default function AdminPaymentMonitoring() {
                 </div>
               </DialogHeader>
 
-              <div className="mt-5 border-y border-border py-4 dark:border-neutral-800 sm:py-5">
+              <div className="mt-5 border-y border-border py-4 dark:border-border sm:py-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-950 text-sm font-bold text-blue-100 sm:h-12 sm:w-12">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground sm:h-12 sm:w-12">
                     {(feeDialogBooking.customer_name || "Guest").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-foreground dark:text-white sm:text-base">{feeDialogBooking.customer_name || "Guest"}</p>
-                    <p className="truncate text-xs font-semibold text-muted-foreground dark:text-neutral-300">
+                    <p className="truncate text-sm font-bold text-foreground sm:text-base">{feeDialogBooking.customer_name || "Guest"}</p>
+                    <p className="truncate text-xs font-semibold text-muted-foreground">
                       {feeDialogBooking.package_name || "Reservation"} · {feeDialogBooking.booking_reference || feeDialogBooking.id}
                     </p>
                   </div>
-                  <div className="text-right text-xs font-semibold text-foreground dark:text-neutral-100">
-                    <p className="text-muted-foreground dark:text-neutral-300">Check-out</p>
+                  <div className="text-right text-xs font-semibold text-foreground">
+                    <p className="text-muted-foreground">Check-out</p>
                     <p>{formatDate(feeDialogBooking.booking_date)}</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-5 space-y-2">
-                <Label className="text-sm font-bold text-foreground dark:text-neutral-200">Damaged items</Label>
+                <Label className="text-sm font-bold text-foreground">Damaged items</Label>
                 <div className="space-y-2.5">
                   {feeForm.items.map((item, index) => (
                     <div key={index} className="grid grid-cols-[1fr] gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_6.5rem_2.5rem]">
@@ -894,10 +894,10 @@ export default function AdminPaymentMonitoring() {
                         value={item.description}
                         onChange={(event) => updateDamageItem(index, { description: event.target.value })}
                         placeholder="Broken bedside lamp"
-                        className="h-11 border-input bg-background text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus-visible:ring-emerald-300"
+                        className="h-11 border-input bg-background text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
                       />
                       <Select value={item.category} onValueChange={(category) => updateDamageItem(index, { category })}>
-                        <SelectTrigger className="h-11 border-input bg-background text-sm font-bold text-foreground focus:ring-1 focus:ring-primary focus:ring-offset-0 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:focus:ring-emerald-300">
+                        <SelectTrigger className="h-11 border-input bg-background text-sm font-bold text-foreground focus:ring-1 focus:ring-primary focus:ring-offset-0">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -913,13 +913,13 @@ export default function AdminPaymentMonitoring() {
                         value={item.amount}
                         onChange={(event) => updateDamageItem(index, { amount: event.target.value })}
                         placeholder="0"
-                        className="h-11 border-input bg-background text-right text-sm font-bold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus-visible:ring-emerald-300"
+                        className="h-11 border-input bg-background text-right text-sm font-bold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
                       />
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-11 w-10 border-border bg-background text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-200"
+                        className="h-11 w-10 border-border bg-background text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => removeDamageItem(index)}
                         aria-label="Remove damaged item"
                       >
@@ -932,7 +932,7 @@ export default function AdminPaymentMonitoring() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 border-border bg-background px-4 font-bold text-foreground hover:bg-muted dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800"
+                  className="h-9 border-border bg-background px-4 font-bold text-foreground hover:bg-muted"
                   onClick={addDamageItem}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -941,26 +941,26 @@ export default function AdminPaymentMonitoring() {
               </div>
 
               <div className="mt-5 space-y-2">
-                <Label htmlFor="additional-fee-reason" className="text-sm font-bold text-foreground dark:text-neutral-200">Notes</Label>
+                <Label htmlFor="additional-fee-reason" className="text-sm font-bold text-foreground">Notes</Label>
                 <Textarea
                   id="additional-fee-reason"
                   value={feeForm.notes}
                   onChange={(event) => setFeeForm((current) => ({ ...current, notes: event.target.value }))}
                   placeholder="Describe the damage or context for this charge"
-                  className="min-h-24 border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus-visible:ring-emerald-300"
+                  className="min-h-24 border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
                 />
               </div>
 
-              <div className="mt-5 space-y-2 border-t border-border pt-4 text-sm dark:border-neutral-800">
-                <div className="flex items-center justify-between text-muted-foreground dark:text-neutral-200">
+              <div className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
+                <div className="flex items-center justify-between text-muted-foreground">
                   <span className="font-semibold">Subtotal</span>
                   <span>{formatMoney(damageSubtotal)}</span>
                 </div>
-                <div className="flex items-center justify-between text-muted-foreground dark:text-neutral-200">
+                <div className="flex items-center justify-between text-muted-foreground">
                   <span className="font-semibold">Service fee (10%)</span>
                   <span>{formatMoney(damageServiceFee)}</span>
                 </div>
-                <div className="flex items-center justify-between text-lg font-bold text-foreground dark:text-white">
+                  <div className="flex items-center justify-between text-lg font-bold text-foreground">
                   <span>Total damage charge</span>
                   <span>{formatMoney(damageTotal)}</span>
                 </div>
@@ -969,7 +969,7 @@ export default function AdminPaymentMonitoring() {
               <DialogFooter className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Button
                   variant="outline"
-                  className="h-11 border-border bg-card font-bold text-foreground hover:bg-muted dark:border-neutral-700 dark:bg-[#080808] dark:text-white dark:hover:bg-neutral-900"
+                  className="h-11 border-border bg-card font-bold text-foreground hover:bg-muted"
                   onClick={() => saveAdditionalFee("pending")}
                   disabled={savingFeeId === feeDialogBooking.id}
                 >
@@ -977,7 +977,7 @@ export default function AdminPaymentMonitoring() {
                   Save draft
                 </Button>
                 <Button
-                  className="h-11 bg-primary font-bold text-primary-foreground hover:bg-primary/90 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                  className="h-11 bg-primary font-bold text-primary-foreground hover:bg-primary/90"
                   onClick={() => saveAdditionalFee("unpaid")}
                   disabled={savingFeeId === feeDialogBooking.id}
                 >

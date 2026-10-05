@@ -204,8 +204,8 @@ export default function AdminPackages() {
             { label: "Total packages", value: summary.total, icon: Tag, tone: "text-foreground" },
             { label: "Active offers", value: summary.active, icon: CalendarCheck, tone: "text-primary" },
             { label: "With images", value: summary.withImages, icon: ImageIcon, tone: "text-secondary" },
-            { label: "Guest capacity", value: summary.capacity || "Flexible", icon: Users, tone: "text-emerald-700" },
-            { label: "Starting price", value: formatMoney(summary.startingPrice), icon: Wallet, tone: "text-amber-700" },
+            { label: "Guest capacity", value: summary.capacity || "Flexible", icon: Users, tone: "text-success" },
+            { label: "Starting price", value: formatMoney(summary.startingPrice), icon: Wallet, tone: "text-warning" },
           ].map(({ label, value, icon: Icon, tone }) => (
             <div key={label} className="rounded-lg border border-border bg-background p-4">
               <div className="flex items-center justify-between gap-3">
@@ -320,7 +320,7 @@ export default function AdminPackages() {
                               <Button variant="ghost" size="icon" onClick={() => { setEditPkg(pkg); setFormOpen(true); }} title="Edit package">
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="text-amber-600 hover:text-amber-700" onClick={() => setArchiveId(pkg.id)} title="Archive package">
+                              <Button variant="ghost" size="icon" className="text-warning hover:text-warning" onClick={() => setArchiveId(pkg.id)} title="Archive package">
                                 <Archive className="h-4 w-4" />
                               </Button>
                             </div>
@@ -360,7 +360,7 @@ export default function AdminPackages() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive} className="bg-amber-600 text-white hover:bg-amber-700">
+            <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90">
               Archive
             </AlertDialogAction>
           </AlertDialogFooter>

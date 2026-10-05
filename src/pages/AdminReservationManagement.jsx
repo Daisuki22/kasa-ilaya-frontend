@@ -20,8 +20,8 @@ import { Search } from "lucide-react";
 
 const rebookingBadgeClasses = {
   none: "border-border bg-muted text-muted-foreground",
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  pending: "border-warning/30 bg-warning/10 text-warning",
+  approved: "border-success/30 bg-success/10 text-success",
   declined: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
@@ -340,7 +340,7 @@ export default function AdminReservationManagement() {
                                 <CalendarPlus className="h-4 w-4" /> Review
                               </Button>
                             ) : null}
-                            <Button variant="outline" size="sm" className="gap-2 text-amber-600" onClick={() => setArchiveId(booking.id)} disabled={booking.status === "archived"}>
+                            <Button variant="outline" size="sm" className="gap-2 text-warning" onClick={() => setArchiveId(booking.id)} disabled={booking.status === "archived"}>
                               <Archive className="h-4 w-4" /> Archive
                             </Button>
                           </div>
@@ -372,7 +372,7 @@ export default function AdminReservationManagement() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive} className="bg-amber-600 text-white hover:bg-amber-700" disabled={archiving}>
+            <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={archiving}>
               {archiving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Archive"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -478,7 +478,7 @@ export default function AdminReservationManagement() {
                 </p>
               </div>
 
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm leading-6 text-warning">
                 Policy: one approved rebooking per reservation, requested at least 7 days before the reservation date. Payment stays non-refundable and transfers to the approved new date.
               </div>
 
@@ -504,7 +504,7 @@ export default function AdminReservationManagement() {
                 {resolvingRebooking === "declined" ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                 Decline
               </Button>
-              <Button className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => handleResolveRebooking("approved")} disabled={!!resolvingRebooking}>
+              <Button className="gap-2 bg-success text-white hover:bg-success" onClick={() => handleResolveRebooking("approved")} disabled={!!resolvingRebooking}>
                 {resolvingRebooking === "approved" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                 Approve
               </Button>

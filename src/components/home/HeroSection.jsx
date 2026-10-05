@@ -74,14 +74,14 @@ export default function HeroSection() {
           onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.jpg"; }}
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-transparent" />
+        <div className="absolute inset-0 brand-image-overlay-horizontal" />
 
         {showSliderControls ? (
           <>
             <button
               type="button"
               onClick={showPreviousHero}
-              className="absolute left-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/55 sm:flex lg:left-4 lg:h-11 lg:w-11"
+              className="absolute left-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 brand-overlay-control text-white backdrop-blur-sm transition  sm:flex lg:left-4 lg:h-11 lg:w-11"
               aria-label="Show previous homepage image"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -89,12 +89,12 @@ export default function HeroSection() {
             <button
               type="button"
               onClick={showNextHero}
-              className="absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/55 sm:flex lg:right-4 lg:h-11 lg:w-11"
+              className="absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 brand-overlay-control text-white backdrop-blur-sm transition  sm:flex lg:right-4 lg:h-11 lg:w-11"
               aria-label="Show next homepage image"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-full border border-white/15 bg-black/30 px-2.5 py-1.5 backdrop-blur-sm sm:bottom-6 sm:gap-2 sm:px-3 sm:py-2">
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-full border border-white/15 brand-overlay-panel px-2.5 py-1.5 backdrop-blur-sm sm:bottom-6 sm:gap-2 sm:px-3 sm:py-2">
               {heroImages.map((_, index) => (
                 <button
                   key={`hero-dot-${index}`}
@@ -133,7 +133,7 @@ export default function HeroSection() {
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full gap-2 border-white/40 bg-black/35 px-6 text-white hover:bg-black/50 sm:w-auto sm:px-7"
+                className="w-full gap-2 border-white/40 brand-overlay-control px-6 text-white  sm:w-auto sm:px-7"
               >
                 <CalendarCheck className="h-5 w-5" />
                 Book Now

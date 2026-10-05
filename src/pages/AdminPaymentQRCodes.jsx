@@ -224,7 +224,7 @@ export default function AdminPaymentQRCodes() {
                         <Button variant="ghost" size="icon" onClick={() => { setEditingCode(code); setFormOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-amber-600" onClick={() => setArchiveId(code.id)}>
+                        <Button variant="ghost" size="icon" className="text-warning" onClick={() => setArchiveId(code.id)}>
                           <Archive className="h-4 w-4" />
                         </Button>
                       </div>
@@ -309,7 +309,7 @@ export default function AdminPaymentQRCodes() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive} className="bg-amber-600 text-white hover:bg-amber-700">Archive</AlertDialogAction>
+            <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90">Archive</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

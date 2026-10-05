@@ -17,19 +17,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarDays, CheckCheck, CheckCircle2, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-const SCHEDULE_COLOR = "#2563eb";
+const SCHEDULE_COLOR = "hsl(var(--info))";
 const BOOKING_COLORS = {
-  pending: "#f59e0b",
-  confirmed: "#16a34a",
-  completed: "#64748b",
-  cancelled: "#ef4444",
+  pending: "hsl(var(--warning))",
+  confirmed: "hsl(var(--success))",
+  completed: "hsl(var(--muted-foreground))",
+  cancelled: "hsl(var(--destructive))",
 };
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const statusBadgeClasses = {
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  completed: "border-slate-200 bg-slate-100 text-slate-700",
+  pending: "border-warning/30 bg-warning/10 text-warning",
+  confirmed: "border-success/30 bg-success/10 text-success",
+  completed: "border-border bg-background text-foreground",
   cancelled: "border-destructive/20 bg-destructive/10 text-destructive",
   expired: "border-destructive/20 bg-destructive/10 text-destructive",
 };

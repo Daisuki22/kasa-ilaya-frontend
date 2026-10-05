@@ -516,7 +516,7 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
 
                   <div className="overflow-y-auto">
                     <div className="overflow-hidden bg-card">
-                      <div className="relative min-h-[420px] bg-slate-950 text-white">
+                      <div className="relative min-h-[420px] bg-primary text-white">
                         {previewHeroImages.length > 0 ? (
                           <img
                             src={previewHeroImages[0]}
@@ -524,7 +524,7 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
                             className="absolute inset-0 h-full w-full object-cover"
                           />
                         ) : null}
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/10" />
+                        <div className="absolute inset-0 brand-image-overlay-horizontal" />
                         <div className="relative flex min-h-[420px] flex-col justify-between p-6 sm:p-8 lg:p-12">
                           <div className="flex items-center gap-3">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/90 shadow-lg">
@@ -558,7 +558,7 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
                               {previewDescription}
                             </p>
                             <div className="flex flex-wrap gap-3 pt-2">
-                              <div className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-900 shadow-sm">
+                              <div className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-foreground shadow-sm">
                                 Explore Packages
                               </div>
                               <div className="rounded-full border border-white/30 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur-sm">

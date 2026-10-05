@@ -457,7 +457,7 @@ export default function Login() {
             alt="Kasa Ilaya Resort view"
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70" />
+          <div className="absolute inset-0 brand-image-overlay-vertical" />
           <div className="relative flex h-full flex-col justify-between p-10 text-white">
             <div className="inline-flex w-fit items-center gap-3 rounded-full bg-white/15 px-4 py-2 text-sm font-medium backdrop-blur-md">
               <TreePalm className="h-4 w-4" />

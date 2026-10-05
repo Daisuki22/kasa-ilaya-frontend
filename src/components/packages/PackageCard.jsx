@@ -103,10 +103,10 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 					onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/img/room_Resort%20View.jpg'; }}
 					className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
 				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+				<div className="absolute inset-0 brand-image-overlay" />
 
 				<div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
-					<Badge className="border-white/20 bg-white/90 text-slate-950 hover:bg-white">
+					<Badge className="border-white/20 bg-white/90 text-foreground hover:bg-white">
 						{selectedTour ? tourLabels[selectedTour] : 'Flexible Options'}
 					</Badge>
 					<Badge className="bg-secondary text-secondary-foreground">
@@ -117,11 +117,11 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 				<div className="absolute bottom-4 left-4 right-4">
 					<h2 className="font-display text-xl font-bold leading-tight text-white sm:text-2xl">{pkg.name}</h2>
 					<div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/85">
-						<span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur">
+						<span className="inline-flex items-center gap-1 rounded-full brand-overlay-control px-2.5 py-1 backdrop-blur">
 							<Users className="h-3.5 w-3.5" />
 							Standard group: {pkg.max_guests || 10} guests; extras allowed
 						</span>
-						<span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur">
+						<span className="inline-flex items-center gap-1 rounded-full brand-overlay-control px-2.5 py-1 backdrop-blur">
 							<ShieldCheck className="h-3.5 w-3.5" />
 							Managed package
 						</span>
@@ -131,10 +131,10 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 				{hasMultipleImages ? (
 					<>
 						<div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-3">
-							<button type="button" onClick={goToPrevious} className="rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur-sm transition hover:bg-black/55" aria-label={`Previous image for ${pkg.name}`}>
+							<button type="button" onClick={goToPrevious} className="rounded-full border border-white/25 brand-overlay-control p-2 text-white backdrop-blur-sm transition" aria-label={`Previous image for ${pkg.name}`}>
 								<ChevronLeft className="h-4 w-4" />
 							</button>
-							<button type="button" onClick={goToNext} className="rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur-sm transition hover:bg-black/55" aria-label={`Next image for ${pkg.name}`}>
+							<button type="button" onClick={goToNext} className="rounded-full border border-white/25 brand-overlay-control p-2 text-white backdrop-blur-sm transition" aria-label={`Next image for ${pkg.name}`}>
 								<ChevronRight className="h-4 w-4" />
 							</button>
 						</div>

@@ -34,7 +34,7 @@ const INQUIRY_STORAGE_KEY = "kasa-ilaya-inquiry-access";
 const inquiryStatusClasses = {
   open: "bg-accent/20 text-accent-foreground border-accent/30",
   in_progress: "bg-primary/10 text-primary border-primary/20",
-  resolved: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  resolved: "bg-success/10 text-success border-success/30",
   closed: "bg-muted text-muted-foreground border-border",
 };
 const ACTIVE_INQUIRY_STATUSES = new Set(["open", "in_progress"]);

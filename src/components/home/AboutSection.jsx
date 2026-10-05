@@ -294,7 +294,7 @@ export default function AboutSection({ standalone = false }) {
                   onError={handleImageFallback}
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 group-focus-within:scale-105 motion-reduce:transform-none"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent transition-colors duration-300 group-hover:from-black/80" />
+                <div className="absolute inset-0 brand-image-overlay transition-opacity duration-300 group-hover:opacity-100" />
                 <figcaption className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                   <h3 className="font-display text-lg font-semibold text-white sm:text-xl">{slide.title}</h3>
                   <p className="mt-1 line-clamp-2 text-sm leading-6 text-white/80">{slide.subtitle}</p>
@@ -307,7 +307,7 @@ export default function AboutSection({ standalone = false }) {
 
       <section className="relative overflow-hidden bg-foreground text-white">
         <img src={gallery[1]?.src || heroImage} alt="Plan a Kasa Ilaya visit" loading="lazy" decoding="async" onError={handleImageFallback} className="absolute inset-0 h-full w-full object-cover opacity-35" />
-        <div className="absolute inset-0 bg-black/65" />
+        <div className="absolute inset-0 brand-image-overlay-scrim" />
         <div className="relative grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[1fr_auto] lg:items-center lg:px-4 lg:py-10">
           <div>
             <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
