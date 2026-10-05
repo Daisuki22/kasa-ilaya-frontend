@@ -59,7 +59,7 @@ const formatTimeRange = (schedule) => {
 };
 
 const bookingStatusColors = {
-  pending: "bg-accent/20 text-accent-foreground border-accent/30",
+  pending: "bg-warning/10 text-warning border-warning/30",
   confirmed: "bg-primary/10 text-primary border-primary/20",
   completed: "bg-muted text-muted-foreground border-border",
 };
@@ -310,7 +310,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                   modifiers={{ scheduled: scheduledDates, booked: bookingDates }}
                   modifiersClassNames={{
                     scheduled: "bg-primary/15 text-primary font-semibold ring-1 ring-primary/30",
-                    booked: "bg-secondary/20 text-secondary-foreground font-semibold ring-1 ring-secondary/40",
+                    booked: "bg-secondary/20 text-secondary font-semibold ring-1 ring-secondary/40",
                   }}
                   className="rounded-lg border bg-background p-4 sm:p-5"
                   classNames={{
@@ -469,7 +469,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                       </div>
                       <Badge
                         variant="outline"
-                        className={schedule.type === "booking" ? "border-secondary/20 bg-secondary/5 text-secondary-foreground" : "border-primary/20 bg-primary/5 text-primary"}
+                        className={schedule.type === "booking" ? "border-secondary/30 bg-secondary/10 text-secondary" : "border-primary/20 bg-primary/5 text-primary"}
                       >
                         {schedule.timeLabel}
                       </Badge>

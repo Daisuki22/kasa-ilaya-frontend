@@ -29,7 +29,7 @@ const currency = new Intl.NumberFormat("en-PH", {
 });
 
 const statusColors = {
-  pending: "bg-accent/20 text-accent-foreground border-accent/30",
+  pending: "bg-warning/10 text-warning border-warning/30",
   confirmed: "bg-primary/10 text-primary border-primary/20",
   completed: "bg-muted text-muted-foreground border-border",
   cancelled: "bg-destructive/10 text-destructive border-destructive/30",

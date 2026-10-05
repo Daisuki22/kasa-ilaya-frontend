@@ -37,7 +37,7 @@ const paymentColors = {
 };
 
 const bookingStatusColors = {
-  pending: "bg-accent/20 text-accent-foreground",
+  pending: "bg-warning/10 text-warning",
   confirmed: "bg-primary/10 text-primary",
   completed: "bg-muted text-muted-foreground",
   cancelled: "bg-destructive/10 text-destructive",
@@ -57,7 +57,7 @@ const paymentTypeLabels = {
 };
 
 const additionalFeeStatusColors = {
-  pending: "bg-accent/20 text-accent-foreground",
+  pending: "bg-warning/10 text-warning",
   unpaid: "bg-destructive/10 text-destructive",
   paid: "bg-primary/10 text-primary",
 };
@@ -447,7 +447,7 @@ export default function AdminPaymentMonitoring() {
           <CardContent className="p-5 sm:p-6 sm:pt-6">
             <p className="text-sm text-muted-foreground">Pending review</p>
             <p className="mt-2 text-2xl font-semibold text-foreground">{summary.pendingCount}</p>
-            <p className="text-sm font-medium text-accent-foreground">{formatMoney(summary.pendingPayments)}</p>
+            <p className="text-sm font-medium text-warning">{formatMoney(summary.pendingPayments)}</p>
           </CardContent>
         </Card>
         <Card>
