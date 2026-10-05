@@ -1511,7 +1511,7 @@ export default function BookingForm() {
               {modalStep === 4 && (
                 <motion.div key="modal-step-terms" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="space-y-5">
-                    <div className="rounded-lg border border-warning/30 bg-warning p-4 text-sm leading-6 text-warning">
+                    <div className="rounded-lg border border-warning/30 bg-warning p-4 text-sm leading-6 text-warning-foreground">
                       <p className="font-semibold">Payment Policy</p>
                       <p className="mt-1">{PAYMENT_POLICY_NOTICE}</p>
                     </div>

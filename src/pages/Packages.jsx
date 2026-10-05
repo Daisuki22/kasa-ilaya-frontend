@@ -145,7 +145,7 @@ export default function Packages() {
 
   return (
     <div className="bg-background">
-      <section className="relative min-h-[34rem] overflow-hidden bg-foreground text-white lg:min-h-[38rem]">
+      <section className="relative min-h-[34rem] overflow-hidden bg-[var(--brand-charcoal)] text-white lg:min-h-[38rem]">
         <div className="absolute inset-0">
           <img
             key={`${activeBannerImage}-${activeBannerIndex}`}

@@ -119,7 +119,7 @@ export default function AboutSection({ standalone = false }) {
 
   return (
     <div className="bg-background">
-      <section className="relative min-h-[34rem] overflow-hidden bg-foreground text-white lg:min-h-[38rem]">
+      <section className="relative min-h-[34rem] overflow-hidden bg-[var(--brand-charcoal)] text-white lg:min-h-[38rem]">
         <RotatingBannerBackground images={pageBannerImages} alt={`${siteName} about banner`} />
 
         <div className="relative flex min-h-[34rem] w-full app-content-container flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
@@ -305,7 +305,7 @@ export default function AboutSection({ standalone = false }) {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-foreground text-white">
+      <section className="relative overflow-hidden bg-[var(--brand-charcoal)] text-white">
         <img src={gallery[1]?.src || heroImage} alt="Plan a Kasa Ilaya visit" loading="lazy" decoding="async" onError={handleImageFallback} className="absolute inset-0 h-full w-full object-cover opacity-35" />
         <div className="absolute inset-0 brand-image-overlay-scrim" />
         <div className="relative grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[1fr_auto] lg:items-center lg:px-4 lg:py-10">

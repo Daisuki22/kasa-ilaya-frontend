@@ -253,7 +253,7 @@ export default function Contact() {
 
   return (
     <div className="bg-background">
-      <section className="relative min-h-[34rem] overflow-hidden bg-foreground text-white lg:min-h-[38rem]">
+      <section className="relative min-h-[34rem] overflow-hidden bg-[var(--brand-charcoal)] text-white lg:min-h-[38rem]">
         <RotatingBannerBackground images={heroImages} alt="Kasa Ilaya Resort contact banner" />
 
         <div className="relative flex min-h-[34rem] w-full app-content-container flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">

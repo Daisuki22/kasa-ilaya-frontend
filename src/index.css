@@ -35,6 +35,7 @@
   --success: 164 55% 27%;
   --success-foreground: 0 0% 100%;
   --warning: 40 57% 35%;
+  --warning-foreground: 165 14% 16%;
   --info: 180 45% 30%;
   --destructive: 0 65% 42%;
   --destructive-foreground: 0 0% 100%;
@@ -58,7 +59,7 @@
   --card-foreground: 36 43% 93%;
   --popover: 183 48% 17%;
   --popover-foreground: 36 43% 93%;
-  --primary: 180 39% 40%;
+  --primary: 180 39% 32%;
   --primary-foreground: 0 0% 100%;
   --secondary: 164 55% 27%;
   --secondary-foreground: 0 0% 100%;
@@ -69,9 +70,10 @@
   --success: 147 42% 64%;
   --success-foreground: 165 14% 16%;
   --warning: 40 50% 57%;
+  --warning-foreground: 165 14% 12%;
   --info: 178 38% 64%;
-  --destructive: 0 72% 68%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive: 0 72% 76%;
+  --destructive-foreground: 165 14% 12%;
   --border: 180 20% 30%;
   --input: 180 20% 34%;
   --ring: 178 38% 64%;

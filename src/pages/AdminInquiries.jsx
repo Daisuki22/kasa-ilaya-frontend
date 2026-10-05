@@ -390,7 +390,7 @@ export default function AdminInquiries() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="text-warning hover:bg-warning hover:text-warning"
+                          className="text-warning hover:bg-warning hover:text-warning-foreground"
                           title="Archive inquiry"
                           disabled={inquiry.status === "archived"}
                           onClick={(event) => {
