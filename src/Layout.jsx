@@ -9,7 +9,7 @@ import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
   Menu, X, User, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
-  ChartBarIcon, CreditCard, FileText, Phone, Mail, MapPin, ArrowUpRight
+  ChartBarIcon, CreditCard, FileText, Phone, Mail, MapPin, Facebook, ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1027,7 +1027,13 @@ export default function Layout({ children, currentPageName }) {
                       <li>
                         <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                           <Phone className="h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
-                          <span>{RESORT_CONTACT.phoneDisplay}</span>
+                          <span>Mobile: {RESORT_CONTACT.phoneDisplay}</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`tel:${RESORT_CONTACT.landlineLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                          <Phone className="h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
+                          <span>Landline: {RESORT_CONTACT.landlineDisplay}</span>
                         </a>
                       </li>
                       <li>
@@ -1041,6 +1047,13 @@ export default function Layout({ children, currentPageName }) {
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
                           <span>{RESORT_CONTACT.address}</span>
                           <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-accent" aria-hidden="true" />
+                        </a>
+                      </li>
+                      <li>
+                        <a href={RESORT_CONTACT.facebookUrl} target="_blank" rel="noopener noreferrer" className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                          <Facebook className="h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
+                          <span>Facebook Page</span>
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-brand-accent" aria-hidden="true" />
                         </a>
                       </li>
                     </ul>
