@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
-import { Star, Quote } from "lucide-react";
+import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 
@@ -19,12 +19,25 @@ function StarRating({ rating }) {
 }
 
 export default function ReviewsSection() {
+  const carouselRef = useRef(null);
   const { data: reviews = [] } = useQuery({
     queryKey: ["public-reviews"],
     queryFn: () => baseClient.entities.Review.filter({ is_approved: true }, "-created_date", 6),
   });
 
   if (reviews.length === 0) return null;
+
+  const moveCarousel = (direction) => {
+    const carousel = carouselRef.current;
+    const firstCard = carousel?.firstElementChild;
+    if (!carousel || !firstCard) return;
+
+    const gap = Number.parseFloat(window.getComputedStyle(carousel).columnGap) || 0;
+    carousel.scrollBy({
+      left: direction * (firstCard.getBoundingClientRect().width + gap),
+      behavior: "smooth",
+    });
+  };
 
   return (
     <section className="bg-muted/40 py-24 sm:py-28 lg:py-32">
@@ -37,9 +50,34 @@ export default function ReviewsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 lg:gap-10">
+        <div className="mb-5 flex justify-end gap-2 sm:mb-6">
+          <button
+            type="button"
+            onClick={() => moveCarousel(-1)}
+            aria-label="Show previous guest reviews"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => moveCarousel(1)}
+            aria-label="Show next guest reviews"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div
+          ref={carouselRef}
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5 lg:gap-6"
+          role="region"
+          aria-label="Guest reviews carousel"
+          tabIndex={0}
+        >
           {reviews.map((review) => (
-            <Card key={review.id} data-scroll-reveal="up" className="relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <Card key={review.id} className="relative w-full shrink-0 snap-start overflow-hidden transition-shadow duration-300 hover:shadow-lg sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3rem)/3)]">
               <CardContent className="p-8">
                 <Quote className="mb-4 h-8 w-8 text-primary/20" />
                 <p className="mb-6 line-clamp-4 text-sm leading-7 text-foreground">
