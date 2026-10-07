@@ -139,7 +139,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const queryClient = useQueryClient();
-  const { user, isLoadingAuth } = useAuth();
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
@@ -583,10 +583,10 @@ export default function Layout({ children, currentPageName }) {
       </div>
       {!compact ? (
         <div>
-          <span className="block font-display text-lg font-bold text-foreground tracking-tight">
+          <span className="block font-display text-base font-bold text-foreground tracking-tight">
             {siteName}
           </span>
-          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             {isAdminMode ? "Resort Admin" : "Resort Navigation"}
           </span>
         </div>
@@ -602,16 +602,6 @@ export default function Layout({ children, currentPageName }) {
       )}
     </div>
   );
-
-  if (isLoadingAuth) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="flex h-full w-full items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-primary border-border" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`min-h-screen bg-background ${isAdminMode ? "md:pl-60" : ""}`}>
@@ -667,8 +657,8 @@ export default function Layout({ children, currentPageName }) {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{user.full_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                  <p className="truncate text-xs font-medium text-foreground">{user.full_name}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
                 </div>
               </div>
 
@@ -678,7 +668,7 @@ export default function Layout({ children, currentPageName }) {
               {/* Profile Settings */}
               <Link
                 to={createPageUrl(profilePageTarget)}
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Settings className="h-4 w-4" />
                 Profile Settings
@@ -688,7 +678,7 @@ export default function Layout({ children, currentPageName }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -833,15 +823,15 @@ export default function Layout({ children, currentPageName }) {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{user.full_name || "Account"}</p>
-                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                    <p className="truncate text-xs font-medium text-foreground">{user.full_name || "Account"}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
 
                 <Link
                   to={createPageUrl(profilePageTarget)}
                   onClick={() => setMobileOpen(false)}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Settings className="h-4 w-4" />
                   Profile Settings
@@ -853,7 +843,7 @@ export default function Layout({ children, currentPageName }) {
                     setMobileOpen(false);
                     handleLogout();
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
                 >
                   <LogOut className="h-4 w-4" />
                   Logout

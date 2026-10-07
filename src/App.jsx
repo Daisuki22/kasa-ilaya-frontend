@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './page.config'
-import { Component, Suspense, useLayoutEffect, useState } from 'react';
+import { Component, Suspense, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -134,15 +134,20 @@ const WelcomeIntroGate = () => {
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
+  const hasResolvedInitialLoad = useRef(false);
   const currentPageName = location.pathname.split("/").filter(Boolean)[0] || mainPageKey;
   const hasKnownPage = location.pathname === "/" || Object.prototype.hasOwnProperty.call(Pages, currentPageName);
+
+  if (!isLoadingPublicSettings && !isLoadingAuth) {
+    hasResolvedInitialLoad.current = true;
+  }
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (!hasResolvedInitialLoad.current && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin"></div>
