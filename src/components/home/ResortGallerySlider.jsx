@@ -62,7 +62,7 @@ export default function ResortGallerySlider() {
       <div className="pointer-events-none absolute -left-36 top-0 h-96 w-96 rounded-full bg-[#096164]/25 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-48 right-0 h-[32rem] w-[32rem] rounded-full bg-[#659EA7]/15 blur-3xl" />
 
-      <div className="relative mx-auto w-full max-w-[1440px] px-4 sm:px-8 lg:px-12">
+      <div className="relative mx-auto w-full max-w-[1240px] px-5 sm:px-8 lg:px-10">
         <div className="mb-9 flex flex-col justify-between gap-6 sm:mb-12 sm:flex-row sm:items-end">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#A3CBD8]">
@@ -86,7 +86,7 @@ export default function ResortGallerySlider() {
         </div>
 
         <div id="resort-gallery-slides" className="grid gap-4 md:grid-cols-[minmax(0,1.65fr)_minmax(250px,0.8fr)] lg:gap-5">
-          <article className="group relative min-h-[24rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] sm:min-h-[30rem] lg:min-h-[35rem]">
+          <article className="group relative min-h-[23rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] sm:min-h-[28rem] lg:min-h-[31rem]">
             <AnimatePresence mode="wait" initial={false}>
               <motion.img
                 key={activeSlide.src}
@@ -147,7 +147,7 @@ export default function ResortGallerySlider() {
               type="button"
               onClick={() => setActiveIndex(nextIndex)}
               aria-label={`Show ${nextSlide.title}`}
-              className="group relative hidden min-h-[30rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] text-left md:block lg:min-h-[35rem]"
+              className="group relative hidden min-h-[28rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] text-left md:block lg:min-h-[31rem]"
             >
               <img
                 src={imageFor(nextSlide, nextIndex)}

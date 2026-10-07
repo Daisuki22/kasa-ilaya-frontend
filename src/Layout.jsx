@@ -141,7 +141,7 @@ export default function Layout({ children, currentPageName }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isHeroVisible, setIsHeroVisible] = useState(currentPageName === "Home");
+  const [isHomeAtTop, setIsHomeAtTop] = useState(currentPageName === "Home");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
@@ -162,7 +162,7 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const isAdminMode = Boolean(isAdmin && isAdminPage);
-  const isTransparentHomeNav = !isAdminMode && currentPageName === "Home" && isHeroVisible && !mobileOpen;
+  const isTransparentHomeNav = !isAdminMode && currentPageName === "Home" && isHomeAtTop && !mobileOpen;
   const { data: footerLegalDocuments = [], isLoading: isLoadingFooterLegal, isError: hasFooterLegalError } = useQuery({
     queryKey: ["published-legal-documents"],
     queryFn: () => baseClient.entities.LegalDocument.list("-published_at", 10),
@@ -194,26 +194,18 @@ export default function Layout({ children, currentPageName }) {
 
   useLayoutEffect(() => {
     if (isAdminMode || currentPageName !== "Home") {
-      setIsHeroVisible(false);
+      setIsHomeAtTop(false);
       return undefined;
     }
 
-    const hero = document.getElementById("top");
-    if (!hero) {
-      setIsHeroVisible(false);
-      return undefined;
-    }
-
-    const updateHeroVisibility = () => {
-      setIsHeroVisible(hero.getBoundingClientRect().bottom > 88);
+    const updateHomeTopState = () => {
+      setIsHomeAtTop(window.scrollY <= 16);
     };
 
-    updateHeroVisibility();
-    window.addEventListener("scroll", updateHeroVisibility, { passive: true });
-    window.addEventListener("resize", updateHeroVisibility);
+    updateHomeTopState();
+    window.addEventListener("scroll", updateHomeTopState, { passive: true });
     return () => {
-      window.removeEventListener("scroll", updateHeroVisibility);
-      window.removeEventListener("resize", updateHeroVisibility);
+      window.removeEventListener("scroll", updateHomeTopState);
     };
   }, [currentPageName, isAdminMode, location.pathname]);
 
@@ -799,7 +791,10 @@ export default function Layout({ children, currentPageName }) {
           </div>
         ) : null}
 
-        <header className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${isAdminMode ? "border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 md:hidden" : isTransparentHomeNav ? "border-transparent bg-transparent shadow-none backdrop-blur-0 supports-[backdrop-filter]:bg-transparent" : "border-border bg-card/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80"}`}>
+        <header
+          className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${isAdminMode ? "border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 md:hidden" : isTransparentHomeNav ? "border-transparent bg-transparent shadow-none backdrop-blur-0 supports-[backdrop-filter]:bg-transparent" : "border-border bg-card/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80"}`}
+          style={isTransparentHomeNav ? { backgroundColor: "transparent", backgroundImage: "none", backdropFilter: "none", WebkitBackdropFilter: "none" } : undefined}
+        >
           <div className={`min-h-16 px-2 sm:px-3 lg:px-4 ${isAdminMode ? "flex items-center justify-between" : "flex items-center justify-between py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 xl:gap-10"}`}>
             <Link to={createPageUrl("Home")} className="flex min-w-0 items-center gap-3">
               {renderBrandMark(true, isTransparentHomeNav)}
