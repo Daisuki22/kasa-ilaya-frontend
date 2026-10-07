@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, format, isBefore, isSameDay, startOfDay } from "date-fns";
 import { baseClient } from "@/api/baseClient";
 import { useAuth } from "@/lib/AuthContext";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, resortCalendarClassNames } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -294,8 +294,8 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                 Calendar View
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 lg:p-8">
-              <div className="flex justify-center">
+            <CardContent className="min-w-0 p-3 sm:p-6 lg:p-8">
+              <div className="flex min-w-0 justify-center">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -312,17 +312,8 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                     scheduled: "bg-primary/15 text-primary font-semibold ring-1 ring-primary/30",
                     booked: "bg-secondary/20 text-secondary font-semibold ring-1 ring-secondary/40",
                   }}
-                  className="rounded-lg border bg-background p-4 sm:p-5"
-                  classNames={{
-                    months: "flex flex-col gap-6",
-                    month: "space-y-5",
-                    caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-base sm:text-lg font-semibold",
-                    head_cell: "text-muted-foreground rounded-md w-12 sm:w-14 font-normal text-sm",
-                    cell: "h-12 w-12 sm:h-14 sm:w-14 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md focus-within:relative focus-within:z-20",
-                    day: "h-12 w-12 sm:h-14 sm:w-14 p-0 text-sm sm:text-base font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md",
-                    day_disabled: "text-muted-foreground pointer-events-none hover:bg-transparent hover:text-muted-foreground",
-                  }}
+                  className="w-full max-w-full rounded-lg border bg-background p-2 sm:p-4"
+                  classNames={resortCalendarClassNames}
                 />
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">

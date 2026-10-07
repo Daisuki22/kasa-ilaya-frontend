@@ -571,11 +571,12 @@ export default function Layout({ children, currentPageName }) {
     );
   };
 
-  const BrandMark = ({ compact = false }) => (
+  const logoUrl = resolveAssetUrl(siteSettings?.logo_url || "");
+  const renderBrandMark = (compact = false) => (
     <div className="flex min-w-0 items-center gap-3">
       <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 sm:h-16 sm:w-16`}>
-        {siteSettings?.logo_url ? (
-          <img src={siteSettings.logo_url} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
+        {logoUrl ? (
+          <img src={logoUrl} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
         ) : (
           <TreePalm className="h-6 w-6 text-primary" />
         )}
@@ -613,23 +614,23 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className={`min-h-screen bg-background ${isAdminMode ? "md:pl-64" : ""}`}>
+    <div className={`min-h-screen bg-background ${isAdminMode ? "md:pl-60" : ""}`}>
       {isAdminMode ? (
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border/80 bg-gradient-to-b from-card via-card to-primary/[0.04] shadow-[8px_0_36px_-32px_rgba(15,61,47,0.4)] md:flex md:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-border/80 bg-gradient-to-b from-card via-card to-primary/[0.04] shadow-[8px_0_36px_-32px_rgba(15,61,47,0.4)] md:flex md:flex-col">
         <div className="border-b border-border/70 px-6 py-6">
           <Link to={createPageUrl("Home")} className="flex items-center gap-3">
-            <BrandMark />
+            {renderBrandMark()}
           </Link>
         </div>
 
         <div className="flex flex-1 flex-col overflow-y-auto px-4 py-6">
           <nav className="space-y-1.5">
-            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Admin workspace</p>
+            <p className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Admin workspace</p>
             {navItems.map((item) => (
               <Link
                 key={item.page || item.href}
                 to={item.href || createPageUrl(item.page)}
-                className={`group relative isolate flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition-all duration-200 ${
+                className={`group relative isolate flex items-center gap-2.5 rounded-xl border px-2.5 py-2.5 text-xs font-medium transition-all duration-200 ${
                   currentPageName === item.page
                     ? "border-primary/15 text-primary-foreground shadow-md shadow-primary/15"
                     : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/80 hover:text-foreground hover:shadow-sm"
@@ -642,8 +643,8 @@ export default function Layout({ children, currentPageName }) {
                     transition={{ type: "spring", stiffness: 380, damping: 34 }}
                   />
                 ) : null}
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${currentPageName === item.page ? "bg-white/15" : "bg-muted/70 group-hover:bg-primary/10"}`}>
-                  <item.icon className="relative z-10 h-4 w-4" />
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${currentPageName === item.page ? "bg-white/15" : "bg-muted/70 group-hover:bg-primary/10"}`}>
+                  <item.icon className="relative z-10 h-3.5 w-3.5" />
                 </span>
                 <span className="relative z-10">{item.name}</span>
               </Link>
@@ -712,7 +713,7 @@ export default function Layout({ children, currentPageName }) {
         <header className={`fixed inset-x-0 top-0 z-50 border-b border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 ${isAdminMode ? "md:hidden" : ""}`}>
           <div className={`min-h-16 px-2 sm:px-3 lg:px-4 ${isAdminMode ? "flex items-center justify-between" : "flex items-center justify-between py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 xl:gap-10"}`}>
             <Link to={createPageUrl("Home")} className="flex min-w-0 items-center gap-3">
-              <BrandMark compact />
+              {renderBrandMark(true)}
             </Link>
 
             {!isAdminMode ? (
@@ -780,7 +781,7 @@ export default function Layout({ children, currentPageName }) {
         >
           <div className="flex min-h-16 items-center justify-between border-b border-border px-4">
             <Link to={createPageUrl("Home")} onClick={() => setMobileOpen(false)} className="min-w-0">
-              <BrandMark compact />
+              {renderBrandMark(true)}
             </Link>
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} aria-label="Close navigation menu">
               <X className="h-5 w-5" />
@@ -788,7 +789,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           <nav className="flex-1 overflow-y-auto px-4 py-5">
-            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{isAdminMode ? "Admin workspace" : "Explore Kasa Ilaya"}</p>
+            <p className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{isAdminMode ? "Admin workspace" : "Explore Kasa Ilaya"}</p>
             <div className="space-y-1.5">
               {navItems.map((item) => (
                 <Link

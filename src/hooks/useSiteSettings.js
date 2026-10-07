@@ -158,6 +158,7 @@ export function useSiteSettings() {
   const query = useQuery({
     queryKey: ["site-settings"],
     queryFn: () => baseClient.entities.SiteSetting.list("-updated_date", 1),
+    staleTime: 5 * 60 * 1000,
   });
 
   const settings = useMemo(() => {

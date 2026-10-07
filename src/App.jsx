@@ -66,10 +66,6 @@ class AppErrorBoundary extends Component {
   }
 }
 
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
-
 const AdminOnlyRoute = ({ user, pageName, children }) => {
   if (!canAccessAdminPage(user, pageName)) {
     return <Navigate to="/" replace />;
@@ -138,6 +134,8 @@ const WelcomeIntroGate = () => {
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
+  const currentPageName = location.pathname.split("/").filter(Boolean)[0] || mainPageKey;
+  const hasKnownPage = location.pathname === "/" || Object.prototype.hasOwnProperty.call(Pages, currentPageName);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -163,50 +161,51 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Render the main app
-  return (
-    <Suspense fallback={<PageLoadingFallback />}>
-      <Routes>
-        <Route path="/" element={
-          <AdminDestinationGuard user={user} pageName={mainPageKey}>
-            <LayoutWrapper currentPageName={mainPageKey}>
-              <MainPage />
-            </LayoutWrapper>
-          </AdminDestinationGuard>
-        } />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route
-            key={path}
-            path={`/${path}`}
-            element={
-              <AdminDestinationGuard user={user} pageName={path}>
-                {path.startsWith('Admin') ? (
+  const pageRoutes = (
+    <Routes>
+      <Route path="/" element={
+        <AdminDestinationGuard user={user} pageName={mainPageKey}>
+          <MainPage />
+        </AdminDestinationGuard>
+      } />
+      {Object.entries(Pages).map(([path, Page]) => (
+        <Route
+          key={path}
+          path={`/${path}`}
+          element={
+            <AdminDestinationGuard user={user} pageName={path}>
+              {path.startsWith('Admin') ? (
                 <AdminOnlyRoute user={user} pageName={path}>
-                  <LayoutWrapper currentPageName={path}>
-                    <Page />
-                  </LayoutWrapper>
+                  <Page />
                 </AdminOnlyRoute>
               ) : guestOrRegularUserPages.has(path) ? (
                 <GuestOrRegularUserRoute user={user}>
-                  <LayoutWrapper currentPageName={path}>
-                    <Page />
-                  </LayoutWrapper>
+                  <Page />
                 </GuestOrRegularUserRoute>
               ) : protectedUserPages.has(path) ? (
                 <UserOnlyRoute isAuthenticated={Boolean(user)}>
-                  <LayoutWrapper currentPageName={path}>
-                    <Page />
-                  </LayoutWrapper>
+                  <Page />
                 </UserOnlyRoute>
               ) : (
-                <LayoutWrapper currentPageName={path}>
-                  <Page />
-                </LayoutWrapper>
-                )}
-              </AdminDestinationGuard>
-            }
-          />
-        ))}
+                <Page />
+              )}
+            </AdminDestinationGuard>
+          }
+        />
+      ))}
+    </Routes>
+  );
+
+  // Keep the shared layout mounted while the lazy page content changes.
+  return hasKnownPage && Layout ? (
+    <Layout currentPageName={currentPageName}>
+      <Suspense fallback={<PageLoadingFallback />}>
+        {pageRoutes}
+      </Suspense>
+    </Layout>
+  ) : (
+    <Suspense fallback={<PageLoadingFallback />}>
+      <Routes>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </Suspense>
