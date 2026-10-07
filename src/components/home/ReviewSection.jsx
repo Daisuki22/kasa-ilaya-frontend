@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
 import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 
 function StarRating({ rating }) {
   return (
@@ -44,6 +45,15 @@ export default function ReviewsSection() {
                 <p className="mb-6 line-clamp-4 text-sm leading-7 text-foreground">
                   "{review.review_text}"
                 </p>
+                {review.image_url ? (
+                  <img
+                    src={resolveAssetUrl(review.image_url)}
+                    alt={`Photo shared by ${review.guest_name}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="mb-6 max-h-56 w-full rounded-md object-cover"
+                  />
+                ) : null}
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-foreground text-sm">{review.guest_name}</p>
