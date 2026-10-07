@@ -38,7 +38,7 @@ export default function ReviewsSection() {
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 lg:gap-10">
           {reviews.map((review) => (
-            <Card key={review.id} className="relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <Card key={review.id} data-scroll-reveal="up" className="relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <CardContent className="p-8">
                 <Quote className="mb-4 h-8 w-8 text-primary/20" />
                 <p className="mb-6 line-clamp-4 text-sm leading-7 text-foreground">

@@ -200,25 +200,60 @@ export default function Layout({ children, currentPageName }) {
       return undefined;
     }
 
-    const revealTargets = document.querySelectorAll("main section, main article, main [data-scroll-reveal]");
-    if (!revealTargets.length) {
-      return undefined;
-    }
-
+    const revealSelector = "main section > div:not(.absolute):not([data-scroll-reveal-ignore]), main article, main figure, main [data-scroll-reveal], #site-footer > div";
+    const registeredTargets = new Set();
+    const siblingIndexes = new Map();
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         entry.target.classList.add("scroll-reveal-visible");
         observer.unobserve(entry.target);
       });
-    }, { threshold: 0.08, rootMargin: "0px 0px -36px 0px" });
+    }, { threshold: 0.12, rootMargin: "0px 0px -56px 0px" });
 
-    revealTargets.forEach((target) => {
-      target.classList.add("scroll-reveal");
-      observer.observe(target);
+    const registerTargets = (root) => {
+      const revealTargets = [];
+      if (root instanceof Element && root.matches(revealSelector)) revealTargets.push(root);
+      revealTargets.push(...root.querySelectorAll(revealSelector));
+
+      revealTargets.forEach((target) => {
+        if (registeredTargets.has(target)) return;
+        registeredTargets.add(target);
+        const siblingIndex = siblingIndexes.get(target.parentElement) || 0;
+        siblingIndexes.set(target.parentElement, siblingIndex + 1);
+        target.style.setProperty("--scroll-reveal-delay", `${Math.min(siblingIndex * 110, 330)}ms`);
+
+        const direction = target.dataset.scrollReveal;
+        target.style.setProperty("--scroll-reveal-x", direction === "left" ? "-24px" : direction === "right" ? "24px" : "0px");
+        target.style.setProperty("--scroll-reveal-y", direction === "left" || direction === "right" ? "0px" : "26px");
+        target.classList.add("scroll-reveal");
+        observer.observe(target);
+      });
+    };
+
+    registerTargets(document);
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof Element) registerTargets(node);
+        });
+      });
     });
+    const main = document.querySelector("main");
+    const footer = document.querySelector("#site-footer");
+    if (main) mutationObserver.observe(main, { childList: true, subtree: true });
+    if (footer) mutationObserver.observe(footer, { childList: true, subtree: true });
 
-    return () => observer.disconnect();
+    return () => {
+      mutationObserver.disconnect();
+      observer.disconnect();
+      registeredTargets.forEach((target) => {
+        target.classList.remove("scroll-reveal", "scroll-reveal-visible");
+        target.style.removeProperty("--scroll-reveal-delay");
+        target.style.removeProperty("--scroll-reveal-x");
+        target.style.removeProperty("--scroll-reveal-y");
+      });
+    };
   }, [location.pathname, prefersReducedMotion]);
 
   useEffect(() => {

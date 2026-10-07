@@ -90,6 +90,7 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 
 	return (
 		<Card
+			data-scroll-reveal={index % 2 === 0 ? "left" : "right"}
 			className="group overflow-hidden border-border/80 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
 			style={{ animationDelay: `${index * 80}ms` }}
 		>
