@@ -912,6 +912,7 @@ export const baseClient = {
           {
             method: "POST",
             body: payload,
+            timeoutMs: 60000,
           }
         );
       },
