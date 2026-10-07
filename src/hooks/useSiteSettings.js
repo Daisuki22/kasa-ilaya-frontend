@@ -114,7 +114,7 @@ const normalizeJsonField = (value, fallback) => {
 
 export const defaultSiteSettings = {
   site_name: "Kasa Ilaya",
-  logo_url: "/img/apple-touch-icon.png",
+  logo_url: "",
   hero_image_url: "/img/Logo.png",
   hero_images: DEFAULT_HERO_IMAGES,
   packages_banner_url: "/img/Logo.png",

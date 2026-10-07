@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { TreePalm } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const INTRO_DURATION_MS = 2800;
 const INTRO_FADE_MS = 550;
 
 export default function WelcomeIntro() {
-  const { settings } = useSiteSettings();
+  const { settings, isLoading: isLoadingSiteSettings } = useSiteSettings();
   const [isVisible, setIsVisible] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [logoImageFailed, setLogoImageFailed] = useState(false);
 
   const siteName = settings?.site_name?.trim() || "Kasa Ilaya";
   const logoUrl = settings?.logo_url?.trim();
@@ -19,6 +19,10 @@ export default function WelcomeIntro() {
 
     return gallery || settings?.packages_banner_url || settings?.hero_image_url || "/img/room_Resort%20View.jpg";
   }, [settings?.hero_image_url, settings?.packages_banner_url, settings?.resort_gallery]);
+
+  useEffect(() => {
+    setLogoImageFailed(false);
+  }, [logoUrl]);
 
   useEffect(() => {
     if (!isVisible) {
@@ -75,11 +79,9 @@ export default function WelcomeIntro() {
 
       <div className="welcome-intro__content">
         <div className="welcome-intro__mark" aria-hidden="true">
-          {logoUrl ? (
-            <img src={logoUrl} alt="" loading="eager" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/apple-touch-icon.png"; }} />
-          ) : (
-            <TreePalm className="h-10 w-10" />
-          )}
+          {!isLoadingSiteSettings && logoUrl && !logoImageFailed ? (
+            <img src={logoUrl} alt="" loading="eager" decoding="async" onError={() => setLogoImageFailed(true)} />
+          ) : null}
         </div>
         <p className="welcome-intro__eyebrow">Welcome to</p>
         <h1 className="welcome-intro__title">{siteName}</h1>

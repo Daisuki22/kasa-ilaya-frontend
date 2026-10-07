@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
-  Menu, X, User, TreePalm, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
+  Menu, X, User, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
   ChartBarIcon, CreditCard, FileText, Phone, Mail, MapPin, ArrowUpRight
 } from "lucide-react";
@@ -144,10 +144,11 @@ export default function Layout({ children, currentPageName }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
+  const [logoImageFailed, setLogoImageFailed] = useState(false);
   const initializedChatNotifications = useRef(false);
   const deliveredChatNotifications = useRef(new Set());
   const chatNotificationUserKey = useRef("");
-  const { settings: siteSettings } = useSiteSettings();
+  const { settings: siteSettings, isLoading: isLoadingSiteSettings } = useSiteSettings();
   const { theme, resolvedTheme, setTheme } = useTheme();
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdminUser = Boolean(
@@ -572,13 +573,17 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const logoUrl = resolveAssetUrl(siteSettings?.logo_url || "");
+  useEffect(() => {
+    setLogoImageFailed(false);
+  }, [logoUrl]);
+
   const renderBrandMark = (compact = false) => (
     <div className="flex min-w-0 items-center gap-3">
       <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 sm:h-16 sm:w-16`}>
-        {logoUrl ? (
-          <img src={logoUrl} alt={`${siteName} logo`} loading="eager" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
+        {!isLoadingSiteSettings && logoUrl && !logoImageFailed ? (
+          <img src={logoUrl} alt={`${siteName} logo`} loading="eager" decoding="async" onError={() => setLogoImageFailed(true)} className="h-full w-full object-contain" />
         ) : (
-          <TreePalm className="h-6 w-6 text-primary" />
+          null
         )}
       </div>
       {!compact ? (
@@ -875,10 +880,10 @@ export default function Layout({ children, currentPageName }) {
                 <div className="grid gap-8 border-b border-white/15 py-9 sm:py-11 md:grid-cols-[minmax(0,1.4fr)_auto] md:items-center md:gap-10">
                   <div className="flex items-start gap-4">
                     <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-2 sm:h-20 sm:w-20">
-                      {siteSettings?.logo_url ? (
-                        <img src={resolveAssetUrl(siteSettings.logo_url)} alt={`${siteName} logo`} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-contain" />
+                      {!isLoadingSiteSettings && logoUrl && !logoImageFailed ? (
+                        <img src={logoUrl} alt={`${siteName} logo`} loading="lazy" decoding="async" onError={() => setLogoImageFailed(true)} className="h-full w-full object-contain" />
                       ) : (
-                        <TreePalm className="h-8 w-8 text-brand-accent" aria-hidden="true" />
+                        null
                       )}
                     </Link>
                     <div className="min-w-0 max-w-xl">
