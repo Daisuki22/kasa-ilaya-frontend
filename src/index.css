@@ -1276,6 +1276,49 @@ h1, h2, h3, h4, h5, h6, .font-display {
   }
 }
 
+.reviews-marquee-mask {
+  width: 100%;
+  overflow: hidden;
+}
+
+.reviews-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: reviews-marquee-scroll 96s linear infinite;
+  will-change: transform;
+}
+
+.reviews-marquee-group {
+  display: flex;
+  flex: none;
+  gap: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.reviews-marquee-mask:hover .reviews-marquee-track,
+.reviews-marquee-mask:focus-within .reviews-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes reviews-marquee-scroll {
+  to { transform: translateX(-16.666667%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviews-marquee-mask {
+    overflow-x: auto;
+  }
+
+  .reviews-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
+  .reviews-marquee-group:not(:first-child) {
+    display: none;
+  }
+}
+
 @media print {
   .scroll-reveal {
     opacity: 1 !important;

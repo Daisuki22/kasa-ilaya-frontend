@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
-import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 
@@ -19,53 +19,19 @@ function StarRating({ rating }) {
 }
 
 export default function ReviewsSection() {
-  const carouselRef = useRef(null);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const { data: reviews = [] } = useQuery({
     queryKey: ["public-reviews"],
     queryFn: () => baseClient.entities.Review.filter({ is_approved: true }, "-created_date", 6),
   });
 
-  useEffect(() => {
-    if (reviews.length < 2 || isCarouselPaused) return undefined;
-
-    const intervalId = window.setInterval(() => {
-      const carousel = carouselRef.current;
-      const firstCard = carousel?.firstElementChild;
-      if (!carousel || !firstCard || document.hidden) return;
-
-      const gap = Number.parseFloat(window.getComputedStyle(carousel).columnGap) || 0;
-      const distance = firstCard.getBoundingClientRect().width + gap;
-      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-
-      if (maxScroll <= 0 || maxScroll - carousel.scrollLeft <= distance * 0.65) {
-        carousel.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        carousel.scrollBy({ left: distance, behavior: "smooth" });
-      }
-    }, 5000);
-
-    return () => window.clearInterval(intervalId);
-  }, [isCarouselPaused, reviews.length]);
-
   if (reviews.length === 0) return null;
 
-  const moveCarousel = (direction) => {
-    const carousel = carouselRef.current;
-    const firstCard = carousel?.firstElementChild;
-    if (!carousel || !firstCard) return;
-
-    const gap = Number.parseFloat(window.getComputedStyle(carousel).columnGap) || 0;
-    carousel.scrollBy({
-      left: direction * (firstCard.getBoundingClientRect().width + gap),
-      behavior: "smooth",
-    });
-  };
+  const reviewCopies = Array.from({ length: 6 }, (_, copyIndex) => copyIndex);
 
   return (
     <section className="bg-muted/40 py-24 sm:py-28 lg:py-32">
       <div className="w-full app-content-container px-2 sm:px-3 lg:px-4">
-        <div className="mb-16 text-center lg:mb-20">
+        <div className="mb-12 text-center sm:mb-14 lg:mb-16">
           <p className="text-secondary font-medium uppercase tracking-widest text-sm mb-2">Guest Stories</p>
           <h2 className="mb-5 font-display text-4xl font-bold text-foreground lg:text-5xl">What Our Guests Say</h2>
           <p className="mx-auto max-w-2xl text-muted-foreground leading-8">
@@ -73,71 +39,51 @@ export default function ReviewsSection() {
           </p>
         </div>
 
-        <div className="mb-5 flex justify-end gap-2 sm:mb-6">
-          <button
-            type="button"
-            onClick={() => moveCarousel(-1)}
-            aria-label="Show previous guest reviews"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => moveCarousel(1)}
-            aria-label="Show next guest reviews"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-
         <div
-          ref={carouselRef}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5 lg:gap-6"
+          className="reviews-marquee-mask"
           role="region"
           aria-label="Guest reviews carousel"
           tabIndex={0}
-          onMouseEnter={() => setIsCarouselPaused(true)}
-          onMouseLeave={() => setIsCarouselPaused(false)}
-          onFocus={() => setIsCarouselPaused(true)}
-          onBlur={() => setIsCarouselPaused(false)}
-          onTouchStart={() => setIsCarouselPaused(true)}
-          onTouchEnd={() => setIsCarouselPaused(false)}
         >
-          {reviews.map((review) => (
-            <Card key={review.id} className="relative w-full shrink-0 snap-start overflow-hidden transition-shadow duration-300 hover:shadow-lg sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3rem)/3)]">
-              <CardContent className="p-8">
-                <Quote className="mb-4 h-8 w-8 text-primary/20" />
-                <p className="mb-6 line-clamp-4 text-sm leading-7 text-foreground">
-                  "{review.review_text}"
-                </p>
-                {review.image_url ? (
-                  <img
-                    src={resolveAssetUrl(review.image_url)}
-                    alt={`Photo shared by ${review.guest_name}`}
-                    loading="lazy"
-                    decoding="async"
-                    className="mb-6 max-h-56 w-full rounded-md object-cover"
-                  />
-                ) : null}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground text-sm">{review.guest_name}</p>
-                    {review.package_name && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{review.package_name}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <StarRating rating={review.rating} />
-                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                      Verified Stay
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <div className="reviews-marquee-track">
+            {reviewCopies.map((copyIndex) => (
+              <div key={`review-copy-${copyIndex}`} className="reviews-marquee-group" aria-hidden={copyIndex > 0}>
+                {reviews.map((review, reviewIndex) => (
+                  <Card key={`${copyIndex}-${review.id}`} className="relative w-[min(84vw,22rem)] shrink-0 overflow-hidden transition-shadow duration-300 hover:shadow-lg sm:w-[22rem]">
+                    <CardContent className="flex h-full flex-col p-6 sm:p-7">
+                      <Quote className="mb-4 h-7 w-7 shrink-0 text-primary/20" />
+                      <p className="mb-5 line-clamp-4 min-h-20 text-sm leading-7 text-foreground">
+                        “{review.review_text}”
+                      </p>
+                      {review.image_url ? (
+                        <img
+                          src={resolveAssetUrl(review.image_url)}
+                          alt={`Photo shared by ${review.guest_name}`}
+                          loading={copyIndex === 0 && reviewIndex < 3 ? "eager" : "lazy"}
+                          decoding="async"
+                          className="mb-5 max-h-44 w-full rounded-md object-cover"
+                        />
+                      ) : null}
+                      <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 pt-4">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{review.guest_name}</p>
+                          {review.package_name ? (
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">{review.package_name}</p>
+                          ) : null}
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-2">
+                          <StarRating rating={review.rating} />
+                          <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            Verified Stay
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
