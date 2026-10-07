@@ -69,28 +69,6 @@ export default function ResortGallerySlider() {
       <div className="pointer-events-none absolute -bottom-48 right-0 h-[32rem] w-[32rem] rounded-full bg-[#659EA7]/15 blur-3xl" />
 
       <div className="relative mx-auto w-full max-w-[1240px] px-5 sm:px-8 lg:px-10">
-        <div className="mb-9 flex flex-col justify-between gap-6 sm:mb-12 sm:flex-row sm:items-end">
-          <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#A3CBD8]">
-              <Images className="h-4 w-4" />
-              Resort Gallery
-            </div>
-            <h2 className="font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-              Step inside Kasa Ilaya
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
-              Explore the spaces made for restful stays, easy gatherings, and moments worth remembering.
-            </p>
-          </div>
-
-          <a
-            href="#resort-gallery-slides"
-            className="hidden shrink-0 items-center gap-2 pb-1 text-sm font-medium text-[#BFCBC0] transition-colors hover:text-white sm:inline-flex"
-          >
-            Explore the resort <ArrowDownRight className="h-4 w-4" />
-          </a>
-        </div>
-
         <div id="resort-gallery-slides" className="grid gap-4 md:grid-cols-[minmax(0,1.65fr)_minmax(250px,0.8fr)] lg:gap-5">
           <article className="group relative min-h-[23rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] sm:min-h-[28rem] lg:min-h-[31rem]">
             <AnimatePresence mode="wait" initial={false}>
@@ -195,6 +173,28 @@ export default function ResortGallerySlider() {
             <span className="text-xs tabular-nums text-white/55">{String(activeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}</span>
           </div>
         ) : null}
+
+        <div className="mt-10 flex flex-col justify-between gap-5 border-t border-white/10 pt-6 sm:mt-12 sm:flex-row sm:items-end sm:gap-8">
+          <div className="max-w-2xl">
+            <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#A3CBD8]">
+              <Images className="h-4 w-4" />
+              Resort Gallery
+            </div>
+            <h2 className="font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+              Step inside Kasa Ilaya
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
+              Explore the spaces made for restful stays, easy gatherings, and moments worth remembering.
+            </p>
+          </div>
+
+          <a
+            href="#resort-gallery-slides"
+            className="hidden shrink-0 items-center gap-2 pb-1 text-sm font-medium text-[#BFCBC0] transition-colors hover:text-white sm:inline-flex"
+          >
+            Explore the resort <ArrowDownRight className="h-4 w-4" />
+          </a>
+        </div>
       </div>
     </section>
   );
