@@ -1,238 +1,194 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
-import { motion } from "framer-motion";
-import { baseClient } from "@/api/baseClient";
-import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowDownRight, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { handleImageFallback } from "@/lib/imageFallback";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 
 const FALLBACK_IMAGES = [
-  { src: "/img/room_Resort%20View.webp", title: "Resort View", subtitle: "Wide-open leisure spaces and refreshing scenery." },
-  { src: "/img/room_eventplace.webp", title: "Event Space", subtitle: "A venue designed for celebrations, reunions, and special occasions." },
-  { src: "/img/room_EntireHouse_EventPlace.webp", title: "Private Stay", subtitle: "Comfortable accommodations for families and barkada getaways." },
-  { src: "/img/room_kubo.webp", title: "Kubo Area", subtitle: "Relaxed corners for rest, dining, and poolside bonding." },
-  { src: "/img/kubo_accomodation.webp", title: "Kubo Accommodation", subtitle: "A more rustic stay experience with resort comfort." },
+  { src: "/img/room_Resort%20View.webp", title: "Resort View", subtitle: "Unwind in a calm space surrounded by open skies and greenery." },
+  { src: "/img/room_eventplace.webp", title: "Event Place", subtitle: "A welcoming venue for celebrations, reunions, and special days." },
+  { src: "/img/room_EntireHouse_EventPlace.webp", title: "Private Stay", subtitle: "Make room for family time, group getaways, and slow mornings." },
+  { src: "/img/room_kubo.webp", title: "Kubo Area", subtitle: "Find a quiet corner to relax between swims and shared meals." },
+  { src: "/img/kubo_accomodation.webp", title: "Kubo Accommodation", subtitle: "Enjoy a relaxed stay with the comforts of the resort close by." },
 ];
+
+const wrapIndex = (index, length) => (index + length) % length;
 
 export default function ResortGallerySlider() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [activeImageFailed, setActiveImageFailed] = useState(false);
+  const [failedImages, setFailedImages] = useState(() => new Set());
   const { settings } = useSiteSettings();
-  const customSlides = useMemo(
-    () => Array.isArray(settings?.resort_gallery) ? settings.resort_gallery.filter((slide) => slide?.src) : [],
-    [settings?.resort_gallery]
-  );
-
-  const { data: packages = [] } = useQuery({
-    queryKey: ["home-gallery-packages"],
-    queryFn: () => baseClient.entities.Package.filter({ is_active: true }, "name", 50),
-    enabled: customSlides.length === 0,
-  });
-
-  const packageSlides = useMemo(() => {
-    const collectedSlides = [];
-    const seenImages = new Set();
-
-    for (const pkg of packages) {
-      const galleryImages = Array.isArray(pkg.gallery_images) && pkg.gallery_images.length > 0
-        ? pkg.gallery_images
-        : [pkg.image_url].filter(Boolean);
-
-      for (const imageUrl of galleryImages) {
-        if (!imageUrl || seenImages.has(imageUrl)) {
-          continue;
-        }
-
-        seenImages.add(imageUrl);
-        collectedSlides.push({
-          src: imageUrl,
-          title: pkg.name || "Resort Experience",
-          subtitle: pkg.description || "Explore another corner of Kasa Ilaya Resort.",
-        });
-      }
-    }
-
-    for (const fallbackImage of FALLBACK_IMAGES) {
-      if (!seenImages.has(fallbackImage.src)) {
-        seenImages.add(fallbackImage.src);
-        collectedSlides.push(fallbackImage);
-      }
-    }
-
-    return collectedSlides.slice(0, 8);
-  }, [packages]);
+  const prefersReducedMotion = useReducedMotion();
 
   const slides = useMemo(() => {
-    if (customSlides.length > 0) {
-      return customSlides.slice(0, 8).map((slide) => ({
-        src: slide.src,
-        title: slide.title || "Resort Photo",
-        subtitle: slide.subtitle || "Discover more of Kasa Ilaya Resort.",
-      }));
-    }
+    const customSlides = Array.isArray(settings?.resort_gallery)
+      ? settings.resort_gallery
+          .filter((slide) => slide?.src)
+          .map((slide) => ({
+            src: slide.src,
+            title: slide.title || "A look around the resort",
+            subtitle: slide.subtitle || "Discover the spaces and details that make every stay memorable.",
+          }))
+      : [];
 
-    return packageSlides;
-  }, [customSlides, packageSlides]);
+    return customSlides.length ? customSlides : FALLBACK_IMAGES;
+  }, [settings?.resort_gallery]);
 
   useEffect(() => {
-    if (!slides.length) {
-      setActiveIndex(0);
-      return;
-    }
-
-    setActiveIndex((current) => (current >= slides.length ? 0 : current));
+    setActiveIndex((current) => (current < slides.length ? current : 0));
+    setFailedImages(new Set());
   }, [slides]);
 
   useEffect(() => {
-    setActiveImageFailed(false);
-  }, [activeIndex, slides]);
-
-  useEffect(() => {
-    if (slides.length <= 1) {
-      return undefined;
-    }
-
+    if (slides.length < 2 || prefersReducedMotion) return undefined;
     const intervalId = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % slides.length);
-    }, 4500);
-
+      setActiveIndex((current) => wrapIndex(current + 1, slides.length));
+    }, 6000);
     return () => window.clearInterval(intervalId);
-  }, [slides.length]);
+  }, [prefersReducedMotion, slides.length]);
 
-  if (!slides.length) {
-    return null;
-  }
+  if (!slides.length) return null;
 
   const activeSlide = slides[activeIndex];
-
-  const goToPrevious = () => {
-    setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
-  };
-
-  const goToNext = () => {
-    setActiveIndex((current) => (current + 1) % slides.length);
-  };
+  const nextIndex = wrapIndex(activeIndex + 1, slides.length);
+  const nextSlide = slides[nextIndex];
+  const imageFor = (slide, index) => (
+    failedImages.has(index) ? FALLBACK_IMAGES[index % FALLBACK_IMAGES.length].src : resolveAssetUrl(slide.src)
+  );
+  const markImageFailed = (index) => setFailedImages((current) => new Set(current).add(index));
 
   return (
-    <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgb(var(--brand-resort-green-rgb) / 0.16),_transparent_42%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)/0.45))] py-20">
-      <div className="w-full app-content-container space-y-8">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-2xl"
-        >
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-            <ImageIcon className="h-4 w-4" />
-            Resort Gallery
-          </div>
-          <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
-            Take a look around the resort before you book
-          </h2>
-          <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-            Browse photos of the resort, accommodations, and event spaces to get a better feel for the experience on the guest side.
-          </p>
-        </motion.div>
+    <section className="relative overflow-hidden bg-[#0E2024] py-16 text-white sm:py-20 lg:py-24">
+      <div className="pointer-events-none absolute -left-36 top-0 h-96 w-96 rounded-full bg-[#096164]/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-48 right-0 h-[32rem] w-[32rem] rounded-full bg-[#659EA7]/15 blur-3xl" />
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(260px,320px)]">
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.7 }}
-            className="relative overflow-hidden rounded-lg border border-border/70 bg-card/70 shadow-[0_24px_70px_-45px_rgb(var(--brand-deep-teal-rgb) / 0.36)]"
+      <div className="relative mx-auto w-full max-w-[1440px] px-4 sm:px-8 lg:px-12">
+        <div className="mb-9 flex flex-col justify-between gap-6 sm:mb-12 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#A3CBD8]">
+              <Images className="h-4 w-4" />
+              Resort Gallery
+            </div>
+            <h2 className="font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+              Step inside Kasa Ilaya
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
+              Explore the spaces made for restful stays, easy gatherings, and moments worth remembering.
+            </p>
+          </div>
+
+          <a
+            href="#resort-gallery-slides"
+            className="hidden shrink-0 items-center gap-2 pb-1 text-sm font-medium text-[#BFCBC0] transition-colors hover:text-white sm:inline-flex"
           >
-            <div className="relative aspect-[16/9] overflow-hidden">
-              <img
+            Explore the resort <ArrowDownRight className="h-4 w-4" />
+          </a>
+        </div>
+
+        <div id="resort-gallery-slides" className="grid gap-4 md:grid-cols-[minmax(0,1.65fr)_minmax(250px,0.8fr)] lg:gap-5">
+          <article className="group relative min-h-[24rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] sm:min-h-[30rem] lg:min-h-[35rem]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.img
                 key={activeSlide.src}
-                src={activeImageFailed ? FALLBACK_IMAGES[activeIndex % FALLBACK_IMAGES.length].src : activeSlide.src}
+                src={imageFor(activeSlide, activeIndex)}
                 alt={activeSlide.title}
                 loading="lazy"
                 decoding="async"
-                onError={() => setActiveImageFailed(true)}
-                className="h-full w-full object-cover"
+                onError={() => markImageFailed(activeIndex)}
+                initial={prefersReducedMotion ? false : { opacity: 0, scale: 1.035 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.65, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 brand-image-overlay" />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#071315]/90 via-[#071315]/25 to-transparent" />
 
-              {slides.length > 1 ? (
-                <>
-                  <div className="absolute inset-y-0 left-4 flex items-center">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      className="h-11 w-11 rounded-full border-white/35 brand-overlay-control text-white "
-                      onClick={goToPrevious}
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <div className="absolute inset-y-0 right-4 flex items-center">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      className="h-11 w-11 rounded-full border-white/35 brand-overlay-control text-white "
-                      onClick={goToNext}
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </>
-              ) : null}
-
-              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                <div className="max-w-xl rounded-lg border border-white/10 brand-overlay-panel px-4 py-3 text-white backdrop-blur-md sm:px-5 sm:py-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-white sm:text-xs">Featured Photo</div>
-                  <h3 className="mt-1.5 font-display text-xl font-bold sm:text-2xl">{activeSlide.title}</h3>
-                  <p className="mt-1.5 text-xs leading-5 text-white sm:text-sm sm:leading-6">{activeSlide.subtitle}</p>
-                </div>
-              </div>
+            <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-[#0E2024]/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85 backdrop-blur sm:left-6 sm:top-6 sm:text-xs">
+              Featured space
             </div>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.75 }}
-            className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-2"
-          >
-            {slides.map((slide, index) => {
-              const isActive = index === activeIndex;
+            {slides.length > 1 ? (
+              <div className="absolute right-4 top-4 flex gap-2 sm:right-6 sm:top-6">
+                <button
+                  type="button"
+                  onClick={() => setActiveIndex((current) => wrapIndex(current - 1, slides.length))}
+                  aria-label="Previous resort photo"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#0E2024]/55 text-white backdrop-blur transition hover:bg-white hover:text-[#0E2024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveIndex((current) => wrapIndex(current + 1, slides.length))}
+                  aria-label="Next resort photo"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#0E2024]/55 text-white backdrop-blur transition hover:bg-white hover:text-[#0E2024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            ) : null}
 
-              return (
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10">
+              <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[#BFCBC0]">
+                {String(activeIndex + 1).padStart(2, "0")} <span className="text-white/45">/ {String(slides.length).padStart(2, "0")}</span>
+              </p>
+              <h3 className="max-w-2xl font-display text-2xl font-semibold sm:text-3xl lg:text-4xl">
+                {activeSlide.title}
+              </h3>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-white/75 sm:text-base">
+                {activeSlide.subtitle}
+              </p>
+            </div>
+          </article>
+
+          {slides.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => setActiveIndex(nextIndex)}
+              aria-label={`Show ${nextSlide.title}`}
+              className="group relative hidden min-h-[30rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] text-left md:block lg:min-h-[35rem]"
+            >
+              <img
+                src={imageFor(nextSlide, nextIndex)}
+                alt={nextSlide.title}
+                loading="lazy"
+                decoding="async"
+                onError={() => markImageFailed(nextIndex)}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#071315]/90 via-[#071315]/20 to-[#071315]/10" />
+              <div className="absolute left-5 top-5 rounded-full border border-white/15 bg-[#0E2024]/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85 backdrop-blur">
+                Up next
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+                <h3 className="font-display text-xl font-semibold sm:text-2xl">{nextSlide.title}</h3>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/70">{nextSlide.subtitle}</p>
+                <span className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 transition group-hover:bg-white group-hover:text-[#0E2024]">
+                  <ArrowDownRight className="h-4 w-4" />
+                </span>
+              </div>
+            </button>
+          ) : null}
+        </div>
+
+        {slides.length > 1 ? (
+          <div className="mt-5 flex items-center gap-4 sm:mt-6">
+            <div className="flex gap-2" role="group" aria-label="Choose resort photo">
+              {slides.map((slide, index) => (
                 <button
                   key={`${slide.src}-${index}`}
                   type="button"
                   onClick={() => setActiveIndex(index)}
-                  className={`group overflow-hidden rounded-lg border text-left transition-all ${
-                    isActive
-                      ? "border-primary shadow-lg shadow-primary/15"
-                      : "border-border/70 bg-card/60 hover:border-primary/40"
-                  }`}
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img
-                      src={slide.src}
-                      alt={slide.title}
-                      loading="lazy"
-                      decoding="async"
-                      onError={handleImageFallback}
-                      className={`h-full w-full object-cover transition duration-500 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
-                    />
-                    <div className="absolute inset-0 brand-image-overlay" />
-                    <div className="absolute inset-x-0 bottom-0 p-3">
-                      <div className="text-sm font-semibold text-white">{slide.title}</div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </motion.div>
-        </div>
+                  aria-label={`Show photo ${index + 1}: ${slide.title}`}
+                  aria-current={index === activeIndex ? "true" : undefined}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${index === activeIndex ? "w-9 bg-[#A3CBD8]" : "w-3 bg-white/30 hover:bg-white/60"}`}
+                />
+              ))}
+            </div>
+            <span className="text-xs tabular-nums text-white/55">{String(activeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}</span>
+          </div>
+        ) : null}
       </div>
     </section>
   );

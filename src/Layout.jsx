@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
+import React, { Suspense, lazy, useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { createPageUrl } from "@/utils";
@@ -141,6 +141,7 @@ export default function Layout({ children, currentPageName }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isHeroVisible, setIsHeroVisible] = useState(currentPageName === "Home");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
@@ -161,6 +162,7 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const isAdminMode = Boolean(isAdmin && isAdminPage);
+  const isTransparentHomeNav = !isAdminMode && currentPageName === "Home" && isHeroVisible && !mobileOpen;
   const { data: footerLegalDocuments = [], isLoading: isLoadingFooterLegal, isError: hasFooterLegalError } = useQuery({
     queryKey: ["published-legal-documents"],
     queryFn: () => baseClient.entities.LegalDocument.list("-published_at", 10),
@@ -189,6 +191,31 @@ export default function Layout({ children, currentPageName }) {
 
   const bodyFontFamily = FONT_STYLE_OPTIONS[siteSettings?.body_font_style]?.cssFamily || FONT_STYLE_OPTIONS.inter.cssFamily;
   const headingFontFamily = FONT_STYLE_OPTIONS[siteSettings?.heading_font_style]?.cssFamily || FONT_STYLE_OPTIONS.playfair.cssFamily;
+
+  useLayoutEffect(() => {
+    if (isAdminMode || currentPageName !== "Home") {
+      setIsHeroVisible(false);
+      return undefined;
+    }
+
+    const hero = document.getElementById("top");
+    if (!hero) {
+      setIsHeroVisible(false);
+      return undefined;
+    }
+
+    const updateHeroVisibility = () => {
+      setIsHeroVisible(hero.getBoundingClientRect().bottom > 88);
+    };
+
+    updateHeroVisibility();
+    window.addEventListener("scroll", updateHeroVisibility, { passive: true });
+    window.addEventListener("resize", updateHeroVisibility);
+    return () => {
+      window.removeEventListener("scroll", updateHeroVisibility);
+      window.removeEventListener("resize", updateHeroVisibility);
+    };
+  }, [currentPageName, isAdminMode, location.pathname]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--font-body", bodyFontFamily);
@@ -435,7 +462,7 @@ export default function Layout({ children, currentPageName }) {
       ? "Booking and guest chat updates"
       : "Account, booking, and chat updates";
 
-  const renderNotificationMenu = ({ compact = false } = {}) => {
+  const renderNotificationMenu = ({ compact = false, onHero = false } = {}) => {
     if (!user) {
       return null;
     }
@@ -452,7 +479,13 @@ export default function Layout({ children, currentPageName }) {
       >
         <DropdownMenuTrigger asChild>
           {compact ? (
-            <Button variant="outline" size="icon" className="relative h-8 w-8" aria-label="Notifications" onClick={enableBrowserNotifications}>
+            <Button
+              variant={onHero ? "ghost" : "outline"}
+              size="icon"
+              className={`relative h-8 w-8 ${onHero ? "border border-white/30 bg-black/20 text-white backdrop-blur-sm hover:bg-white/15 hover:text-white" : ""}`}
+              aria-label="Notifications"
+              onClick={enableBrowserNotifications}
+            >
               <Bell className="h-3.5 w-3.5" />
               {unreadCount > 0 ? (
                 <span className="absolute -right-1 -top-1 min-w-[1rem] rounded-full bg-destructive px-1 text-[9px] font-semibold leading-3.5 text-destructive-foreground">
@@ -528,11 +561,11 @@ export default function Layout({ children, currentPageName }) {
     ? `System (${resolvedThemeLabel})`
     : `${activeTheme.label} mode`;
 
-  const ThemeModeIndicator = ({ compact = false } = {}) => (
-    <div className={`flex flex-nowrap items-center gap-1 rounded-lg border border-border bg-background/70 text-muted-foreground ${compact ? "px-2 py-1.5 text-xs" : "px-2 py-2 text-xs"}`}>
+  const ThemeModeIndicator = ({ compact = false, onHero = false } = {}) => (
+    <div className={`flex flex-nowrap items-center gap-1 rounded-lg border ${onHero ? "border-white/25 bg-black/20 text-white/80 backdrop-blur-sm" : "border-border bg-background/70 text-muted-foreground"} ${compact ? "px-2 py-1.5 text-xs" : "px-2 py-2 text-xs"}`}>
       <ActiveThemeIcon className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} shrink-0`} />
-      <span className="shrink-0 whitespace-nowrap font-semibold text-foreground">{compact ? activeTheme.label : "Appearance"}</span>
-      <span className="shrink-0 whitespace-nowrap text-muted-foreground">{compact ? (theme === "system" ? resolvedThemeLabel : "mode") : themeModeLabel}</span>
+      <span className={`shrink-0 whitespace-nowrap font-semibold ${onHero ? "text-white" : "text-foreground"}`}>{compact ? activeTheme.label : "Appearance"}</span>
+      <span className={`shrink-0 whitespace-nowrap ${onHero ? "text-white/75" : "text-muted-foreground"}`}>{compact ? (theme === "system" ? resolvedThemeLabel : "mode") : themeModeLabel}</span>
     </div>
   );
 
@@ -560,10 +593,10 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  const NavbarThemeToggle = () => (
+  const NavbarThemeToggle = ({ onHero = false } = {}) => (
     <div className="hidden items-center gap-2 sm:flex">
-      <ThemeModeIndicator compact />
-      <div className="flex items-center rounded-lg border border-border bg-background/70 p-1">
+      <ThemeModeIndicator compact onHero={onHero} />
+      <div className={`flex items-center rounded-lg border p-1 ${onHero ? "border-white/25 bg-black/20 backdrop-blur-sm" : "border-border bg-background/70"}`}>
         {themeOptions.map(({ id, Icon, label }) => (
           <button
             key={id}
@@ -573,7 +606,7 @@ export default function Layout({ children, currentPageName }) {
             className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
               theme === id
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                : onHero ? "text-white/85 hover:bg-white/15 hover:text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
             aria-label={label}
           >
@@ -638,9 +671,9 @@ export default function Layout({ children, currentPageName }) {
     setLogoImageFailed(false);
   }, [logoUrl]);
 
-  const renderBrandMark = (compact = false) => (
+  const renderBrandMark = (compact = false, onHero = false) => (
     <div className="flex min-w-0 items-center gap-3">
-      <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 sm:h-16 sm:w-16`}>
+      <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl ${onHero ? "bg-white/15 backdrop-blur-sm" : "bg-primary/10"} sm:h-16 sm:w-16`}>
         {!isLoadingSiteSettings && logoUrl && !logoImageFailed ? (
           <img src={logoUrl} alt={`${siteName} logo`} loading="eager" decoding="async" onError={() => setLogoImageFailed(true)} className="h-full w-full object-contain" />
         ) : (
@@ -658,10 +691,10 @@ export default function Layout({ children, currentPageName }) {
         </div>
       ) : (
         <div className="min-w-0">
-          <span className="block max-w-[11rem] truncate font-display text-sm font-bold tracking-tight text-foreground sm:max-w-none sm:text-lg">
+          <span className={`block max-w-[11rem] truncate font-display text-sm font-bold tracking-tight sm:max-w-none sm:text-lg ${onHero ? "text-white" : "text-foreground"}`}>
             {siteName} Resort
           </span>
-          <span className="block truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground sm:text-xs sm:tracking-[0.2em]">
+          <span className={`block truncate text-[9px] uppercase tracking-[0.14em] sm:text-xs sm:tracking-[0.2em] ${onHero ? "text-white/75" : "text-muted-foreground"}`}>
             Official Resort Website
           </span>
         </div>
@@ -766,14 +799,14 @@ export default function Layout({ children, currentPageName }) {
           </div>
         ) : null}
 
-        <header className={`fixed inset-x-0 top-0 z-50 border-b border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 ${isAdminMode ? "md:hidden" : ""}`}>
+        <header className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${isAdminMode ? "border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 md:hidden" : isTransparentHomeNav ? "border-transparent bg-transparent shadow-none backdrop-blur-0 supports-[backdrop-filter]:bg-transparent" : "border-border bg-card/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80"}`}>
           <div className={`min-h-16 px-2 sm:px-3 lg:px-4 ${isAdminMode ? "flex items-center justify-between" : "flex items-center justify-between py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 xl:gap-10"}`}>
             <Link to={createPageUrl("Home")} className="flex min-w-0 items-center gap-3">
-              {renderBrandMark(true)}
+              {renderBrandMark(true, isTransparentHomeNav)}
             </Link>
 
             {!isAdminMode ? (
-              <nav className="hidden items-center justify-center gap-1 rounded-full border border-border/70 bg-background/75 p-1.5 shadow-[0_8px_28px_-20px_rgba(15,61,47,0.45)] backdrop-blur lg:flex lg:justify-self-center xl:gap-1.5 xl:p-2">
+              <nav className={`hidden items-center justify-center gap-1 rounded-full border p-1.5 backdrop-blur lg:flex lg:justify-self-center xl:gap-1.5 xl:p-2 ${isTransparentHomeNav ? "border-white/20 bg-black/10 shadow-none" : "border-border/70 bg-background/75 shadow-[0_8px_28px_-20px_rgba(15,61,47,0.45)]"}`}>
                 {navItems.map((item) => (
                   <Link
                     key={item.page || item.href}
@@ -781,7 +814,7 @@ export default function Layout({ children, currentPageName }) {
                     className={`relative isolate flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
                       currentPageName === item.page
                         ? "text-primary-foreground"
-                        : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                        : isTransparentHomeNav ? "text-white/90 hover:bg-white/10 hover:text-white" : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
                     {currentPageName === item.page ? (
@@ -799,8 +832,8 @@ export default function Layout({ children, currentPageName }) {
             ) : null}
 
             <div className={`flex items-center gap-2 sm:gap-3 ${isAdminMode ? "" : "lg:justify-self-end"}`}>
-              <NavbarThemeToggle />
-              {!isAdminMode ? renderNotificationMenu({ compact: true }) : null}
+              <NavbarThemeToggle onHero={isTransparentHomeNav} />
+              {!isAdminMode ? renderNotificationMenu({ compact: true, onHero: isTransparentHomeNav }) : null}
               <div className="hidden sm:block">
                 {renderUserMenu()}
               </div>
@@ -808,7 +841,7 @@ export default function Layout({ children, currentPageName }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={isAdminMode ? "rounded-xl border border-border/70 bg-background/80 shadow-sm" : "rounded-xl border border-border/70 bg-background/80 text-foreground shadow-sm lg:hidden"}
+                className={isAdminMode ? "rounded-xl border border-border/70 bg-background/80 shadow-sm" : isTransparentHomeNav ? "rounded-xl border border-white/30 bg-black/20 text-white shadow-sm backdrop-blur-sm hover:bg-white/15 hover:text-white lg:hidden" : "rounded-xl border border-border/70 bg-background/80 text-foreground shadow-sm lg:hidden"}
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-navigation-drawer"
@@ -923,7 +956,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </aside>
 
-        <main className={`min-h-screen ${isAdminMode ? "pt-16 md:pt-0" : "pt-16"}`}>
+        <main className={`min-h-screen ${isAdminMode ? "pt-16 md:pt-0" : currentPageName === "Home" ? "pt-0" : "pt-16"}`}>
           <motion.div
             key={location.pathname}
             initial={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
