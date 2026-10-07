@@ -708,13 +708,20 @@ export const baseClient = {
     },
 
     async verifyRegistrationOtp(data) {
-      return request(
+      const payload = await request(
         "/auth.php?action=verify-registration-otp",
         {
           method: "POST",
           body: data,
         }
       );
+
+      if (payload?.user) {
+        markClientAuthenticated();
+      }
+      dispatchAuthChange();
+
+      return payload;
     },
 
     async validateResetToken(token) {

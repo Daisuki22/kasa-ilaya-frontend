@@ -714,7 +714,7 @@ export default function Login() {
       </div>
 
       <Dialog open={isGoogleDetailsOpen} onOpenChange={setIsGoogleDetailsOpen}>
-        <DialogContent className="rounded-xl sm:max-w-md">
+        <DialogContent className="overflow-x-hidden rounded-xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Complete your Google account</DialogTitle>
             <DialogDescription>
@@ -774,6 +774,7 @@ export default function Login() {
           </form>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

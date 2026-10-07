@@ -16,9 +16,10 @@ export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const initialEmail = searchParams.get('email') || '';
+  const sampleOtp = searchParams.get('sample_otp') || '';
   const isTokenReset = token !== '';
   const [status, setStatus] = useState({ loading: isTokenReset, valid: !isTokenReset, email: initialEmail });
-  const [form, setForm] = useState({ email: initialEmail, code: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ email: initialEmail, code: sampleOtp, password: '', confirmPassword: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [isCodeVerified, setIsCodeVerified] = useState(isTokenReset);
@@ -111,13 +112,18 @@ export default function ResetPassword() {
     try {
       const response = await baseClient.auth.resendResetOtp(resetIdentifierPayload());
 
-      if (response.mail_sent === false) {
+      if (response.sample_reset_otp) {
+        setForm((current) => ({ ...current, code: response.sample_reset_otp, password: '', confirmPassword: '' }));
+        toast.success(`Temporary development reset code: ${response.sample_reset_otp}`);
+      } else if (response.mail_sent === false) {
         toast.error('Reset code was created, but email delivery failed. Please check the email service settings.');
       } else {
         toast.success('If the account exists, a new reset code has been sent.');
       }
 
-      setForm((current) => ({ ...current, code: '', password: '', confirmPassword: '' }));
+      if (!response.sample_reset_otp) {
+        setForm((current) => ({ ...current, code: '', password: '', confirmPassword: '' }));
+      }
       setIsCodeVerified(false);
       setResetToken('');
       setResendSeconds(60);

@@ -26,7 +26,12 @@ export default function ForgotPassword() {
         email,
       });
 
-      if (response.mail_sent === false) {
+      if (response.sample_reset_otp) {
+        toast.success(`Temporary development reset code: ${response.sample_reset_otp}`);
+        const params = new URLSearchParams({ method: 'email', email });
+        params.set('sample_otp', response.sample_reset_otp);
+        navigate(`${createPageUrl('ResetPassword')}?${params.toString()}`);
+      } else if (response.mail_sent === false) {
         toast.error('Reset code was created, but email delivery failed. Please check the email service settings.');
       } else {
         toast.success('If the account exists, a reset code has been sent.');
