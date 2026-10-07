@@ -154,7 +154,7 @@ export default function Packages() {
             loading={activeBannerIndex === 0 ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={activeBannerIndex === 0 ? "high" : "auto"}
-            onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.jpg"; }}
+            onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 brand-image-overlay-scrim" />

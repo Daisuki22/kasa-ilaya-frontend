@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 import { isSuperAdmin } from "@/lib/adminAccess";
 import { defaultSiteSettings, FONT_STYLE_OPTIONS, AMENITY_ICON_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
+import { optimizeImageFile } from "@/lib/optimizeImageFile";
 
 const buildForm = (settings) => ({
   site_name: settings?.site_name || defaultSiteSettings.site_name,
@@ -123,7 +124,8 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
     try {
       const uploadedSlides = await Promise.all(
         files.map(async (file) => {
-          const { file_url } = await baseClient.integrations.Core.UploadFile({ file });
+          const optimizedFile = await optimizeImageFile(file);
+          const { file_url } = await baseClient.integrations.Core.UploadFile({ file: optimizedFile });
           const fallbackTitle = file.name.replace(/\.[^.]+$/, "").trim() || "Resort Photo";
 
           return {
@@ -156,7 +158,8 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
     setUploading(true);
 
     try {
-      const { file_url } = await baseClient.integrations.Core.UploadFile({ file });
+      const optimizedFile = await optimizeImageFile(file, type === "logo" ? 1000 : 1600);
+      const { file_url } = await baseClient.integrations.Core.UploadFile({ file: optimizedFile });
       setForm((prev) => ({
         ...prev,
         [type === "logo" ? "logo_url" : type === "packages-banner" ? "packages_banner_url" : "hero_image_url"]: file_url,
@@ -183,7 +186,8 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
       const uploadedImages = [];
 
       for (const file of files) {
-        const { file_url } = await baseClient.integrations.Core.UploadFile({ file });
+        const optimizedFile = await optimizeImageFile(file);
+        const { file_url } = await baseClient.integrations.Core.UploadFile({ file: optimizedFile });
         uploadedImages.push(file_url);
       }
 

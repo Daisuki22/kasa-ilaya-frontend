@@ -1,4 +1,4 @@
-export const RESORT_IMAGE_FALLBACK = "/img/room_Resort%20View.jpg";
+export const RESORT_IMAGE_FALLBACK = "/img/room_Resort%20View.webp";
 export const LOGO_IMAGE_FALLBACK = "/img/apple-touch-icon.png";
 
 export const handleImageFallback = (event, fallback = RESORT_IMAGE_FALLBACK) => {

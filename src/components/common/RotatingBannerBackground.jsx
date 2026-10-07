@@ -7,7 +7,7 @@ export default function RotatingBannerBackground({
   intervalMs = 9000,
   overlayClassName = "brand-image-overlay-horizontal",
 }) {
-  const bannerImages = Array.isArray(images) && images.length > 0 ? images : ["/img/room_Resort%20View.jpg"];
+  const bannerImages = Array.isArray(images) && images.length > 0 ? images : ["/img/room_Resort%20View.webp"];
   const [activeIndex, setActiveIndex] = useState(0);
   const showControls = bannerImages.length > 1;
   const activeImage = bannerImages[activeIndex] || bannerImages[0];
@@ -48,7 +48,7 @@ export default function RotatingBannerBackground({
           loading={activeIndex === 0 ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={activeIndex === 0 ? "high" : "auto"}
-          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.jpg"; }}
+          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
           className="h-full w-full object-cover"
         />
       </div>

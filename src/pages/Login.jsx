@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CalendarCheck, ImagePlus, Loader2, LockKeyhole, TreePalm } from 'lucide-react';
 import { baseClient } from '@/api/baseClient';
@@ -11,6 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
+import { DATA_PRIVACY_NOTICE } from '@/lib/resortNotices';
+import { defaultSiteSettings, useSiteSettings } from '@/hooks/useSiteSettings';
+import { optimizeImageFile } from '@/lib/optimizeImageFile';
 
 const normalizeEmail = (value) => value.trim().toLowerCase();
 
@@ -116,6 +120,9 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState('signin');
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signUpForm, setSignUpForm] = useState({ first_name: '', middle_name: '', last_name: '', birth_date: '', phone: '', email: '', password: '', confirmPassword: '' });
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
+  const [legalDialogType, setLegalDialogType] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleConfig, setGoogleConfig] = useState({
     enabled: Boolean(DEFAULT_GOOGLE_CLIENT_ID),
@@ -130,6 +137,13 @@ export default function Login() {
   const [googleProfilePicture, setGoogleProfilePicture] = useState(null);
   const [isGoogleDetailsOpen, setIsGoogleDetailsOpen] = useState(false);
   const [isCompletingGoogleDetails, setIsCompletingGoogleDetails] = useState(false);
+  const { settings: siteSettings } = useSiteSettings();
+  const { data: legalDocuments = [] } = useQuery({
+    queryKey: ['published-legal-documents'],
+    queryFn: () => baseClient.entities.LegalDocument.list('-published_at', 10),
+  });
+  const termsDocument = legalDocuments.find((document) => document.document_type === 'terms' && document.status === 'published');
+  const privacyDocument = legalDocuments.find((document) => document.document_type === 'privacy' && document.status === 'published');
   const googleButtonRef = useRef(null);
   const signUpFormRef = useRef(signUpForm);
   const pageTitle = activeTab === 'signin' ? 'Login' : 'Register';
@@ -152,8 +166,9 @@ export default function Login() {
     let profilePictureUploadFailed = false;
     if (overrides.profile_picture_file) {
       try {
+        const optimizedProfileImage = await optimizeImageFile(overrides.profile_picture_file, 800);
         const { file_url } = await baseClient.integrations.Core.UploadFile({
-          file: overrides.profile_picture_file,
+          file: optimizedProfileImage,
           purpose: 'profile_image',
         });
         await baseClient.auth.updateMe({ profile_image_url: file_url });
@@ -343,6 +358,11 @@ export default function Login() {
       return;
     }
 
+    if (response?.delivery_method === 'server_log') {
+      toast.success('Temporary verification code created. Check the backend logs in Render.');
+      return;
+    }
+
     toast.success(successMessage);
   };
 
@@ -463,6 +483,11 @@ export default function Login() {
       return;
     }
 
+    if (!termsAccepted || !privacyAcknowledged) {
+      toast.error('Please accept the Terms & Conditions and acknowledge the Privacy Notice.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -482,6 +507,8 @@ export default function Login() {
       if (payload?.sample_registration_otp) {
         params.set('sample_otp', payload.sample_registration_otp);
       }
+      params.set('terms_accepted', '1');
+      params.set('privacy_acknowledged', '1');
       navigate(`${createPageUrl('VerifyRegistrationOtp')}?${params.toString()}`);
     } catch (error) {
       toast.error(error.message || 'Unable to create account.');
@@ -495,7 +522,7 @@ export default function Login() {
       <div className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-6xl overflow-hidden rounded-[28px] border border-border bg-card shadow-2xl shadow-black/10 dark:shadow-black/35 lg:grid-cols-[1.05fr_0.95fr]">
         <section className="relative hidden min-h-[640px] overflow-hidden bg-primary lg:block">
           <img
-            src="/img/room_Resort%20View.jpg"
+            src="/img/room_Resort%20View.webp"
             alt="Kasa Ilaya Resort view"
             className="absolute inset-0 h-full w-full object-cover"
           />
@@ -698,10 +725,46 @@ export default function Login() {
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements showRequirementsOnFocus confirmValue={signUpForm.confirmPassword} required />
+                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements showRequirementsOnFocus requirementsPlacement="top" confirmValue={signUpForm.confirmPassword} required />
                       <PasswordInput id="signup-confirm" label="Confirm password" value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
                     </div>
-                    <Button className="h-11 w-full rounded-lg" disabled={isSubmitting || !passwordMeetsRequirements(signUpForm.password) || signUpForm.password !== signUpForm.confirmPassword} type="submit">
+                    <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="flex items-start gap-2 text-sm leading-5 text-muted-foreground">
+                        <input
+                          id="registration-terms"
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          aria-label="I agree to the Terms and Conditions"
+                          checked={termsAccepted}
+                          onChange={(event) => setTermsAccepted(event.target.checked)}
+                          required
+                        />
+                        <p>
+                          I agree to the{' '}
+                          <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => setLegalDialogType('terms')}>
+                            Terms &amp; Conditions
+                          </button>.
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm leading-5 text-muted-foreground">
+                        <input
+                          id="registration-privacy"
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          aria-label="I acknowledge the Privacy Notice"
+                          checked={privacyAcknowledged}
+                          onChange={(event) => setPrivacyAcknowledged(event.target.checked)}
+                          required
+                        />
+                        <p>
+                          I acknowledge the{' '}
+                          <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => setLegalDialogType('privacy')}>
+                            Privacy Notice
+                          </button>.
+                        </p>
+                      </div>
+                    </div>
+                    <Button className="h-11 w-full rounded-lg" disabled={isSubmitting || !termsAccepted || !privacyAcknowledged || !passwordMeetsRequirements(signUpForm.password) || signUpForm.password !== signUpForm.confirmPassword} type="submit">
                       {isSubmitting ? 'Creating account...' : 'Create Account'}
                     </Button>
                   </form>
@@ -772,6 +835,30 @@ export default function Login() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(legalDialogType)} onOpenChange={(open) => { if (!open) setLegalDialogType(null); }}>
+        <DialogContent className="overflow-x-hidden sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {legalDialogType === 'terms'
+                ? termsDocument?.title || siteSettings.terms_title || defaultSiteSettings.terms_title
+                : privacyDocument?.title || 'Privacy Notice'}
+            </DialogTitle>
+            <DialogDescription>
+              {legalDialogType === 'terms' && termsDocument?.version
+                ? `Published version ${termsDocument.version}.`
+                : legalDialogType === 'privacy' && privacyDocument?.version
+                  ? `Published version ${privacyDocument.version}.`
+                  : 'Please review this information before creating your account.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/20 p-4 text-sm leading-6 text-foreground">
+            {legalDialogType === 'terms'
+              ? termsDocument?.content || siteSettings.terms_content || defaultSiteSettings.terms_content
+              : privacyDocument?.content || DATA_PRIVACY_NOTICE}
+          </div>
         </DialogContent>
       </Dialog>
 

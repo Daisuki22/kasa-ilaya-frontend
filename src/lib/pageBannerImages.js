@@ -1,4 +1,4 @@
-const DEFAULT_PAGE_BANNER = "/img/room_Resort%20View.jpg";
+const DEFAULT_PAGE_BANNER = "/img/room_Resort%20View.webp";
 
 const isUsableBannerImage = (value) => {
   if (typeof value !== "string" || !value.trim()) {

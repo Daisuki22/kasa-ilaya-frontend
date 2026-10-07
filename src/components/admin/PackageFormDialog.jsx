@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Check, ImagePlus, Loader2, Plus, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { optimizeImageFile } from "@/lib/optimizeImageFile";
 
 const createDefaultForm = () => ({
   name: "",
@@ -95,7 +96,8 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
       const uploadedImages = [];
 
       for (const file of files) {
-        const { file_url } = await baseClient.integrations.Core.UploadFile({ file });
+        const optimizedFile = await optimizeImageFile(file);
+        const { file_url } = await baseClient.integrations.Core.UploadFile({ file: optimizedFile });
         uploadedImages.push(file_url);
       }
 

@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { optimizeStaticImageUrl } from '@/hooks/useSiteSettings';
 
 const tourLabels = {
 	day_tour: 'Day Tour',
@@ -41,9 +42,9 @@ const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 
 export default function PackageCard({ pkg, index = 0, liveAvailability, selectedTour }) {
 	const { isAuthenticated } = useAuth();
-	const galleryImages = Array.isArray(pkg.gallery_images) && pkg.gallery_images.length > 0
+	const galleryImages = (Array.isArray(pkg.gallery_images) && pkg.gallery_images.length > 0
 		? pkg.gallery_images
-		: [pkg.image_url || '/img/room_Resort%20View.jpg'];
+		: [pkg.image_url || '/img/room_Resort%20View.webp']).map(optimizeStaticImageUrl);
 	const [activeImageIndex, setActiveImageIndex] = useState(0);
 	const bookedToday = liveAvailability?.bookedToday || 0;
 	const maxSlots = liveAvailability?.maxSlots || 1;
@@ -100,7 +101,7 @@ export default function PackageCard({ pkg, index = 0, liveAvailability, selected
 					loading={index < 2 ? 'eager' : 'lazy'}
 					decoding="async"
 					fetchPriority={index < 2 ? 'high' : 'auto'}
-					onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/img/room_Resort%20View.jpg'; }}
+					onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/img/room_Resort%20View.webp'; }}
 					className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
 				/>
 				<div className="absolute inset-0 brand-image-overlay" />

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { resolveAssetUrl } from '@/lib/assetUrls';
+import { optimizeImageFile } from '@/lib/optimizeImageFile';
 import { Camera, Loader2, Upload } from 'lucide-react';
 import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
@@ -102,7 +103,8 @@ export default function ProfileSettings({
     setUploadingPhoto(true);
 
     try {
-      const { file_url } = await baseClient.integrations.Core.UploadFile({ file, purpose: 'profile_image' });
+      const optimizedFile = await optimizeImageFile(file, 800);
+      const { file_url } = await baseClient.integrations.Core.UploadFile({ file: optimizedFile, purpose: 'profile_image' });
       const updatedUser = await baseClient.auth.updateMe({ profile_image_url: file_url });
       syncProfileState(updatedUser);
       toast.success('Profile photo updated.');

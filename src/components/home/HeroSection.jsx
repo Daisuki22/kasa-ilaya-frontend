@@ -17,7 +17,7 @@ export default function HeroSection() {
       return images;
     }
 
-    return [settings?.hero_image_url || "/img/Logo.png"];
+    return [settings?.hero_image_url || "/img/room_Resort%20View.webp"];
   }, [settings?.hero_images, settings?.hero_image_url]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const badgeText = settings?.hero_badge_text || "Welcome to Paradise";
@@ -71,7 +71,7 @@ export default function HeroSection() {
           loading={activeHeroIndex === 0 ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={activeHeroIndex === 0 ? "high" : "auto"}
-          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.jpg"; }}
+          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 hero-image-overlay" />

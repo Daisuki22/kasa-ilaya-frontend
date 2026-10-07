@@ -21,22 +21,22 @@ import { handleImageFallback } from "@/lib/imageFallback";
 
 const fallbackGallery = [
   {
-    src: "/img/room_Resort%20View.jpg",
+    src: "/img/room_Resort%20View.webp",
     title: "Resort View",
     subtitle: "Open resort spaces with a quiet, refreshing setting.",
   },
   {
-    src: "/img/room_eventplace.jpg",
+    src: "/img/room_eventplace.webp",
     title: "Event Place",
     subtitle: "Flexible venue space for private celebrations and reunions.",
   },
   {
-    src: "/img/room_EntireHouse_EventPlace.jpg",
+    src: "/img/room_EntireHouse_EventPlace.webp",
     title: "Private Stay",
     subtitle: "Comfortable accommodation for family and group visits.",
   },
   {
-    src: "/img/room_kubo.jpg",
+    src: "/img/room_kubo.webp",
     title: "Kubo Area",
     subtitle: "Relaxed corners for meals, rest, and poolside bonding.",
   },
@@ -81,7 +81,7 @@ export default function AboutSection({ standalone = false }) {
     }));
   }, [settings?.resort_gallery]);
 
-  const homeSectionImage = gallery[0]?.src || settings?.hero_image_url || "/img/room_Resort%20View.jpg";
+  const homeSectionImage = gallery[0]?.src || settings?.hero_image_url || "/img/room_Resort%20View.webp";
   const pageBannerImages = getPageBannerImages(settings);
   const pageBannerImage = pageBannerImages[0];
   const heroImage = standalone ? pageBannerImage : homeSectionImage;

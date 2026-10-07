@@ -8,11 +8,11 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { handleImageFallback } from "@/lib/imageFallback";
 
 const FALLBACK_IMAGES = [
-  { src: "/img/room_Resort%20View.jpg", title: "Resort View", subtitle: "Wide-open leisure spaces and refreshing scenery." },
-  { src: "/img/room_eventplace.jpg", title: "Event Space", subtitle: "A venue designed for celebrations, reunions, and special occasions." },
-  { src: "/img/room_EntireHouse_EventPlace.jpg", title: "Private Stay", subtitle: "Comfortable accommodations for families and barkada getaways." },
-  { src: "/img/room_kubo.jpg", title: "Kubo Area", subtitle: "Relaxed corners for rest, dining, and poolside bonding." },
-  { src: "/img/kubo_accomodation.jpg", title: "Kubo Accommodation", subtitle: "A more rustic stay experience with resort comfort." },
+  { src: "/img/room_Resort%20View.webp", title: "Resort View", subtitle: "Wide-open leisure spaces and refreshing scenery." },
+  { src: "/img/room_eventplace.webp", title: "Event Space", subtitle: "A venue designed for celebrations, reunions, and special occasions." },
+  { src: "/img/room_EntireHouse_EventPlace.webp", title: "Private Stay", subtitle: "Comfortable accommodations for families and barkada getaways." },
+  { src: "/img/room_kubo.webp", title: "Kubo Area", subtitle: "Relaxed corners for rest, dining, and poolside bonding." },
+  { src: "/img/kubo_accomodation.webp", title: "Kubo Accommodation", subtitle: "A more rustic stay experience with resort comfort." },
 ];
 
 export default function ResortGallerySlider() {

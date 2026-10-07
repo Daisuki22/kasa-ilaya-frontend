@@ -115,6 +115,8 @@ export default function ResetPassword() {
       if (response.sample_reset_otp) {
         setForm((current) => ({ ...current, code: response.sample_reset_otp, password: '', confirmPassword: '' }));
         toast.success(`Temporary development reset code: ${response.sample_reset_otp}`);
+      } else if (response.delivery_method === 'server_log') {
+        toast.success('Temporary reset code created. Check the backend logs in Render.');
       } else if (response.mail_sent === false) {
         toast.error('Reset code was created, but email delivery failed. Please check the email service settings.');
       } else {
@@ -246,7 +248,7 @@ export default function ResetPassword() {
               ) : null}
               {isCodeVerified ? (
                 <>
-                  <PasswordInput id="reset-password" label="New password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus confirmValue={form.confirmPassword} required />
+                  <PasswordInput id="reset-password" label="New password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus requirementsPlacement="top" confirmValue={form.confirmPassword} required />
                   <PasswordInput id="reset-confirm-password" label="Confirm new password" value={form.confirmPassword} onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={form.password} required />
                   <Button className="w-full" disabled={isSubmitting || !passwordMeetsRequirements(form.password) || form.password !== form.confirmPassword} type="submit">
                     {isSubmitting ? 'Updating password...' : 'Update password'}

@@ -17,7 +17,7 @@ export default function WelcomeIntro() {
       ? settings.resort_gallery.find((slide) => slide?.src)?.src
       : null;
 
-    return gallery || settings?.packages_banner_url || settings?.hero_image_url || "/img/room_Resort%20View.jpg";
+    return gallery || settings?.packages_banner_url || settings?.hero_image_url || "/img/room_Resort%20View.webp";
   }, [settings?.hero_image_url, settings?.packages_banner_url, settings?.resort_gallery]);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function WelcomeIntro() {
       aria-label="Welcome intro"
       aria-modal="true"
     >
-      <img src={heroImage} alt="" loading="eager" decoding="async" fetchPriority="high" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.jpg"; }} className="welcome-intro__image" />
+      <img src={heroImage} alt="" loading="eager" decoding="async" fetchPriority="high" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }} className="welcome-intro__image" />
       <div className="welcome-intro__shade" />
       <div className="welcome-intro__panel welcome-intro__panel--left" />
       <div className="welcome-intro__panel welcome-intro__panel--right" />

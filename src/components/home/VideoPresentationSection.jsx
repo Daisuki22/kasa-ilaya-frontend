@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 const RESORT_VIDEO = {
   embedUrl: "",
   localVideoUrl: "/img/video.mp4",
-  posterUrl: "/img/room_Resort%20View.jpg",
+  posterUrl: "/img/room_Resort%20View.webp",
 };
 
 export default function VideoPresentationSection() {

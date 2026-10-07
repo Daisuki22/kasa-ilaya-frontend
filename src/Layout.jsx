@@ -196,6 +196,32 @@ export default function Layout({ children, currentPageName }) {
   }, [bodyFontFamily, headingFontFamily]);
 
   useEffect(() => {
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+      return undefined;
+    }
+
+    const revealTargets = document.querySelectorAll("main section, main article, main [data-scroll-reveal]");
+    if (!revealTargets.length) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("scroll-reveal-visible");
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.08, rootMargin: "0px 0px -36px 0px" });
+
+    revealTargets.forEach((target) => {
+      target.classList.add("scroll-reveal");
+      observer.observe(target);
+    });
+
+    return () => observer.disconnect();
+  }, [location.pathname, prefersReducedMotion]);
+
+  useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         setMobileOpen(false);

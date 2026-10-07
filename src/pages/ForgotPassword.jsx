@@ -31,6 +31,10 @@ export default function ForgotPassword() {
         const params = new URLSearchParams({ method: 'email', email });
         params.set('sample_otp', response.sample_reset_otp);
         navigate(`${createPageUrl('ResetPassword')}?${params.toString()}`);
+      } else if (response.delivery_method === 'server_log') {
+        toast.success('Temporary reset code created. Check the backend logs in Render.');
+        const params = new URLSearchParams({ method: 'email', email });
+        navigate(`${createPageUrl('ResetPassword')}?${params.toString()}`);
       } else if (response.mail_sent === false) {
         toast.error('Reset code was created, but email delivery failed. Please check the email service settings.');
       } else {

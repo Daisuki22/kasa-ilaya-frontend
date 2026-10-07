@@ -66,34 +66,58 @@ const DEFAULT_AMENITIES = [
 
 const DEFAULT_RESORT_GALLERY = [
   {
-    src: "/img/room_Resort%20View.jpg",
+    src: "/img/room_Resort%20View.webp",
     title: "Resort View",
     subtitle: "Wide-open leisure spaces and refreshing scenery.",
   },
   {
-    src: "/img/room_eventplace.jpg",
+    src: "/img/room_eventplace.webp",
     title: "Event Space",
     subtitle: "A venue designed for celebrations, reunions, and special occasions.",
   },
   {
-    src: "/img/room_EntireHouse_EventPlace.jpg",
+    src: "/img/room_EntireHouse_EventPlace.webp",
     title: "Private Stay",
     subtitle: "Comfortable accommodations for families and barkada getaways.",
   },
   {
-    src: "/img/room_kubo.jpg",
+    src: "/img/room_kubo.webp",
     title: "Kubo Area",
     subtitle: "Relaxed corners for rest, dining, and poolside bonding.",
   },
   {
-    src: "/img/kubo_accomodation.jpg",
+    src: "/img/kubo_accomodation.webp",
     title: "Kubo Accommodation",
     subtitle: "A more rustic stay experience with resort comfort.",
   },
 ];
 
-const DEFAULT_HERO_IMAGES = ["/img/Logo.png"];
-const DEFAULT_PACKAGES_BANNER_IMAGES = ["/img/Logo.png"];
+const DEFAULT_HERO_IMAGES = ["/img/room_Resort%20View.webp"];
+const DEFAULT_PACKAGES_BANNER_IMAGES = ["/img/room_Resort%20View.webp"];
+const OPTIMIZED_STATIC_IMAGE_FILES = {
+  "Logo.png": "Logo.webp",
+  "logo2.png": "logo2.webp",
+  "room_Resort View.jpg": "room_Resort%20View.webp",
+  "room_eventplace.jpg": "room_eventplace.webp",
+  "room_EntireHouse_EventPlace.jpg": "room_EntireHouse_EventPlace.webp",
+  "room_kubo.jpg": "room_kubo.webp",
+  "kubo_accomodation.jpg": "kubo_accomodation.webp",
+  "PackageD.jpg": "PackageD.webp",
+};
+
+export const optimizeStaticImageUrl = (value) => {
+  if (typeof value !== "string" || !value.trim()) return value;
+
+  const imageUrl = value.trim();
+  const filename = imageUrl.split(/[?#]/, 1)[0].split("/").pop();
+  let decodedFilename = filename;
+  try {
+    decodedFilename = decodeURIComponent(filename);
+  } catch {}
+
+  const optimizedFilename = OPTIMIZED_STATIC_IMAGE_FILES[decodedFilename];
+  return optimizedFilename ? `/img/${optimizedFilename}` : imageUrl;
+};
 
 const normalizeJsonField = (value, fallback) => {
   if (Array.isArray(value)) {
@@ -115,9 +139,9 @@ const normalizeJsonField = (value, fallback) => {
 export const defaultSiteSettings = {
   site_name: "Kasa Ilaya",
   logo_url: "",
-  hero_image_url: "/img/Logo.png",
+  hero_image_url: "/img/room_Resort%20View.webp",
   hero_images: DEFAULT_HERO_IMAGES,
-  packages_banner_url: "/img/Logo.png",
+  packages_banner_url: "/img/room_Resort%20View.webp",
   packages_banner_images: DEFAULT_PACKAGES_BANNER_IMAGES,
   hero_badge_text: "Welcome to Paradise",
   hero_title_line1: "Kasa Ilaya",
@@ -169,23 +193,27 @@ export function useSiteSettings() {
     const packagesBannerImages = normalizeJsonField(latest?.packages_banner_images_json, DEFAULT_PACKAGES_BANNER_IMAGES);
 
     const normalizedHeroImages = Array.isArray(heroImages) && heroImages.length > 0
-      ? heroImages.filter((image) => typeof image === "string" && image.trim())
-      : (latest?.hero_image_url ? [latest.hero_image_url] : DEFAULT_HERO_IMAGES);
+      ? heroImages.filter((image) => typeof image === "string" && image.trim()).map(optimizeStaticImageUrl)
+      : (latest?.hero_image_url ? [optimizeStaticImageUrl(latest.hero_image_url)] : DEFAULT_HERO_IMAGES);
 
     const normalizedPackagesBannerImages = Array.isArray(packagesBannerImages) && packagesBannerImages.length > 0
-      ? packagesBannerImages.filter((image) => typeof image === "string" && image.trim())
-      : (latest?.packages_banner_url ? [latest.packages_banner_url] : DEFAULT_PACKAGES_BANNER_IMAGES);
+      ? packagesBannerImages.filter((image) => typeof image === "string" && image.trim()).map(optimizeStaticImageUrl)
+      : (latest?.packages_banner_url ? [optimizeStaticImageUrl(latest.packages_banner_url)] : DEFAULT_PACKAGES_BANNER_IMAGES);
+    const normalizedResortGallery = resortGallery.map((slide) => ({
+      ...slide,
+      src: optimizeStaticImageUrl(slide?.src),
+    }));
 
     return {
       ...defaultSiteSettings,
       ...(latest || {}),
-      logo_url: latest?.logo_url?.trim() || defaultSiteSettings.logo_url,
+      logo_url: optimizeStaticImageUrl(latest?.logo_url?.trim()) || defaultSiteSettings.logo_url,
       amenities,
       hero_image_url: normalizedHeroImages[0] || defaultSiteSettings.hero_image_url,
       hero_images: normalizedHeroImages.length > 0 ? normalizedHeroImages : DEFAULT_HERO_IMAGES,
       packages_banner_url: normalizedPackagesBannerImages[0] || defaultSiteSettings.packages_banner_url,
       packages_banner_images: normalizedPackagesBannerImages.length > 0 ? normalizedPackagesBannerImages : DEFAULT_PACKAGES_BANNER_IMAGES,
-      resort_gallery: Array.isArray(resortGallery) && resortGallery.length > 0 ? resortGallery : DEFAULT_RESORT_GALLERY,
+      resort_gallery: Array.isArray(normalizedResortGallery) && normalizedResortGallery.length > 0 ? normalizedResortGallery : DEFAULT_RESORT_GALLERY,
     };
   }, [query.data]);
 

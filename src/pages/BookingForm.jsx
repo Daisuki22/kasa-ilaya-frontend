@@ -21,6 +21,7 @@ import { format, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { handleImageFallback } from "@/lib/imageFallback";
+import { optimizeStaticImageUrl } from "@/hooks/useSiteSettings";
 import { CANCELLATION_REBOOKING_NOTICE } from "@/lib/resortNotices";
 import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 
@@ -50,7 +51,7 @@ const getPackagePriceByTourType = (pkg, tourType) => {
   return Number(pkg.price || 0);
 };
 
-const FALLBACK_PACKAGE_IMAGE = "/img/room_Resort%20View.jpg";
+const FALLBACK_PACKAGE_IMAGE = "/img/room_Resort%20View.webp";
 const defaultTour = { label: "Choose a tour type", time: "Select inside the booking modal" };
 const PAYMENT_POLICY_NOTICE = CANCELLATION_REBOOKING_NOTICE;
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -233,13 +234,13 @@ export default function BookingForm() {
     const images = [];
 
     if (pkg?.image_url) {
-      images.push(pkg.image_url);
+      images.push(optimizeStaticImageUrl(pkg.image_url));
     }
 
     if (Array.isArray(pkg?.gallery_images)) {
       for (const imageUrl of pkg.gallery_images) {
         if (typeof imageUrl === "string" && imageUrl.trim()) {
-          images.push(imageUrl.trim());
+          images.push(optimizeStaticImageUrl(imageUrl.trim()));
         }
       }
     }
