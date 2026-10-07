@@ -247,7 +247,7 @@ export default function ProfileSettings({
             {user.has_local_password ? (
             <form className="space-y-4" onSubmit={handlePasswordSubmit}>
               <PasswordInput id="current-password" label="Current password" value={passwordForm.current_password} onChange={(event) => setPasswordForm((current) => ({ ...current, current_password: event.target.value }))} autoComplete="current-password" required />
-              <PasswordInput id="new-password" label="New password" value={passwordForm.new_password} onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus confirmValue={passwordForm.confirmPassword} required />
+              <PasswordInput id="new-password" label="New password" value={passwordForm.new_password} onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus requirementsPlacement="top" confirmValue={passwordForm.confirmPassword} required />
               <PasswordInput id="confirm-password" label="Confirm new password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={passwordForm.new_password} required />
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button className="w-full sm:w-auto" disabled={savingPassword || !passwordMeetsRequirements(passwordForm.new_password) || passwordForm.new_password !== passwordForm.confirmPassword} type="submit">Update password</Button>

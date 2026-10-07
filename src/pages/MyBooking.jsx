@@ -46,6 +46,7 @@ import { addDays, format } from "date-fns";
 import { calendarDaysUntil, getBookingEndDateTime as getBookingEndTime } from "@/lib/bookingTimes";
 import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 import { createPageUrl } from "@/utils";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -200,6 +201,7 @@ export default function MyBookings() {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [unavailableReceiptUrl, setUnavailableReceiptUrl] = useState("");
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [bookingToRebook, setBookingToRebook] = useState(null);
   const [rebookingForm, setRebookingForm] = useState({ requested_date: "", note: "" });
@@ -877,9 +879,20 @@ export default function MyBookings() {
               {selectedBooking.receipt_url ? (
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">Payment Proof</span>
-                  <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-border bg-muted/20">
-                    <img src={selectedBooking.receipt_url} alt="Payment proof" className="max-h-[42vh] w-full bg-white object-contain sm:max-h-72" />
-                  </a>
+                  {unavailableReceiptUrl === resolveAssetUrl(selectedBooking.receipt_url) ? (
+                    <p className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning" role="status">
+                      This payment proof image is no longer available. Please contact the resort for help.
+                    </p>
+                  ) : (
+                    <a href={resolveAssetUrl(selectedBooking.receipt_url)} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-border bg-muted/20">
+                      <img
+                        src={resolveAssetUrl(selectedBooking.receipt_url)}
+                        alt="Payment proof"
+                        onError={() => setUnavailableReceiptUrl(resolveAssetUrl(selectedBooking.receipt_url))}
+                        className="max-h-[42vh] w-full bg-white object-contain sm:max-h-72"
+                      />
+                    </a>
+                  )}
                 </div>
               ) : null}
 

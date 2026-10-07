@@ -24,7 +24,7 @@ const checkLabels = [
 export default function PasswordInput({
   id, label, value, onChange, required = false, autoComplete,
   placeholder, showRequirements = false, showRequirementsOnFocus = false,
-  showMatch = false, confirmValue,
+  requirementsPlacement = "bottom", showMatch = false, confirmValue,
 }) {
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -36,10 +36,29 @@ export default function PasswordInput({
   const shouldShowRequirements = showRequirements && (
     !showRequirementsOnFocus || focused || Boolean(value)
   );
+  const requirementsPanel = (
+    <div
+      id={`${id}-requirements`}
+      className={`rounded-lg border bg-card p-3 shadow-sm ${requirementsPlacement === "top" ? "mb-2" : "mt-2"}`}
+      aria-live="polite"
+    >
+      <p className="mb-2 text-xs font-medium text-foreground">Password must contain:</p>
+      <ul className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2">
+        {checkLabels.map(([key, text]) => (
+          <li key={key} className={checks[key] ? "flex items-center gap-1.5 text-success dark:text-success" : "flex items-center gap-1.5 text-muted-foreground"}>
+            {checks[key] ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
+            {text}
+          </li>
+        ))}
+      </ul>
+      {strength ? <p className="mt-2 text-xs text-muted-foreground">Password strength: <span className="font-medium text-foreground">{strength}</span></p> : null}
+    </div>
+  );
 
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
+      {shouldShowRequirements && requirementsPlacement === "top" ? requirementsPanel : null}
       <div
         className="relative"
         onFocusCapture={() => setFocused(true)}
@@ -67,22 +86,9 @@ export default function PasswordInput({
         >
           {visible ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
         </button>
-        {shouldShowRequirements ? (
-          <div
-            id={`${id}-requirements`}
-            className="absolute left-0 right-0 top-full z-20 mt-2 rounded-lg border bg-card p-3 shadow-lg animate-in fade-in-0 slide-in-from-top-1 duration-150"
-            aria-live="polite"
-          >
-            <p className="mb-2 text-xs font-medium text-foreground">Password must contain:</p>
-            <ul className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2">
-              {checkLabels.map(([key, text]) => (
-                <li key={key} className={checks[key] ? "flex items-center gap-1.5 text-success dark:text-success" : "flex items-center gap-1.5 text-muted-foreground"}>
-                  {checks[key] ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
-                  {text}
-                </li>
-              ))}
-            </ul>
-            {strength ? <p className="mt-2 text-xs text-muted-foreground">Password strength: <span className="font-medium text-foreground">{strength}</span></p> : null}
+        {shouldShowRequirements && requirementsPlacement !== "top" ? (
+          <div className="absolute left-0 right-0 top-full z-20 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+            {requirementsPanel}
           </div>
         ) : null}
       </div>

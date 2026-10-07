@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CalendarCheck, Loader2, LockKeyhole, TreePalm } from 'lucide-react';
+import { CalendarCheck, ImagePlus, Loader2, LockKeyhole, TreePalm } from 'lucide-react';
 import { baseClient } from '@/api/baseClient';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,8 +126,10 @@ export default function Login() {
   const [googleLoadError, setGoogleLoadError] = useState('');
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState('');
   const [googleBirthday, setGoogleBirthday] = useState('');
-  const [isGoogleBirthdayOpen, setIsGoogleBirthdayOpen] = useState(false);
-  const [isCompletingGoogleBirthday, setIsCompletingGoogleBirthday] = useState(false);
+  const [googlePhone, setGooglePhone] = useState('');
+  const [googleProfilePicture, setGoogleProfilePicture] = useState(null);
+  const [isGoogleDetailsOpen, setIsGoogleDetailsOpen] = useState(false);
+  const [isCompletingGoogleDetails, setIsCompletingGoogleDetails] = useState(false);
   const googleButtonRef = useRef(null);
   const signUpFormRef = useRef(signUpForm);
   const pageTitle = activeTab === 'signin' ? 'Login' : 'Register';
@@ -138,21 +140,32 @@ export default function Login() {
   }, [signUpForm]);
 
   const completeGoogleLogin = useCallback(async (credential, overrides = {}) => {
-    const currentSignUpForm = signUpFormRef.current;
-    const firstName = currentSignUpForm.first_name.trim();
-    const middleName = currentSignUpForm.middle_name.trim();
-    const lastName = currentSignUpForm.last_name.trim();
-    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
-
     const payload = await baseClient.auth.googleLogin({
       credential,
       next_url: nextPath,
-      birth_date: overrides.birth_date ?? currentSignUpForm.birth_date.trim(),
-      full_name: overrides.full_name ?? fullName,
-      phone: overrides.phone ?? currentSignUpForm.phone.trim(),
+      birth_date: overrides.birth_date ?? '',
+      full_name: overrides.full_name ?? '',
+      phone: overrides.phone ?? '',
+      profile_image_url: overrides.profile_image_url ?? '',
     });
 
+    let profilePictureUploadFailed = false;
+    if (overrides.profile_picture_file) {
+      try {
+        const { file_url } = await baseClient.integrations.Core.UploadFile({
+          file: overrides.profile_picture_file,
+          purpose: 'profile_image',
+        });
+        await baseClient.auth.updateMe({ profile_image_url: file_url });
+      } catch {
+        profilePictureUploadFailed = true;
+      }
+    }
+
     toast.success('Signed in with Google successfully.');
+    if (profilePictureUploadFailed) {
+      toast.error('Your account was created, but the profile picture could not be saved. You can add it later in Profile Settings.');
+    }
     const destination = ['admin', 'super_admin'].includes(payload?.user?.role)
       ? createPageUrl('AdminDashboard')
       : nextPath;
@@ -170,10 +183,12 @@ export default function Login() {
     try {
       await completeGoogleLogin(response.credential);
     } catch (error) {
-      if (error?.code === 'birthday_required') {
+      if (error?.code === 'google_signup_details_required') {
         setPendingGoogleCredential(response.credential);
         setGoogleBirthday(signUpFormRef.current.birth_date || '');
-        setIsGoogleBirthdayOpen(true);
+        setGooglePhone(signUpFormRef.current.phone || '');
+        setGoogleProfilePicture(null);
+        setIsGoogleDetailsOpen(true);
         return;
       }
 
@@ -256,7 +271,7 @@ export default function Login() {
     };
   }, [googleConfig.client_id, googleConfig.enabled, handleGoogleCredential]);
 
-  const handleGoogleBirthdaySubmit = async (event) => {
+  const handleGoogleSignupDetailsSubmit = async (event) => {
     event.preventDefault();
 
     const age = calculateAge(googleBirthday);
@@ -276,23 +291,50 @@ export default function Login() {
       return;
     }
 
-    if (!pendingGoogleCredential) {
-      toast.error('Please click Continue with Google again.');
-      setIsGoogleBirthdayOpen(false);
+    if (!isValidPhoneNumber(googlePhone.trim())) {
+      toast.error('Please enter a valid Philippine mobile number using 09XXXXXXXXX or 639XXXXXXXXX.');
       return;
     }
 
-    setIsCompletingGoogleBirthday(true);
+    if (!pendingGoogleCredential) {
+      toast.error('Please click Continue with Google again.');
+      setIsGoogleDetailsOpen(false);
+      return;
+    }
+
+    setIsCompletingGoogleDetails(true);
 
     try {
-      await completeGoogleLogin(pendingGoogleCredential, { birth_date: googleBirthday });
+      await completeGoogleLogin(pendingGoogleCredential, {
+        birth_date: googleBirthday,
+        phone: googlePhone.trim(),
+        profile_picture_file: googleProfilePicture,
+      });
       setPendingGoogleCredential('');
-      setIsGoogleBirthdayOpen(false);
+      setGoogleProfilePicture(null);
+      setIsGoogleDetailsOpen(false);
     } catch (error) {
       toast.error(error.message || 'Unable to complete Google sign-in.');
     } finally {
-      setIsCompletingGoogleBirthday(false);
+      setIsCompletingGoogleDetails(false);
     }
+  };
+
+  const handleGoogleProfilePictureChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    event.target.value = '';
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Please choose a JPG, PNG, or WebP profile picture.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Profile picture must be 5 MB or smaller.');
+      return;
+    }
+
+    setGoogleProfilePicture(file);
   };
 
   const notifyOtpMailStatus = (response, successMessage) => {
@@ -671,17 +713,17 @@ export default function Login() {
         </section>
       </div>
 
-      <Dialog open={isGoogleBirthdayOpen} onOpenChange={setIsGoogleBirthdayOpen}>
+      <Dialog open={isGoogleDetailsOpen} onOpenChange={setIsGoogleDetailsOpen}>
         <DialogContent className="rounded-xl sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm your birthday</DialogTitle>
+            <DialogTitle>Complete your Google account</DialogTitle>
             <DialogDescription>
-              Google does not share birthday data with Kasa Ilaya. Enter your birthday to finish account setup.
+              Add your birthday and phone number to finish setting up your new account. A profile picture is optional.
             </DialogDescription>
           </DialogHeader>
-          <form className="space-y-4" onSubmit={handleGoogleBirthdaySubmit}>
+          <form className="space-y-4" onSubmit={handleGoogleSignupDetailsSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="google-signup-birthday">Birthday</Label>
+              <Label htmlFor="google-signup-birthday">Birthday <span className="text-destructive">*</span></Label>
               <Input
                 id="google-signup-birthday"
                 className="h-11 rounded-lg"
@@ -692,12 +734,41 @@ export default function Login() {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="google-signup-phone">Phone number <span className="text-destructive">*</span></Label>
+              <Input
+                id="google-signup-phone"
+                className="h-11 rounded-lg"
+                type="tel"
+                autoComplete="tel"
+                value={googlePhone}
+                onChange={(event) => setGooglePhone(event.target.value)}
+                placeholder="09XXXXXXXXX"
+                required
+              />
+              <p className="text-xs text-muted-foreground">Enter a Philippine mobile number.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="google-signup-profile-picture">Profile picture <span className="text-xs font-normal text-muted-foreground">(optional)</span></Label>
+              <label htmlFor="google-signup-profile-picture" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50">
+                <ImagePlus className="h-4 w-4 shrink-0" />
+                <span className="truncate">{googleProfilePicture?.name || 'Choose a profile picture'}</span>
+              </label>
+              <Input
+                id="google-signup-profile-picture"
+                className="sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleGoogleProfilePictureChange}
+              />
+              <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 5 MB.</p>
+            </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsGoogleBirthdayOpen(false)} disabled={isCompletingGoogleBirthday}>
+              <Button type="button" variant="outline" onClick={() => setIsGoogleDetailsOpen(false)} disabled={isCompletingGoogleDetails}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCompletingGoogleBirthday}>
-                {isCompletingGoogleBirthday ? 'Continuing...' : 'Continue'}
+              <Button type="submit" disabled={isCompletingGoogleDetails}>
+                {isCompletingGoogleDetails ? 'Creating account...' : 'Continue'}
               </Button>
             </DialogFooter>
           </form>
