@@ -57,7 +57,7 @@ export default function CTASection() {
           ].map((item, i) => (
             <div key={i} className="flex flex-col items-center justify-center gap-2 text-center text-sm text-white sm:flex-row sm:text-left">
               <item.icon className="h-4 w-4" />
-              <span className="break-words">{item.text}</span>
+              <span className="whitespace-pre-line break-words">{item.text}</span>
             </div>
           ))}
         </div>

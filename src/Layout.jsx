@@ -25,8 +25,6 @@ import { resolveAssetUrl } from "@/lib/assetUrls";
 import { toast } from "sonner";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 
-const RESORT_MAP_URL = "https://www.google.com/maps?q=14.24133309901719%2C120.9992428775908";
-
 const footerQuickLinks = [
   { label: "Home", page: "Home" },
   { label: "About Us", page: "About" },
@@ -1043,9 +1041,9 @@ export default function Layout({ children, currentPageName }) {
                         </a>
                       </li>
                       <li>
-                        <a href={RESORT_MAP_URL} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                        <a href={RESORT_CONTACT.mapUrl} target="_blank" rel="noreferrer" className="group flex min-h-8 items-start gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
-                          <span>{RESORT_CONTACT.address}</span>
+                          <span className="whitespace-pre-line">{RESORT_CONTACT.address}</span>
                           <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-accent" aria-hidden="true" />
                         </a>
                       </li>

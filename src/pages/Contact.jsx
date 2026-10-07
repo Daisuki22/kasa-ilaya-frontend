@@ -311,7 +311,7 @@ export default function Contact() {
                       {item.value}
                     </a>
                   ) : (
-                    <p className="mt-1 break-words font-semibold text-foreground">{item.value}</p>
+                    <p className="mt-1 whitespace-pre-line break-words font-semibold text-foreground">{item.value}</p>
                   )}
                 </div>
               </div>
@@ -439,7 +439,7 @@ export default function Contact() {
           </div>
           <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1990.2607237347663!2d120.9992428775908!3d14.24133309901719!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd7dccae896b1d%3A0x1a027c4f0dfdc38!2sKasa%20Ilaya%20Resort%20%26%20Events%20Place!5e0!3m2!1sen!2sph!4v1775063071661!5m2!1sen!2sph"
+              src="https://www.google.com/maps?q=14.2402639%2C121.0004796&z=18&output=embed"
               title="Kasa Ilaya Resort and Events Place location"
               className="h-[320px] w-full border-0 sm:h-[420px] lg:h-[460px]"
               allowFullScreen

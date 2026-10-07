@@ -992,17 +992,17 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-letterhead img {
   display: block;
-  width: 38mm;
-  max-height: 24mm;
-  margin: 1mm auto 0;
+  width: 34mm;
+  max-height: 21mm;
+  margin: 1mm auto 1.5mm;
   object-fit: contain;
 }
 
-.profit-report-letterhead h2 { margin: -8mm 0 0; font-size: 13px; font-weight: 700; }
-.profit-report-letterhead p { margin: 1mm 0 0; font-size: 11px; }
-.profit-report-rule { height: 1px; margin: 0 0 2mm; background: #52615D; }
-.profit-report-letterhead .profit-report-rule:last-child { margin: 2mm 0 0; }
-.profit-report-title { margin-top: 4mm; text-align: center; }
+.profit-report-letterhead h2 { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.2; }
+.profit-report-letterhead p { margin: 1mm 0 0; font-size: 11px; line-height: 1.2; }
+.profit-report-rule { height: 1px; margin: 0 0 1mm; background: #52615D; }
+.profit-report-letterhead .profit-report-rule:last-child { margin: 1.5mm 0 0; }
+.profit-report-title { margin-top: 2.5mm; text-align: center; }
 .profit-report-title h1 { margin: 0; font-size: 20px; font-weight: 700; }
 .profit-report-title p { margin: 1mm 0 0; font-size: 12px; font-style: italic; }
 
@@ -1158,29 +1158,29 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-letterhead img {
     display: block;
-    width: 38mm;
-    max-height: 24mm;
-    margin: 1mm auto 0;
+    width: 34mm;
+    max-height: 21mm;
+    margin: 1mm auto 1.5mm;
     object-fit: contain;
   }
 
   .profit-report-letterhead h2 {
-    margin: -8mm 0 0;
+    margin: 0;
     color: #24302D !important;
     font-size: 8px !important;
     font-weight: 700 !important;
-    line-height: 1.1 !important;
+    line-height: 1.2 !important;
   }
 
   .profit-report-letterhead p {
-    margin: 0;
+    margin: 1mm 0 0;
     font-size: 7px !important;
-    line-height: 1.1 !important;
+    line-height: 1.2 !important;
   }
 
   .profit-report-rule { height: 1px; margin: 0 0 1mm; background: #52615D !important; }
-  .profit-report-letterhead .profit-report-rule:last-child { margin: 0.75mm 0 0; }
-  .profit-report-title { margin-top: 1.25mm; text-align: center; }
+  .profit-report-letterhead .profit-report-rule:last-child { margin: 1.5mm 0 0; }
+  .profit-report-title { margin-top: 2mm; text-align: center; }
 
   .profit-report-title h1 {
     margin: 0;
