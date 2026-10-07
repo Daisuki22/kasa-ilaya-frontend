@@ -16,6 +16,7 @@ const wrapIndex = (index, length) => (index + length) % length;
 
 export default function ResortGallerySlider() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState(1);
   const [failedImages, setFailedImages] = useState(() => new Set());
   const { settings } = useSiteSettings();
   const prefersReducedMotion = useReducedMotion();
@@ -40,18 +41,23 @@ export default function ResortGallerySlider() {
   }, [slides]);
 
   useEffect(() => {
-    if (slides.length < 2 || prefersReducedMotion) return undefined;
+    if (slides.length < 2) return undefined;
     const intervalId = window.setInterval(() => {
+      setSlideDirection(1);
       setActiveIndex((current) => wrapIndex(current + 1, slides.length));
     }, 6000);
     return () => window.clearInterval(intervalId);
-  }, [prefersReducedMotion, slides.length]);
+  }, [slides.length]);
 
   if (!slides.length) return null;
 
   const activeSlide = slides[activeIndex];
   const nextIndex = wrapIndex(activeIndex + 1, slides.length);
   const nextSlide = slides[nextIndex];
+  const moveToSlide = (index, direction = 1) => {
+    setSlideDirection(direction);
+    setActiveIndex(index);
+  };
   const imageFor = (slide, index) => (
     failedImages.has(index) ? FALLBACK_IMAGES[index % FALLBACK_IMAGES.length].src : resolveAssetUrl(slide.src)
   );
@@ -95,9 +101,9 @@ export default function ResortGallerySlider() {
                 loading="lazy"
                 decoding="async"
                 onError={() => markImageFailed(activeIndex)}
-                initial={prefersReducedMotion ? false : { opacity: 0, scale: 1.035 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, x: `${slideDirection * 5}%` }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, x: `${slideDirection * -5}%` }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.65, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute inset-0 h-full w-full object-cover"
               />
@@ -112,7 +118,7 @@ export default function ResortGallerySlider() {
               <div className="absolute right-4 top-4 flex gap-2 sm:right-6 sm:top-6">
                 <button
                   type="button"
-                  onClick={() => setActiveIndex((current) => wrapIndex(current - 1, slides.length))}
+                  onClick={() => moveToSlide(wrapIndex(activeIndex - 1, slides.length), -1)}
                   aria-label="Previous resort photo"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#0E2024]/55 text-white backdrop-blur transition hover:bg-white hover:text-[#0E2024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
@@ -120,7 +126,7 @@ export default function ResortGallerySlider() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveIndex((current) => wrapIndex(current + 1, slides.length))}
+                  onClick={() => moveToSlide(nextIndex, 1)}
                   aria-label="Next resort photo"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#0E2024]/55 text-white backdrop-blur transition hover:bg-white hover:text-[#0E2024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
@@ -145,7 +151,7 @@ export default function ResortGallerySlider() {
           {slides.length > 1 ? (
             <button
               type="button"
-              onClick={() => setActiveIndex(nextIndex)}
+              onClick={() => moveToSlide(nextIndex, 1)}
               aria-label={`Show ${nextSlide.title}`}
               className="group relative hidden min-h-[28rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] text-left md:block lg:min-h-[31rem]"
             >
@@ -179,7 +185,7 @@ export default function ResortGallerySlider() {
                 <button
                   key={`${slide.src}-${index}`}
                   type="button"
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => moveToSlide(index, index >= activeIndex ? 1 : -1)}
                   aria-label={`Show photo ${index + 1}: ${slide.title}`}
                   aria-current={index === activeIndex ? "true" : undefined}
                   className={`h-1.5 rounded-full transition-all duration-300 ${index === activeIndex ? "w-9 bg-[#A3CBD8]" : "w-3 bg-white/30 hover:bg-white/60"}`}

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
@@ -20,10 +20,33 @@ function StarRating({ rating }) {
 
 export default function ReviewsSection() {
   const carouselRef = useRef(null);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const { data: reviews = [] } = useQuery({
     queryKey: ["public-reviews"],
     queryFn: () => baseClient.entities.Review.filter({ is_approved: true }, "-created_date", 6),
   });
+
+  useEffect(() => {
+    if (reviews.length < 2 || isCarouselPaused) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      const carousel = carouselRef.current;
+      const firstCard = carousel?.firstElementChild;
+      if (!carousel || !firstCard || document.hidden) return;
+
+      const gap = Number.parseFloat(window.getComputedStyle(carousel).columnGap) || 0;
+      const distance = firstCard.getBoundingClientRect().width + gap;
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+
+      if (maxScroll <= 0 || maxScroll - carousel.scrollLeft <= distance * 0.65) {
+        carousel.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        carousel.scrollBy({ left: distance, behavior: "smooth" });
+      }
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isCarouselPaused, reviews.length]);
 
   if (reviews.length === 0) return null;
 
@@ -75,6 +98,12 @@ export default function ReviewsSection() {
           role="region"
           aria-label="Guest reviews carousel"
           tabIndex={0}
+          onMouseEnter={() => setIsCarouselPaused(true)}
+          onMouseLeave={() => setIsCarouselPaused(false)}
+          onFocus={() => setIsCarouselPaused(true)}
+          onBlur={() => setIsCarouselPaused(false)}
+          onTouchStart={() => setIsCarouselPaused(true)}
+          onTouchEnd={() => setIsCarouselPaused(false)}
         >
           {reviews.map((review) => (
             <Card key={review.id} className="relative w-full shrink-0 snap-start overflow-hidden transition-shadow duration-300 hover:shadow-lg sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3rem)/3)]">
