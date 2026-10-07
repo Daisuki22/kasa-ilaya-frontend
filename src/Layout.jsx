@@ -222,11 +222,24 @@ export default function Layout({ children, currentPageName }) {
     const revealSelector = "main section > div:not(.absolute):not([data-scroll-reveal-ignore]), main article, main figure, main [data-scroll-reveal], #site-footer > div";
     const registeredTargets = new Set();
     const siblingIndexes = new Map();
+    let previousScrollY = window.scrollY;
+    let scrollDirection = 1;
+    const updateScrollDirection = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY !== previousScrollY) {
+        scrollDirection = currentScrollY < previousScrollY ? -1 : 1;
+        previousScrollY = currentScrollY;
+      }
+    };
+    window.addEventListener("scroll", updateScrollDirection, { passive: true });
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("scroll-reveal-visible");
-        observer.unobserve(entry.target);
+        if (entry.isIntersecting) {
+          entry.target.classList.add("scroll-reveal-visible");
+        } else if (scrollDirection < 0) {
+          entry.target.classList.remove("scroll-reveal-visible");
+        }
       });
     }, { threshold: 0.12, rootMargin: "0px 0px -56px 0px" });
 
@@ -266,6 +279,7 @@ export default function Layout({ children, currentPageName }) {
     return () => {
       mutationObserver.disconnect();
       observer.disconnect();
+      window.removeEventListener("scroll", updateScrollDirection);
       registeredTargets.forEach((target) => {
         target.classList.remove("scroll-reveal", "scroll-reveal-visible");
         target.style.removeProperty("--scroll-reveal-delay");

@@ -174,7 +174,7 @@ export default function ResortGallerySlider() {
           </div>
         ) : null}
 
-        <div className="mt-10 flex flex-col justify-between gap-5 border-t border-white/10 pt-6 sm:mt-12 sm:flex-row sm:items-end sm:gap-8">
+        <div className="mt-10 border-t border-white/10 pt-6 sm:mt-12">
           <div className="max-w-2xl">
             <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#A3CBD8]">
               <Images className="h-4 w-4" />
@@ -187,13 +187,6 @@ export default function ResortGallerySlider() {
               Explore the spaces made for restful stays, easy gatherings, and moments worth remembering.
             </p>
           </div>
-
-          <a
-            href="#resort-gallery-slides"
-            className="hidden shrink-0 items-center gap-2 pb-1 text-sm font-medium text-[#BFCBC0] transition-colors hover:text-white sm:inline-flex"
-          >
-            Explore the resort <ArrowDownRight className="h-4 w-4" />
-          </a>
         </div>
       </div>
     </section>
