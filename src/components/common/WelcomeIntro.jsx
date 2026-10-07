@@ -43,20 +43,8 @@ export default function WelcomeIntro() {
     };
   }, [isVisible]);
 
-  useEffect(() => {
-    if (!isVisible) {
-      return undefined;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isVisible]);
-
   const closeIntro = () => {
+    if (isLeaving) return;
     setIsLeaving(true);
     window.setTimeout(() => setIsVisible(false), INTRO_FADE_MS);
   };
@@ -71,6 +59,8 @@ export default function WelcomeIntro() {
       role="dialog"
       aria-label="Welcome intro"
       aria-modal="true"
+      onWheel={closeIntro}
+      onTouchMove={closeIntro}
     >
       <img src={heroImage} alt="" loading="eager" decoding="async" fetchPriority="high" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }} className="welcome-intro__image" />
       <div className="welcome-intro__shade" />
