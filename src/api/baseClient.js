@@ -588,39 +588,6 @@ export const baseClient = {
       return request("/auth.php?action=google-config");
     },
 
-    async getCaptchaChallenge(purpose) {
-      return request(
-        `/auth.php?action=captcha-challenge&purpose=${encodeURIComponent(
-          purpose
-        )}`
-      );
-    },
-
-    async verifyCaptcha(data) {
-      return request("/auth.php?action=verify-captcha", {
-        method: "POST",
-        body: data,
-      });
-    },
-
-    async completeLoginCaptcha(data) {
-      const payload = await request(
-        "/auth.php?action=complete-login-captcha",
-        {
-          method: "POST",
-          body: data,
-        }
-      );
-
-      if (payload?.user) {
-        markClientAuthenticated();
-      }
-
-      dispatchAuthChange();
-
-      return payload;
-    },
-
     async googleLogin(data) {
       const payload = await request(
         "/auth.php?action=google-login",

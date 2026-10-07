@@ -369,11 +369,16 @@ export default function Login() {
   const sendVerificationAndRedirect = async (email) => {
     const normalizedEmail = normalizeEmail(email);
     const params = new URLSearchParams({ email: normalizedEmail });
+    params.set('terms_accepted', '1');
+    params.set('privacy_acknowledged', '1');
 
     try {
       const response = await baseClient.auth.sendRegistrationOtp({
         email: normalizedEmail,
       });
+      if (response?.delivery_method) {
+        params.set('delivery_method', response.delivery_method);
+      }
       notifyOtpMailStatus(response, 'Verification code sent by email. Please verify your account first.');
     } catch (otpError) {
       toast.error(otpError.message || 'Unable to send verification code.');
@@ -506,6 +511,9 @@ export default function Login() {
       const params = new URLSearchParams({ email });
       if (payload?.sample_registration_otp) {
         params.set('sample_otp', payload.sample_registration_otp);
+      }
+      if (payload?.delivery_method) {
+        params.set('delivery_method', payload.delivery_method);
       }
       params.set('terms_accepted', '1');
       params.set('privacy_acknowledged', '1');

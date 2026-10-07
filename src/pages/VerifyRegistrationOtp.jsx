@@ -115,7 +115,11 @@ export default function VerifyRegistrationOtp() {
                 required
               />
               <p className="text-sm text-muted-foreground">
-                {sampleOtp ? `Sample code for testing: ${sampleOtp}` : 'Enter the 6-digit code sent to your email address.'}
+                {sampleOtp
+                  ? `Sample code for testing: ${sampleOtp}`
+                  : searchParams.get('delivery_method') === 'server_log'
+                    ? 'Enter the temporary code shown in your backend service logs in Render.'
+                    : 'Enter the 6-digit code sent to your email address.'}
               </p>
             </div>
 
@@ -123,7 +127,7 @@ export default function VerifyRegistrationOtp() {
               <Button className="flex-1" disabled={isSubmitting || !termsAccepted || !privacyAcknowledged} type="submit">
                 {isSubmitting ? 'Verifying...' : 'Verify email'}
               </Button>
-              <Button variant="ghost" disabled={isResending || resendSeconds > 0 || !email} onClick={resend}>
+              <Button type="button" variant="ghost" disabled={isResending || resendSeconds > 0 || !email} onClick={resend}>
                 {isResending ? 'Sending...' : resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend'}
               </Button>
             </div>

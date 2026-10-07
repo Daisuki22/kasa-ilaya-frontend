@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import CaptchaGate from '@/components/auth/CaptchaGate';
 import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
 export default function ResetPassword() {
@@ -17,6 +16,7 @@ export default function ResetPassword() {
   const token = searchParams.get('token') || '';
   const initialEmail = searchParams.get('email') || '';
   const sampleOtp = searchParams.get('sample_otp') || '';
+  const deliveryMethod = searchParams.get('delivery_method') || '';
   const isTokenReset = token !== '';
   const [status, setStatus] = useState({ loading: isTokenReset, valid: !isTokenReset, email: initialEmail });
   const [form, setForm] = useState({ email: initialEmail, code: sampleOtp, password: '', confirmPassword: '' });
@@ -26,7 +26,6 @@ export default function ResetPassword() {
   const [resetToken, setResetToken] = useState(token);
   const [isResending, setIsResending] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(60);
-  const [captchaVerified, setCaptchaVerified] = useState(isTokenReset);
 
   useEffect(() => {
     if (resendSeconds <= 0 || isTokenReset) {
@@ -134,9 +133,6 @@ export default function ResetPassword() {
         setResendSeconds(Number(error.retry_after_seconds));
       }
       toast.error(error.message || 'Unable to resend reset code.');
-      if (error?.code === 'captcha_required') {
-        setCaptchaVerified(false);
-      }
     } finally {
       setIsResending(false);
     }
@@ -200,11 +196,7 @@ export default function ResetPassword() {
             </div>
           ) : null}
 
-          {!status.loading && status.valid && !captchaVerified ? (
-            <CaptchaGate purpose="reset" onVerified={() => setCaptchaVerified(true)} />
-          ) : null}
-
-          {!status.loading && status.valid && captchaVerified ? (
+          {!status.loading && status.valid ? (
             <form className="space-y-4" onSubmit={handleSubmit}>
               {isTokenReset ? (
                 <p className="text-sm text-muted-foreground">Resetting password for <span className="font-medium text-foreground">{status.email}</span>.</p>
@@ -234,6 +226,9 @@ export default function ResetPassword() {
                       disabled={isCodeVerified}
                       required
                     />
+                    {deliveryMethod === 'server_log' ? (
+                      <p className="text-sm text-muted-foreground">The temporary code is in your backend service logs in Render.</p>
+                    ) : null}
                   </div>
                   {!isCodeVerified ? (
                     <Button className="w-full" disabled={isVerifyingCode} type="button" onClick={handleVerifyCode}>

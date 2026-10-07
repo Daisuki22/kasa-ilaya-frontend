@@ -8,14 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import CaptchaGate from '@/components/auth/CaptchaGate';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -34,6 +32,7 @@ export default function ForgotPassword() {
       } else if (response.delivery_method === 'server_log') {
         toast.success('Temporary reset code created. Check the backend logs in Render.');
         const params = new URLSearchParams({ method: 'email', email });
+        params.set('delivery_method', response.delivery_method);
         navigate(`${createPageUrl('ResetPassword')}?${params.toString()}`);
       } else if (response.mail_sent === false) {
         toast.error('Reset code was created, but email delivery failed. Please check the email service settings.');
@@ -44,7 +43,6 @@ export default function ForgotPassword() {
       }
     } catch (error) {
       toast.error(error.message || 'Unable to send reset code.');
-      setCaptchaVerified(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -61,19 +59,15 @@ export default function ForgotPassword() {
           <CardDescription>Enter your email and we will send a password reset code.</CardDescription>
         </CardHeader>
         <CardContent>
-          {!captchaVerified ? (
-            <CaptchaGate purpose="reset" onVerified={() => setCaptchaVerified(true)} />
-          ) : (
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="forgot-email">Email</Label>
-                <Input id="forgot-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-              </div>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input id="forgot-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            </div>
             <Button className="w-full" disabled={isSubmitting} type="submit">
               {isSubmitting ? 'Sending code...' : 'Send reset code'}
             </Button>
-            </form>
-          )}
+          </form>
 
           <div className="mt-6 text-sm text-muted-foreground">
             <Link className="text-primary hover:underline" to={createPageUrl('Login')}>Back to sign in</Link>
