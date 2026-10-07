@@ -11,13 +11,31 @@ import { resolveAssetUrl } from '@/lib/assetUrls';
 import { Camera, Loader2, Upload } from 'lucide-react';
 import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
+const toDateInputValue = (value) => (value ? String(value).slice(0, 10) : '');
+const todayDateInputValue = () => {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+};
+
+const formatBirthDate = (value) => {
+  const dateValue = toDateInputValue(value);
+  if (!dateValue) return 'No birthday added';
+
+  const date = new Date(`${dateValue}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? 'No birthday added'
+    : new Intl.DateTimeFormat('en-PH', { dateStyle: 'long' }).format(date);
+};
+
 export default function ProfileSettings({
   title = 'Profile settings',
   description = 'Manage your personal details and account password.',
   legacySpacing = false,
 }) {
   const [user, setUser] = useState(null);
-  const [profileForm, setProfileForm] = useState({ full_name: '', email: '', phone: '', profile_image_url: '' });
+  const [profileForm, setProfileForm] = useState({ full_name: '', email: '', phone: '', birth_date: '', profile_image_url: '' });
   const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -32,6 +50,7 @@ export default function ProfileSettings({
       full_name: currentUser.full_name || '',
       email: currentUser.email || '',
       phone: currentUser.phone || '',
+      birth_date: toDateInputValue(currentUser.birth_date),
       profile_image_url: currentUser.profile_image_url || '',
     });
   };
@@ -169,6 +188,7 @@ export default function ProfileSettings({
             <p className="text-lg font-semibold text-foreground">{profileForm.full_name || 'Unnamed user'}</p>
             <p className="break-all text-sm text-muted-foreground">{profileForm.email}</p>
             <p className="mt-1 text-sm text-muted-foreground">{profileForm.phone || 'No phone number added'}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Birthday: {formatBirthDate(profileForm.birth_date)}</p>
             <p className="mt-2 inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground">
               {(user.role || 'guest').replace(/_/g, ' ')}
             </p>
@@ -207,6 +227,11 @@ export default function ProfileSettings({
               <div className="space-y-2">
                 <Label htmlFor="profile-phone">Phone number</Label>
                 <Input id="profile-phone" value={profileForm.phone} onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-birthday">Birthday</Label>
+                <Input id="profile-birthday" type="date" max={todayDateInputValue()} value={profileForm.birth_date} onChange={(event) => setProfileForm((current) => ({ ...current, birth_date: event.target.value }))} />
+                <p className="text-xs text-muted-foreground">You must be at least 18 years old.</p>
               </div>
               <Button className="w-full sm:w-auto" disabled={savingProfile} type="submit">Save changes</Button>
             </form>

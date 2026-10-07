@@ -24,6 +24,14 @@ const roleLabel = {
   guest: "Guest",
 };
 
+const formatBirthDate = (value) => {
+  const dateValue = value ? String(value).slice(0, 10) : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) return "Not provided";
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  return format(new Date(year, month - 1, day), "MMM d, yyyy");
+};
+
 export default function AdminUserPermissions() {
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
@@ -222,6 +230,7 @@ export default function AdminUserPermissions() {
                           <div>
                             <p className="text-sm">{targetUser.email}</p>
                             <p className="text-xs text-muted-foreground">{targetUser.phone || "No phone"}</p>
+                            <p className="text-xs text-muted-foreground">Birthday: {formatBirthDate(targetUser.birth_date)}</p>
                           </div>
                         </TableCell>
                         <TableCell>
