@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { baseClient } from '@/api/baseClient';
@@ -51,6 +51,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
   const [savingPassword, setSavingPassword] = useState(false);
   const [busy, setBusy] = useState('');
   const [profileImageUnavailable, setProfileImageUnavailable] = useState(false);
+  const photoInputRef = useRef(null);
 
   const syncUser = (current) => {
     setUser(current);
@@ -109,13 +110,15 @@ export default function ProfileSettings({ legacySpacing = false }) {
   const uploadPhoto = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Choose a JPG, PNG, or WebP photo.'); event.target.value = ''; return;
-    }
-    if (file.size > 5 * 1024 * 1024) { toast.error('Profile photo must be 5 MB or smaller.'); event.target.value = ''; return; }
     setBusy('photo');
     try {
       const optimized = await optimizeImageFile(file, 800);
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(optimized.type)) {
+        throw new Error('Choose a JPG, PNG, or WebP photo.');
+      }
+      if (optimized.size > 5 * 1024 * 1024) {
+        throw new Error('Profile photo must be 5 MB or smaller.');
+      }
       const uploaded = await baseClient.integrations.Core.UploadFile({ file: optimized, purpose: 'profile_image' });
       syncUser(await baseClient.auth.updateMe({ profile_image_url: uploaded.file_url }));
       toast.success('Profile photo updated.');
@@ -205,11 +208,11 @@ export default function ProfileSettings({ legacySpacing = false }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                <Button type="button" onClick={() => photoInputRef.current?.click()} disabled={busy === 'photo'}>
                   {busy === 'photo' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   {busy === 'photo' ? 'Saving…' : 'Change photo'}
-                  <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={uploadPhoto} disabled={busy === 'photo'} />
-                </label>
+                </Button>
+                <input ref={photoInputRef} type="file" accept="image/*" aria-label="Choose a profile photo" className="sr-only" onChange={uploadPhoto} disabled={busy === 'photo'} />
                 {form.profile_image_url ? <Button variant="outline" onClick={removePhoto} disabled={busy === 'photo'}>Remove</Button> : null}
               </div>
             </CardContent>
