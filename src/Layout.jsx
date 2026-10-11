@@ -183,6 +183,7 @@ export default function Layout({ children, currentPageName }) {
     ? "AdminProfileSettings"
     : "ProfileSettings";
   const siteName = siteSettings?.site_name?.trim() || "Kasa Ilaya";
+  const resortBrandName = siteName.replace(/\s+resort$/i, "").trim() || siteName;
   const footerLegalDocument = asArray(footerLegalDocuments).find(
     (document) => document.document_type === footerLegalType && document.status === "published"
   );
@@ -697,7 +698,7 @@ export default function Layout({ children, currentPageName }) {
       ) : (
         <div className="min-w-0">
           <span className={`block max-w-[11rem] truncate font-display text-sm font-bold tracking-tight sm:max-w-none sm:text-lg ${onHero ? "text-white" : "text-foreground"}`}>
-            {siteName} Resort
+            {resortBrandName} Resort
           </span>
           <span className={`block truncate text-[9px] uppercase tracking-[0.14em] sm:text-xs sm:tracking-[0.2em] ${onHero ? "text-white/75" : "text-muted-foreground"}`}>
             Official Resort Website
@@ -985,7 +986,7 @@ export default function Layout({ children, currentPageName }) {
                       <SiteLogo src={logoUrl} alt={`${siteName} logo`} loading="lazy" className="h-full w-full object-contain" />
                     </Link>
                     <div className="min-w-0 max-w-xl">
-                      <p className="font-display text-xl font-bold tracking-tight sm:text-2xl">{siteName} Resort</p>
+                      <p className="font-display text-xl font-bold tracking-tight sm:text-2xl">{resortBrandName} Resort</p>
                       <p className="mt-2 text-sm leading-6 text-white">
                         Kasa Ilaya Resort &amp; Event Place — your destination for relaxing stays, celebrations, and unforgettable moments.
                       </p>

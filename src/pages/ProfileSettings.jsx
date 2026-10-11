@@ -215,14 +215,14 @@ export default function ProfileSettings({ legacySpacing = false }) {
             </CardContent>
           </Card>
           <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,.8fr)]">
-            <Card>
+            <Card className="min-w-0">
               <CardHeader><CardTitle>Personal information</CardTitle><CardDescription>Update the details used for your resort account.</CardDescription></CardHeader>
-              <CardContent>
-                <form className="grid gap-4 sm:grid-cols-2" onSubmit={saveProfile}>
-                  <div className="space-y-2 sm:col-span-2"><Label htmlFor="account-email">Sign-in email</Label><Input id="account-email" type="email" value={user.email || ''} readOnly aria-describedby="email-help" /><p id="email-help" className="text-xs text-muted-foreground">Email changes require a verified-email process. Contact support to request one.</p></div>
-                  <div className="space-y-2 sm:col-span-2"><Label htmlFor="account-name">Full name</Label><Input id="account-name" value={form.full_name} maxLength={120} onChange={(event) => setForm((old) => ({ ...old, full_name: event.target.value }))} required /></div>
-                  <div className="space-y-2"><Label htmlFor="account-phone">Phone number</Label><Input id="account-phone" inputMode="tel" value={form.phone} onChange={(event) => setForm((old) => ({ ...old, phone: event.target.value }))} /></div>
-                  <div className="space-y-2"><Label htmlFor="account-birthday">Birthday</Label><Input id="account-birthday" type="date" max={localToday()} value={form.birth_date} onChange={(event) => setForm((old) => ({ ...old, birth_date: event.target.value }))} /><p className="text-xs text-muted-foreground">Account holders must be at least 18.</p></div>
+              <CardContent className="min-w-0">
+                <form className="grid min-w-0 gap-4 sm:grid-cols-2" onSubmit={saveProfile}>
+                  <div className="min-w-0 space-y-2 sm:col-span-2"><Label htmlFor="account-email">Sign-in email</Label><Input id="account-email" type="email" value={user.email || ''} readOnly aria-describedby="email-help" /><p id="email-help" className="text-xs text-muted-foreground">Email changes require a verified-email process. Contact support to request one.</p></div>
+                  <div className="min-w-0 space-y-2 sm:col-span-2"><Label htmlFor="account-name">Full name</Label><Input id="account-name" value={form.full_name} maxLength={120} onChange={(event) => setForm((old) => ({ ...old, full_name: event.target.value }))} required /></div>
+                  <div className="min-w-0 space-y-2"><Label htmlFor="account-phone">Phone number</Label><Input id="account-phone" inputMode="tel" value={form.phone} onChange={(event) => setForm((old) => ({ ...old, phone: event.target.value }))} /></div>
+                  <div className="min-w-0 space-y-2"><Label htmlFor="account-birthday">Birthday</Label><Input id="account-birthday" type="date" className="min-w-0 max-w-full box-border text-left" max={localToday()} value={form.birth_date} onChange={(event) => setForm((old) => ({ ...old, birth_date: event.target.value }))} /><p className="text-xs text-muted-foreground">Account holders must be at least 18.</p></div>
                   <div className="sm:col-span-2"><Button disabled={savingProfile} type="submit">{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save information</Button></div>
                 </form>
               </CardContent>
