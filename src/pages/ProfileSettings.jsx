@@ -178,19 +178,19 @@ export default function ProfileSettings({ legacySpacing = false }) {
   ];
 
   return (
-    <main className={`w-full ${legacySpacing ? 'max-w-none' : 'app-content-container'} px-2 py-6 sm:px-3 lg:px-4`}>
+    <main className={`w-full min-w-0 ${legacySpacing ? 'max-w-none' : 'app-content-container'} px-2 py-6 sm:px-3 lg:px-4`}>
       <header className="mb-6">
         <p className="text-sm font-medium text-primary">Your account</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-foreground">Account Settings</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">Manage your resort account, sign-in security, and devices.</p>
       </header>
 
-      <Tabs defaultValue="overview" className="space-y-5">
-        <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1.5">
-          {tabs.map(([value, Icon, label]) => <TabsTrigger key={value} value={value} className="gap-2 px-3 py-2.5"><Icon className="h-4 w-4" /><span>{label}</span></TabsTrigger>)}
+      <Tabs defaultValue="overview" className="min-w-0 space-y-5">
+        <TabsList className="flex h-auto w-full flex-nowrap justify-start gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-border bg-card p-1.5">
+          {tabs.map(([value, Icon, label]) => <TabsTrigger key={value} value={value} className="shrink-0 gap-2 whitespace-nowrap px-3 py-2.5"><Icon className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">{label}</span></TabsTrigger>)}
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-5">
+        <TabsContent value="overview" className="min-w-0 space-y-5">
           <Card>
             <CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
               <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-border bg-primary/10">
@@ -214,7 +214,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
               </div>
             </CardContent>
           </Card>
-          <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+          <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,.8fr)]">
             <Card>
               <CardHeader><CardTitle>Personal information</CardTitle><CardDescription>Update the details used for your resort account.</CardDescription></CardHeader>
               <CardContent>
