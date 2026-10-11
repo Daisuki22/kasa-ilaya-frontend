@@ -1351,3 +1351,13 @@ h1, h2, h3, h4, h5, h6, .font-display {
     transition: none !important;
   }
 }
+
+/* iOS Safari adds date-input padding outside a 100% width, causing it to
+   overflow its grid cell. Subtract the input's horizontal padding to offset it. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 640px) {
+    .ios-date-input-width-fix {
+      width: calc(100% - 1.5rem);
+    }
+  }
+}
