@@ -101,6 +101,20 @@ const formatDate = (value) => {
 const normalizePaymentStatus = (status) => status || "unpaid";
 const displayPaymentStatus = (booking) => booking?.status === "rejected" ? "declined" : normalizePaymentStatus(booking?.payment_status);
 const normalizeAdditionalFeeStatus = (status) => status || "unpaid";
+const getTodayManilaDateKey = () => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+};
+const isBookingDatePast = (booking) => {
+  const bookingDate = String(booking?.booking_date || "").slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(bookingDate) && bookingDate < getTodayManilaDateKey();
+};
 
 const chartColors = {
   paid: "hsl(var(--primary))",
@@ -296,6 +310,10 @@ export default function AdminPaymentMonitoring() {
   }, [paymentBookings]);
 
   const openAdditionalFeeDialog = (booking) => {
+    if (isBookingDatePast(booking)) {
+      toast.error("Damage fees can only be added on or before the booking date.");
+      return;
+    }
     if (String(booking.payment_status || "").toLowerCase() !== "paid") {
       toast.error("The booking must be paid before adding a damage fee.");
       return;
@@ -341,6 +359,12 @@ export default function AdminPaymentMonitoring() {
 
   const saveAdditionalFee = async (statusOverride = feeForm.status) => {
     if (!feeDialogBooking) {
+      return;
+    }
+
+    if (isBookingDatePast(feeDialogBooking)) {
+      toast.error("Damage fees can only be added on or before the booking date.");
+      setFeeDialogBooking(null);
       return;
     }
 
@@ -666,7 +690,7 @@ export default function AdminPaymentMonitoring() {
                             <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} title="View payment details">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {additionalFeeStatus !== "paid" && String(booking.payment_status || "").toLowerCase() === "paid" ? (
+                            {additionalFeeStatus !== "paid" && String(booking.payment_status || "").toLowerCase() === "paid" && !isBookingDatePast(booking) ? (
                               <Button variant="ghost" size="icon" onClick={() => openAdditionalFeeDialog(booking)} title="Add additional fee for broken property">
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -832,7 +856,7 @@ export default function AdminPaymentMonitoring() {
                   Review the proof in Reservation Management. Accepting the booking verifies this payment automatically.
                 </p>
               ) : null}
-              {normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) !== "paid" && String(selectedBooking.payment_status || "").toLowerCase() === "paid" ? (
+              {normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) !== "paid" && String(selectedBooking.payment_status || "").toLowerCase() === "paid" && !isBookingDatePast(selectedBooking) ? (
                 <Button variant="outline" className="w-full gap-2" onClick={() => openAdditionalFeeDialog(selectedBooking)}>
                   <Plus className="h-4 w-4" />
                   Add or Update Damage Fee
