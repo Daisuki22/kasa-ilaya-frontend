@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { baseClient } from "@/api/baseClient";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircle, X, Loader2, TreePalm, ArrowLeft, Search, Send } from "lucide-react";
+import { MessageCircle, X, Loader2, TreePalm, ArrowLeft, Search, Send, Minus, FileText, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { createPageUrl } from "@/utils";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useResortRules } from "@/hooks/useResortRules";
@@ -102,6 +104,35 @@ const getVisibleFaqCategories = (search, selectedCategory) => {
           question.toLowerCase().includes(normalizedSearch)
         ),
   })).filter((category) => category.questions.length > 0);
+};
+
+const getFaqSuggestions = (message, limit = 3) => {
+  const normalizedMessage = message.trim().toLowerCase();
+  const terms = normalizedMessage
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/u)
+    .filter((term) => term.length > 2 && !["the", "and", "for", "are", "how", "can", "what", "does", "with", "you"].includes(term));
+  const categoryTerms = {
+    "Reservations & Booking": ["booking", "book", "reservation", "reserve", "status"],
+    "Rates & Packages": ["rate", "rates", "price", "cost", "package", "tour", "inclusion"],
+    "Events & Venue": ["event", "venue", "party", "occasion"],
+    Payment: ["payment", "pay", "gcash", "maya", "paypal", "receipt", "deposit"],
+    "Cancellation & Refund": ["cancel", "cancellation", "refund", "rebook", "reschedule"],
+    "Privacy & Personal Data": ["privacy", "personal", "information", "data"],
+    "Check-in & Check-out": ["checkin", "check-out", "checkout", "bring", "arrival"],
+    "Location & Contact": ["location", "contact", "address", "phone", "email", "where"],
+    "Rules & Policies": ["rule", "rules", "policy", "policies", "food", "charge", "fee"],
+  };
+
+  return FAQ_CATEGORIES.flatMap((category) => category.questions.map((question) => {
+    const searchableText = `${category.title} ${question}`.toLowerCase();
+    const score = terms.reduce((total, term) => total + (searchableText.includes(term) ? 1 : 0), 0) +
+      (categoryTerms[category.title] || []).reduce((total, term) => total + (normalizedMessage.includes(term) ? 1 : 0), 0);
+    return { category: category.title, question, score };
+  }))
+    .filter((item) => item.score > 0 && item.question.toLowerCase() !== normalizedMessage)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, limit);
 };
 
 const assistantReply = ({
@@ -934,7 +965,7 @@ export default function Chatbot() {
   const { rules: resortRules } = useResortRules();
   const [open, setOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
-  const [showFaq, setShowFaq] = useState(true);
+  const [showFaq, setShowFaq] = useState(false);
   const [selectedFaqCategory, setSelectedFaqCategory] = useState(
     FAQ_CATEGORIES[0].title
   );
@@ -944,11 +975,11 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: assistantReply({
-        title: "Welcome to Kasa Ilaya Resort",
-        intro: "How can I help with your visit?",
-        nextStep: "Choose a quick message below.",
-      }),
+      content: "Hi! Welcome to Kasa Ilaya Resort.",
+    },
+    {
+      role: "assistant",
+      content: "Ask me a question and I’ll find an answer for you.",
     },
   ]);
 
@@ -1045,6 +1076,7 @@ export default function Chatbot() {
           {
             role: "assistant",
             content: localResponse,
+            suggestions: getFaqSuggestions(rawMessage),
           },
         ]);
         return;
@@ -1061,6 +1093,7 @@ export default function Chatbot() {
             nextStep:
               "Try asking about bookings, rates, payment, cancellation, location, or resort rules. You can also browse the Frequently Asked Questions.",
           }),
+          suggestions: getFaqSuggestions(rawMessage),
         },
       ]);
     } catch {
@@ -1075,6 +1108,7 @@ export default function Chatbot() {
             nextStep:
               "Try asking about bookings, rates, payment, cancellation, location, or resort rules. You can also browse the Frequently Asked Questions.",
           }),
+          suggestions: getFaqSuggestions(rawMessage),
         },
       ]);
     } finally {
@@ -1122,73 +1156,65 @@ export default function Chatbot() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(82dvh,680px)] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[600px] sm:w-[420px] sm:max-w-[calc(100vw-48px)]">
+        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(82dvh,680px)] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(700px,calc(100dvh-8rem))] sm:w-[420px] sm:max-w-[calc(100vw-48px)]">
           {/* Header */}
-          <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3">
-            <TreePalm className="h-5 w-5" />
-
-            <div>
-              <p className="text-base font-semibold">
-                Kasa Ilaya Assistant
-              </p>
-              <p className="text-sm opacity-90">
-                {showFaq ? "Frequently Asked Questions" : "Answers & support"}
-              </p>
-            </div>
+          <div className="relative flex min-h-16 items-center justify-center bg-black px-4 py-3 text-white">
+            <p className="text-center text-lg font-semibold">Kasa Ilaya Assistant</p>
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              onClick={() => setOpen(false)}
+              aria-label="Minimize chatbot"
+            >
+              <Minus className="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
 
           {/* Messages */}
           <div
             ref={messagesContainerRef}
-            className="flex-1 space-y-4 overflow-y-auto p-5"
+            className="flex-1 space-y-4 overflow-y-auto bg-white p-4 sm:p-5"
             role="log"
             aria-live="polite"
             aria-relevant="additions"
           >
-            {!showFaq && (
-              <button
-                type="button"
-                className="inline-flex min-h-12 items-center gap-2 rounded-md border border-border bg-background px-4 text-base font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => setShowFaq(true)}
-                disabled={loading}
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Back to FAQ
-              </button>
-            )}
-
             {messages.map((msg, i) => (
-              <div
-                key={i}
-                role="group"
-                aria-label={
-                  msg.role === "user"
-                    ? "Your message"
-                    : "Kasa Ilaya Assistant message"
-                }
-                className={`flex ${
-                  msg.role === "user"
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`min-w-0 max-w-[92%] break-words rounded-lg px-4 py-3 text-base leading-7 [overflow-wrap:anywhere] ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted text-foreground rounded-bl-md"
-                  }`}
-                >
-                  {msg.role === "user" ? (
-                    <p className="m-0 whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
-                  ) : (
-                    <ReactMarkdown
-                      className="max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_h3]:mb-3 [&_h3]:text-base [&_h3]:font-semibold [&_li]:my-2 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
+              <div key={i} role="group" aria-label={msg.role === "user" ? "Your message" : "Kasa Ilaya Assistant message"} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                {msg.role === "assistant" && (
+                  <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-800" aria-hidden="true">
+                    <TreePalm className="h-4 w-4" />
+                  </span>
+                )}
+                <div className={`flex min-w-0 max-w-[86%] flex-col gap-2 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`min-w-0 break-words rounded-2xl px-4 py-3 text-base leading-6 [overflow-wrap:anywhere] ${msg.role === "user" ? "rounded-br-md bg-black text-white" : "rounded-bl-md bg-neutral-100 text-neutral-800"}`}>
+                    {msg.role === "user" ? (
+                      <p className="m-0 whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      <ReactMarkdown className="max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_li]:my-1 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5">
+                        {msg.content}
+                      </ReactMarkdown>
+                    )}
+                  </div>
+                  {msg.suggestions?.length > 0 && (
+                    <div className="w-full space-y-2" aria-label="Related FAQ articles">
+                      <p className="px-1 text-sm text-neutral-600">Here are some questions that may help:</p>
+                      {msg.suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.question}
+                          type="button"
+                          className="flex w-full items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3 text-left text-sm text-blue-700 shadow-sm transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={() => processMessage(suggestion.question)}
+                          disabled={loading}
+                        >
+                          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-medium">{suggestion.question}</span>
+                            <span className="mt-1 block text-xs text-neutral-500">{suggestion.category}</span>
+                          </span>
+                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -1200,14 +1226,52 @@ export default function Chatbot() {
                 role="status"
                 aria-label="Assistant is responding"
               >
-                <div className="rounded-lg rounded-bl-md bg-muted px-4 py-3">
+                <div className="rounded-2xl rounded-bl-md bg-neutral-100 px-4 py-3">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
               </div>
             )}
 
+            {!showFaq && messages.length === 2 && (
+              <section className="ml-12 space-y-2" aria-label="Suggested questions">
+                <p className="px-1 text-sm text-neutral-600">Popular questions</p>
+                {FAQ_CATEGORIES.slice(0, 4).map((category) => (
+                  <button
+                    key={category.title}
+                    type="button"
+                    className="block max-w-full rounded-full bg-black px-4 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => processMessage(category.questions[0])}
+                  >
+                    {category.questions[0]}
+                  </button>
+                ))}
+                <button type="button" className="text-sm font-medium text-blue-700 underline underline-offset-2" onClick={() => setShowFaq(true)}>
+                  Browse all frequently asked questions
+                </button>
+              </section>
+            )}
+
+            {!showFaq && messages.length > 2 && (
+              <button
+                type="button"
+                className="ml-12 inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => setShowFaq(true)}
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+                Browse FAQs
+              </button>
+            )}
+
             {showFaq && (
               <section className="space-y-5 pt-2" aria-labelledby="chatbot-faq-title">
+                <button
+                  type="button"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setShowFaq(false)}
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  Back to chat
+                </button>
                 <div>
                   <h3 id="chatbot-faq-title" className="text-lg font-semibold text-foreground">
                     Frequently Asked Questions
@@ -1295,26 +1359,42 @@ export default function Chatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form
-            onSubmit={handleMessageSubmit}
-            className="flex items-center gap-2 border-t border-border bg-card p-3"
-            aria-label="Ask Kasa Ilaya Assistant"
-          >
+          <div className="border-t border-neutral-200 bg-white px-4 pb-4 pt-3">
+            <div className="mb-3 flex justify-end">
+              <Link
+                to={createPageUrl("Contact")}
+                onClick={() => setOpen(false)}
+                className="inline-flex min-h-10 items-center rounded-full border border-black px-4 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Get in touch
+              </Link>
+            </div>
+            <form
+              onSubmit={handleMessageSubmit}
+              className="flex items-end gap-2"
+              aria-label="Ask Kasa Ilaya Assistant"
+            >
             <label className="sr-only" htmlFor="chatbot-message-input">
               Type a question for Kasa Ilaya Assistant
             </label>
-            <input
+            <textarea
               id="chatbot-message-input"
-              type="text"
+              rows={2}
               value={draftMessage}
               onChange={(event) => setDraftMessage(event.target.value)}
-              placeholder="Type your question..."
-              className="h-12 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  handleMessageSubmit(event);
+                }
+              }}
+              placeholder="Type your question here..."
+              className="min-h-16 min-w-0 flex-1 resize-y rounded-lg border-2 border-neutral-300 bg-white px-3 py-3 text-base text-foreground outline-none placeholder:text-neutral-400 focus-visible:border-neutral-500 focus-visible:ring-2 focus-visible:ring-ring"
               disabled={loading}
             />
             <button
               type="submit"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Send question"
               disabled={loading || !draftMessage.trim()}
             >
@@ -1324,7 +1404,8 @@ export default function Chatbot() {
                 <Send className="h-5 w-5" aria-hidden="true" />
               )}
             </button>
-          </form>
+            </form>
+          </div>
         </div>
       )}
     </>
