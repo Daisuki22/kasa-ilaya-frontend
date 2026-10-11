@@ -1379,7 +1379,7 @@ export default function Chatbot() {
             </label>
             <textarea
               id="chatbot-message-input"
-              rows={2}
+              rows={1}
               value={draftMessage}
               onChange={(event) => setDraftMessage(event.target.value)}
               onKeyDown={(event) => {
@@ -1389,7 +1389,7 @@ export default function Chatbot() {
                 }
               }}
               placeholder="Type your question here..."
-              className="min-h-16 min-w-0 flex-1 resize-y rounded-lg border-2 border-input bg-background px-3 py-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-h-12 min-w-0 flex-1 resize-y rounded-lg border-2 border-input bg-background px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
               disabled={loading}
             />
             <button
