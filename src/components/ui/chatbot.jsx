@@ -1058,11 +1058,14 @@ export default function Chatbot() {
     }
 
     let resetTimeout;
-    const bounceInterval = window.setInterval(() => {
+    const triggerBounce = () => {
       setAttentionBounce(true);
       window.clearTimeout(resetTimeout);
       resetTimeout = window.setTimeout(() => setAttentionBounce(false), 850);
-    }, 10000);
+    };
+
+    triggerBounce();
+    const bounceInterval = window.setInterval(triggerBounce, 10000);
 
     return () => {
       window.clearInterval(bounceInterval);
