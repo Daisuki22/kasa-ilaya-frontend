@@ -588,6 +588,10 @@ export const baseClient = {
       return request("/auth.php?action=google-config");
     },
 
+    async getGoogleSignupCsrf() {
+      return request("/auth.php?action=google-signup-csrf");
+    },
+
     async googleLogin(data) {
       const payload = await request(
         "/auth.php?action=google-login",
@@ -604,6 +608,32 @@ export const baseClient = {
       dispatchAuthChange(payload?.user);
 
       return payload;
+    },
+
+    async completeGoogleSignup(data) {
+      const payload = await request(
+        "/auth.php?action=google-signup-complete",
+        {
+          method: "POST",
+          body: data,
+        }
+      );
+
+      if (payload?.user) {
+        markClientAuthenticated();
+      }
+
+      dispatchAuthChange(payload?.user);
+      return payload;
+    },
+
+    async finishGoogleRedirect() {
+      const user = await request("/auth.php?action=me", {
+        suppressAuthEvent: true,
+      });
+      markClientAuthenticated();
+      dispatchAuthChange(user);
+      return user;
     },
 
     async register(data) {

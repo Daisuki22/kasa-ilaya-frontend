@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CalendarCheck, ImagePlus, Loader2, LockKeyhole, TreePalm } from 'lucide-react';
 import { baseClient } from '@/api/baseClient';
+import { API_BASE_URL } from '@/lib/apiUrl';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const isValidPhoneNumber = (value) => {
 };
 
 const MIN_SIGNUP_AGE = 18;
+const GOOGLE_NEXT_PATH_SESSION_KEY = 'ki-google-signin-next-path';
 const DEFAULT_GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
   || '834800627360-tj8514jf4tqk46oodm358bu9thvub21f.apps.googleusercontent.com';
 
@@ -76,6 +78,23 @@ const resolveNextPath = (nextValue) => {
   }
 };
 
+const readStoredGoogleNextPath = () => {
+  try {
+    const stored = JSON.parse(window.sessionStorage.getItem(GOOGLE_NEXT_PATH_SESSION_KEY) || 'null');
+    if (stored?.path && Date.now() - Number(stored.savedAt) < 15 * 60 * 1000) {
+      return stored.path;
+    }
+  } catch {}
+
+  return '';
+};
+
+const clearStoredGoogleNextPath = () => {
+  try {
+    window.sessionStorage.removeItem(GOOGLE_NEXT_PATH_SESSION_KEY);
+  } catch {}
+};
+
 const loadGoogleScript = () => new Promise((resolve, reject) => {
   if (typeof window === 'undefined') {
     reject(new Error('Google sign-in is only available in the browser.'));
@@ -116,7 +135,10 @@ const GoogleMark = () => (
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
+  const nextPath = useMemo(
+    () => resolveNextPath(searchParams.get('next') || readStoredGoogleNextPath()),
+    [searchParams],
+  );
   const [activeTab, setActiveTab] = useState('signin');
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signUpForm, setSignUpForm] = useState({ first_name: '', middle_name: '', last_name: '', birth_date: '', phone: '', email: '', password: '', confirmPassword: '' });
@@ -132,6 +154,9 @@ export default function Login() {
   const [isCheckingGoogle, setIsCheckingGoogle] = useState(true);
   const [googleLoadError, setGoogleLoadError] = useState('');
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState('');
+  const [pendingGoogleRedirect, setPendingGoogleRedirect] = useState(false);
+  const [pendingGoogleCsrfToken, setPendingGoogleCsrfToken] = useState('');
+  const [isLoadingGoogleCsrf, setIsLoadingGoogleCsrf] = useState(false);
   const [googleBirthday, setGoogleBirthday] = useState('');
   const [googlePhone, setGooglePhone] = useState('');
   const [googleProfilePicture, setGoogleProfilePicture] = useState(null);
@@ -145,6 +170,7 @@ export default function Login() {
   const termsDocument = legalDocuments.find((document) => document.document_type === 'terms' && document.status === 'published');
   const privacyDocument = legalDocuments.find((document) => document.document_type === 'privacy' && document.status === 'published');
   const googleButtonRef = useRef(null);
+  const processedGoogleRedirectRef = useRef(false);
   const signUpFormRef = useRef(signUpForm);
   const pageTitle = activeTab === 'signin' ? 'Login' : 'Register';
   const todayInputValue = useMemo(() => toDateInputValue(new Date()), []);
@@ -153,15 +179,71 @@ export default function Login() {
     signUpFormRef.current = signUpForm;
   }, [signUpForm]);
 
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(GOOGLE_NEXT_PATH_SESSION_KEY, JSON.stringify({ path: nextPath, savedAt: Date.now() }));
+    } catch {}
+  }, [nextPath]);
+
+  useEffect(() => {
+    const redirectResult = searchParams.get('google_login');
+    if (!redirectResult || processedGoogleRedirectRef.current) return;
+    processedGoogleRedirectRef.current = true;
+
+    if (redirectResult === 'signup_required') {
+      setPendingGoogleRedirect(true);
+      setIsGoogleDetailsOpen(true);
+      setIsLoadingGoogleCsrf(true);
+      baseClient.auth.getGoogleSignupCsrf()
+        .then((response) => setPendingGoogleCsrfToken(response?.csrf_token || ''))
+        .catch((error) => toast.error(error?.message || 'Google signup expired. Please continue with Google again.'))
+        .finally(() => setIsLoadingGoogleCsrf(false));
+      return;
+    }
+
+    if (redirectResult === 'success') {
+      baseClient.auth.finishGoogleRedirect()
+        .then((user) => {
+          clearStoredGoogleNextPath();
+          toast.success('Signed in with Google successfully.');
+          const destination = ['admin', 'super_admin'].includes(user?.role)
+            ? createPageUrl('AdminDashboard')
+            : nextPath;
+          navigate(destination, { replace: true });
+        })
+        .catch((error) => {
+          toast.error(error?.message || 'Google sign-in could not be completed. Please try again.');
+          navigate(createPageUrl('Login'), { replace: true });
+        });
+      return;
+    }
+
+    const errorMessages = {
+      csrf_error: 'Google could not verify this sign-in request. Please try again.',
+      verification_error: 'Google could not verify this account. Please try again.',
+      account_disabled: 'This account is disabled.',
+      signup_error: 'Unable to finish creating your account. Please try again.',
+    };
+    toast.error(errorMessages[redirectResult] || 'Google sign-in could not be completed. Please try again.');
+    clearStoredGoogleNextPath();
+    navigate(createPageUrl('Login'), { replace: true });
+  }, [navigate, nextPath, searchParams]);
+
   const completeGoogleLogin = useCallback(async (credential, overrides = {}) => {
-    const payload = await baseClient.auth.googleLogin({
-      credential,
-      next_url: nextPath,
-      birth_date: overrides.birth_date ?? '',
-      full_name: overrides.full_name ?? '',
-      phone: overrides.phone ?? '',
-      profile_image_url: overrides.profile_image_url ?? '',
-    });
+    const payload = overrides.usePendingGoogleRedirect
+      ? await baseClient.auth.completeGoogleSignup({
+        birth_date: overrides.birth_date ?? '',
+        phone: overrides.phone ?? '',
+        csrf_token: overrides.csrf_token ?? '',
+      })
+      : await baseClient.auth.googleLogin({
+        credential,
+        next_url: nextPath,
+        birth_date: overrides.birth_date ?? '',
+        full_name: overrides.full_name ?? '',
+        phone: overrides.phone ?? '',
+        profile_image_url: overrides.profile_image_url ?? '',
+      });
 
     let profilePictureUploadFailed = false;
     if (overrides.profile_picture_file) {
@@ -184,7 +266,8 @@ export default function Login() {
     const destination = ['admin', 'super_admin'].includes(payload?.user?.role)
       ? createPageUrl('AdminDashboard')
       : nextPath;
-    navigate(destination);
+    clearStoredGoogleNextPath();
+    navigate(destination, { replace: true });
   }, [navigate, nextPath]);
 
   const handleGoogleCredential = useCallback(async (response) => {
@@ -269,9 +352,15 @@ export default function Login() {
           throw new Error('Google sign-in did not initialize.');
         }
 
+        const isIosBrowser = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+          || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const googleLoginUri = new URL(`${API_BASE_URL}/auth.php`, window.location.origin);
+
         google.accounts.id.initialize({
           client_id: googleConfig.client_id,
           callback: handleGoogleCredential,
+          ux_mode: isIosBrowser ? 'redirect' : 'popup',
+          ...(isIosBrowser ? { login_uri: googleLoginUri.toString() } : {}),
         });
 
         googleButtonRef.current.innerHTML = '';
@@ -321,9 +410,14 @@ export default function Login() {
       return;
     }
 
-    if (!pendingGoogleCredential) {
+    if (!pendingGoogleCredential && !pendingGoogleRedirect) {
       toast.error('Please click Continue with Google again.');
       setIsGoogleDetailsOpen(false);
+      return;
+    }
+
+    if (pendingGoogleRedirect && !pendingGoogleCsrfToken) {
+      toast.error('Google signup could not be verified. Please continue with Google again.');
       return;
     }
 
@@ -334,8 +428,12 @@ export default function Login() {
         birth_date: googleBirthday,
         phone: googlePhone.trim(),
         profile_picture_file: googleProfilePicture,
+        usePendingGoogleRedirect: pendingGoogleRedirect,
+        csrf_token: pendingGoogleCsrfToken,
       });
       setPendingGoogleCredential('');
+      setPendingGoogleRedirect(false);
+      setPendingGoogleCsrfToken('');
       setGoogleProfilePicture(null);
       setIsGoogleDetailsOpen(false);
     } catch (error) {
@@ -854,8 +952,11 @@ export default function Login() {
               <Button type="button" variant="outline" onClick={() => setIsGoogleDetailsOpen(false)} disabled={isCompletingGoogleDetails}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCompletingGoogleDetails}>
-                {isCompletingGoogleDetails ? 'Creating account...' : 'Continue'}
+              <Button
+                type="submit"
+                disabled={isCompletingGoogleDetails || (pendingGoogleRedirect && (isLoadingGoogleCsrf || !pendingGoogleCsrfToken))}
+              >
+                {isCompletingGoogleDetails || isLoadingGoogleCsrf ? 'Please wait...' : 'Continue'}
               </Button>
             </DialogFooter>
           </form>
