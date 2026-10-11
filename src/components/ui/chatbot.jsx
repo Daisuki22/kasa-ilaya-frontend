@@ -1143,7 +1143,7 @@ export default function Chatbot() {
 
         <button
           onClick={() => setOpen(!open)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl sm:h-14 sm:w-14"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 sm:h-14 sm:w-14"
           aria-label={open ? "Close chatbot" : "Open chatbot"}
         >
           {open ? (
@@ -1156,7 +1156,7 @@ export default function Chatbot() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(70dvh,560px)] max-h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(560px,calc(100dvh-8rem))] sm:w-[360px] sm:max-w-[calc(100vw-48px)]">
+        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(70dvh,560px)] max-h-[calc(100dvh-7rem)] animate-in fade-in-0 slide-in-from-bottom-2 duration-200 ease-out flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl motion-reduce:animate-none sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(560px,calc(100dvh-8rem))] sm:w-[360px] sm:max-w-[calc(100vw-48px)]">
           {/* Header */}
           <div className="relative flex min-h-16 items-center justify-center bg-primary px-4 py-3 text-primary-foreground">
             <p className="text-center text-lg font-semibold">Kasa Ilaya Assistant</p>
