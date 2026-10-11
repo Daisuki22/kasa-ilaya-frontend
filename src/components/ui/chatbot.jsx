@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { baseClient } from "@/api/baseClient";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircle, X, Loader2, TreePalm, ArrowLeft, Search } from "lucide-react";
+import { MessageCircle, X, Loader2, TreePalm, ArrowLeft, Search, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -939,6 +939,7 @@ export default function Chatbot() {
     FAQ_CATEGORIES[0].title
   );
   const [faqSearch, setFaqSearch] = useState("");
+  const [draftMessage, setDraftMessage] = useState("");
 
   const [messages, setMessages] = useState([
     {
@@ -1056,8 +1057,9 @@ export default function Chatbot() {
           content: assistantReply({
             title: "How can I help?",
             intro:
-              "I can help with resort information and booking questions.",
-            nextStep: "Choose one of the quick messages below.",
+              "I can help with resort information and booking questions. I may not recognize every question yet.",
+            nextStep:
+              "Try asking about bookings, rates, payment, cancellation, location, or resort rules. You can also browse the Frequently Asked Questions.",
           }),
         },
       ]);
@@ -1069,14 +1071,25 @@ export default function Chatbot() {
           content: assistantReply({
             title: "How can I help?",
             intro:
-              "I can help with resort information and booking questions.",
-            nextStep: "Choose one of the quick messages below.",
+              "I can help with resort information and booking questions. I may not recognize every question yet.",
+            nextStep:
+              "Try asking about bookings, rates, payment, cancellation, location, or resort rules. You can also browse the Frequently Asked Questions.",
           }),
         },
       ]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMessageSubmit = (event) => {
+    event.preventDefault();
+    const message = draftMessage;
+    if (!message.trim() || loading) return;
+
+    setDraftMessage("");
+    setShowFaq(false);
+    processMessage(message);
   };
 
   return (
@@ -1281,6 +1294,37 @@ export default function Chatbot() {
 
             <div ref={messagesEndRef} />
           </div>
+
+          <form
+            onSubmit={handleMessageSubmit}
+            className="flex items-center gap-2 border-t border-border bg-card p-3"
+            aria-label="Ask Kasa Ilaya Assistant"
+          >
+            <label className="sr-only" htmlFor="chatbot-message-input">
+              Type a question for Kasa Ilaya Assistant
+            </label>
+            <input
+              id="chatbot-message-input"
+              type="text"
+              value={draftMessage}
+              onChange={(event) => setDraftMessage(event.target.value)}
+              placeholder="Type your question..."
+              className="h-12 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Send question"
+              disabled={loading || !draftMessage.trim()}
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Send className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
+          </form>
         </div>
       )}
     </>
