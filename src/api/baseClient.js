@@ -4,7 +4,6 @@ import { normalizeDateOnly } from "@/lib/safeDate";
 
 const createId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
-const WELCOME_INTRO_SESSION_KEY = "ki-welcome-intro-shown";
 const THEME_STORAGE_KEY = "kasa-ilaya-theme";
 const AUTH_MARKER_KEY = `ki-authenticated:${API_BASE_URL}`;
 
@@ -51,21 +50,7 @@ const clearClientAuthState = () => {
     return;
   }
 
-  const preservedSession = new Map();
   const preservedLocal = new Map();
-
-  try {
-    const welcomeIntroShown = window.sessionStorage.getItem(
-      WELCOME_INTRO_SESSION_KEY
-    );
-
-    if (welcomeIntroShown !== null) {
-      preservedSession.set(
-        WELCOME_INTRO_SESSION_KEY,
-        welcomeIntroShown
-      );
-    }
-  } catch {}
 
   try {
     const theme = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -84,12 +69,6 @@ const clearClientAuthState = () => {
   } catch {}
 
   inMemoryAuthMarker = false;
-
-  preservedSession.forEach((value, key) => {
-    try {
-      window.sessionStorage.setItem(key, value);
-    } catch {}
-  });
 
   preservedLocal.forEach((value, key) => {
     try {

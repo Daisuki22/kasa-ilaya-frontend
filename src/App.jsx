@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './page.config'
-import { Component, Suspense, useLayoutEffect, useRef, useState } from 'react';
+import { Component, Suspense, useLayoutEffect, useRef } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -13,7 +13,6 @@ import WelcomeIntro from '@/components/common/WelcomeIntro';
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
-const WELCOME_INTRO_SESSION_KEY = 'ki-welcome-intro-shown';
 
 const PageLoadingFallback = () => (
   <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
@@ -110,25 +109,20 @@ const GuestOrRegularUserRoute = ({ user, children }) => {
 const WelcomeIntroGate = () => {
   const location = useLocation();
   const { user, isLoadingAuth } = useAuth();
-  const [shouldShowIntro] = useState(() => {
-    if (location.pathname !== '/') {
-      return false;
-    }
+  const hasShownIntro = useRef(false);
 
-    try {
-      if (window.sessionStorage.getItem(WELCOME_INTRO_SESSION_KEY) === 'true') {
-        return false;
-      }
+  if (
+    location.pathname !== '/' ||
+    isLoadingAuth ||
+    user?.role === 'admin' ||
+    user?.role === 'super_admin' ||
+    hasShownIntro.current
+  ) {
+    return null;
+  }
 
-      window.sessionStorage.setItem(WELCOME_INTRO_SESSION_KEY, 'true');
-      return true;
-    } catch {
-      return true;
-    }
-  });
-
-  if (isLoadingAuth || user?.role === 'admin' || user?.role === 'super_admin') return null;
-  return shouldShowIntro ? <WelcomeIntro /> : null;
+  hasShownIntro.current = true;
+  return <WelcomeIntro />;
 };
 
 const AuthenticatedApp = () => {
