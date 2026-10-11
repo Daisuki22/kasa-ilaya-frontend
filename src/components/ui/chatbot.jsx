@@ -965,6 +965,7 @@ export default function Chatbot() {
   const { rules: resortRules } = useResortRules();
   const [open, setOpen] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  const [attentionBounce, setAttentionBounce] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const [selectedFaqCategory, setSelectedFaqCategory] = useState(
     FAQ_CATEGORIES[0].title
@@ -1047,6 +1048,25 @@ export default function Chatbot() {
     return () => {
       window.clearTimeout(showTimeout);
       window.clearTimeout(hideTimeout);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      setAttentionBounce(false);
+      return undefined;
+    }
+
+    let resetTimeout;
+    const bounceInterval = window.setInterval(() => {
+      setAttentionBounce(true);
+      window.clearTimeout(resetTimeout);
+      resetTimeout = window.setTimeout(() => setAttentionBounce(false), 850);
+    }, 60000);
+
+    return () => {
+      window.clearInterval(bounceInterval);
+      window.clearTimeout(resetTimeout);
     };
   }, [open]);
 
@@ -1143,7 +1163,7 @@ export default function Chatbot() {
 
         <button
           onClick={() => setOpen(!open)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 sm:h-14 sm:w-14"
+          className={`flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 sm:h-14 sm:w-14 ${attentionBounce ? "chatbot-attention-bounce" : ""}`}
           aria-label={open ? "Close chatbot" : "Open chatbot"}
         >
           {open ? (

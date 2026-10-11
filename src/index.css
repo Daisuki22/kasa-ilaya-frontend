@@ -1313,7 +1313,23 @@ h1, h2, h3, h4, h5, h6, .font-display {
   to { transform: translateX(-16.666667%); }
 }
 
+.chatbot-attention-bounce {
+  animation: chatbot-bounce-twice 850ms ease-out;
+}
+
+@keyframes chatbot-bounce-twice {
+  0%, 100% { transform: translateY(0); }
+  16% { transform: translateY(-9px); }
+  31% { transform: translateY(0); }
+  46% { transform: translateY(-6px); }
+  61% { transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .chatbot-attention-bounce {
+    animation: none;
+  }
+
   .reviews-marquee-mask {
     overflow-x: auto;
   }
