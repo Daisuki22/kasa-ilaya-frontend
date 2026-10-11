@@ -708,7 +708,6 @@ export default function AdminReport() {
   const {
     revenueRows,
     totalSales,
-    totalOperatingExpenses,
   } = calculateProfitReport(filteredBookings);
   const formatReportAmount = (amount) => amount === null ? "Not recorded" : formatCurrency(amount);
   const reportableBookings = filteredBookings.filter((booking) => !["cancelled", "archived"].includes(booking.status));
@@ -919,8 +918,6 @@ export default function AdminReport() {
                     <tr key={row.label}><td>{row.label}</td><td>{formatReportAmount(row.amount)}</td></tr>
                   ))}
                   <tr className="profit-total"><td>TOTAL REVENUE (A)</td><td>{formatCurrency(totalSales)}</td></tr>
-                  <tr className="profit-section"><td colSpan={2}>EXPENSES</td></tr>
-                  <tr><td>Expenses recorded in system</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>SUMMARY</td></tr>
                   <tr><td>Total Revenue</td><td>{formatCurrency(totalSales)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>REVENUE BREAKDOWN</td></tr>
