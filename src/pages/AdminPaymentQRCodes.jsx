@@ -4,7 +4,6 @@ import { Archive, ImagePlus, Loader2, Pencil, QrCode, Upload } from "lucide-reac
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import PaymentMethodImage from "@/components/PaymentMethodImage";
-import { optimizeImageFile } from "@/lib/optimizeImageFile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,14 +32,11 @@ const qrImageToDataUrl = async (file) => {
     throw new Error('QR image must be 8 MB or smaller.');
   }
 
-  const optimized = await optimizeImageFile(file, 512);
-  const image = await createImageBitmap(optimized);
+  const image = await createImageBitmap(file);
   try {
-    let width = image.width;
-    let height = image.height;
-    const scale = Math.min(1, 512 / Math.max(width, height));
-    width = Math.max(1, Math.round(width * scale));
-    height = Math.max(1, Math.round(height * scale));
+    const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
+    let width = Math.max(1, Math.round(image.width * scale));
+    let height = Math.max(1, Math.round(image.height * scale));
 
     while (Math.max(width, height) >= 192 && Math.min(width, height) >= 64) {
       const canvas = document.createElement('canvas');
@@ -51,11 +47,11 @@ const qrImageToDataUrl = async (file) => {
       context.imageSmoothingEnabled = false;
       context.drawImage(image, 0, 0, width, height);
       const dataUrl = canvas.toDataURL('image/png');
-      if (dataUrl.length <= 60000) return dataUrl;
-      width = Math.floor(width * 0.8);
-      height = Math.floor(height * 0.8);
+      if (dataUrl.length <= 5_000_000) return dataUrl;
+      width = Math.floor(width * 0.9);
+      height = Math.floor(height * 0.9);
     }
-    throw new Error('This QR image is too detailed to store safely. Crop it around the QR code and upload again.');
+    throw new Error('This QR image is still too large. Crop it closer to the QR code and try again.');
   } finally {
     image.close();
   }
@@ -311,10 +307,11 @@ export default function AdminPaymentQRCodes() {
             <div>
               <Label>QR Image *</Label>
               <div className="mt-2 space-y-3">
+                <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 8 MB.</p>
                 <label className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
                   {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   <span>{uploadingImage ? "Uploading image..." : "Upload QR image"}</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
                 </label>
                 {form.image_url ? (
                   <PaymentMethodImage src={form.image_url} alt={form.label || 'QR code preview'} className="h-48 w-full rounded-xl border border-border bg-white object-contain p-3" />
