@@ -136,7 +136,9 @@ export default function AdminPaymentQRCodes() {
       account_number: form.account_number,
       instructions: form.instructions,
       image_url: form.image_url,
-      display_order: Number(form.display_order) || 1,
+      display_order: editingCode
+        ? Number(form.display_order) || 1
+        : sortedCodes.reduce((highest, code) => Math.max(highest, Number(code.display_order) || 0), 0) + 1,
       is_active: Boolean(form.is_active),
     };
 
@@ -294,15 +296,9 @@ export default function AdminPaymentQRCodes() {
               <Label>Instructions</Label>
               <Textarea className="mt-1" rows={3} value={form.instructions} onChange={(event) => setForm((prev) => ({ ...prev, instructions: event.target.value }))} placeholder="Optional payment instructions for guests." />
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <Label>Display Order</Label>
-                <Input className="mt-1" type="number" min="1" max="3" value={form.display_order} onChange={(event) => setForm((prev) => ({ ...prev, display_order: Number(event.target.value) || 1 }))} />
-              </div>
-              <div className="flex items-end gap-2 pb-2">
-                <Switch checked={form.is_active} onCheckedChange={(value) => setForm((prev) => ({ ...prev, is_active: value }))} />
-                <Label>Active for booking</Label>
-              </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={form.is_active} onCheckedChange={(value) => setForm((prev) => ({ ...prev, is_active: value }))} />
+              <Label>Active for booking</Label>
             </div>
             <div>
               <Label>QR Image *</Label>
