@@ -1003,10 +1003,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-logo-frame img {
   display: block;
-  width: 100%;
-  height: auto;
-  max-height: 28mm;
+  width: auto;
+  height: 27mm;
+  max-width: 100%;
   object-fit: contain;
+  margin: 0 auto;
 }
 
 .profit-report-letterhead h2 { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.2; }
