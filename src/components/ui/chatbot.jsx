@@ -1163,13 +1163,13 @@ export default function Chatbot() {
 
         <button
           onClick={() => setOpen(!open)}
-          className={`flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 sm:h-14 sm:w-14 ${attentionBounce ? "chatbot-attention-bounce" : ""}`}
+          className={`flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 sm:h-14 sm:w-14 ${attentionBounce ? "chatbot-attention-bounce" : ""}`}
           aria-label={open ? "Close chatbot" : "Open chatbot"}
         >
           {open ? (
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           ) : (
-            <MessageCircle className="h-6 w-6" />
+            <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
           )}
         </button>
       </div>
