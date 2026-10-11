@@ -923,7 +923,6 @@ export default function AdminReport() {
                   <tr><td>Expenses recorded in system</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>SUMMARY</td></tr>
                   <tr><td>Total Revenue</td><td>{formatCurrency(totalSales)}</td></tr>
-                  <tr><td>Total Expenses</td><td>{formatReportAmount(totalOperatingExpenses)}</td></tr>
                   <tr className="profit-section"><td colSpan={2}>REVENUE BREAKDOWN</td></tr>
                   {revenueBreakdown.map((row) => (
                     <tr key={`breakdown-${row.label}`}><td>{row.label} ({row.percentage.toFixed(1)}%)</td><td>{formatCurrency(row.amount)}</td></tr>
