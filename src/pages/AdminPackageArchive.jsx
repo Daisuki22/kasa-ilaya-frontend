@@ -449,7 +449,6 @@ const roleLabel = {
                       <TableHead>QR Code</TableHead>
                       <TableHead>Label</TableHead>
                       <TableHead>Account</TableHead>
-                      <TableHead>Order</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -467,7 +466,6 @@ const roleLabel = {
                               <p className="text-muted-foreground">{code.account_number || "No account number"}</p>
                             </div>
                           </TableCell>
-                          <TableCell>{code.display_order}</TableCell>
                           <TableCell className="text-right">
                             <Button variant="outline" size="sm" className="gap-2" onClick={() => setRestoreQrId(code.id)}>
                               <RotateCcw className="h-4 w-4" />
@@ -478,7 +476,7 @@ const roleLabel = {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                        <TableCell colSpan={4} className="py-10 text-center text-sm text-muted-foreground">
                           No archived QR codes.
                         </TableCell>
                       </TableRow>

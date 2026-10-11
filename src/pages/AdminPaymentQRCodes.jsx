@@ -226,7 +226,6 @@ export default function AdminPaymentQRCodes() {
                   <TableHead>QR Code</TableHead>
                   <TableHead>Label</TableHead>
                   <TableHead>Account</TableHead>
-                  <TableHead>Order</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -234,7 +233,7 @@ export default function AdminPaymentQRCodes() {
               <TableBody>
                 {activeCodes.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">No active QR codes configured yet.</TableCell>
+                    <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">No active QR codes configured yet.</TableCell>
                   </TableRow>
                 ) : activeCodes.map((code) => (
                   <TableRow key={code.id}>
@@ -248,7 +247,6 @@ export default function AdminPaymentQRCodes() {
                         <p className="text-muted-foreground">{code.account_number || "No account number"}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{code.display_order}</TableCell>
                     <TableCell>
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${code.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                         {code.is_active ? 'Active' : 'Inactive'}
