@@ -1156,7 +1156,7 @@ export default function Chatbot() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(82dvh,680px)] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(700px,calc(100dvh-8rem))] sm:w-[420px] sm:max-w-[calc(100vw-48px)]">
+        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(70dvh,560px)] max-h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(560px,calc(100dvh-8rem))] sm:w-[360px] sm:max-w-[calc(100vw-48px)]">
           {/* Header */}
           <div className="relative flex min-h-16 items-center justify-center bg-primary px-4 py-3 text-primary-foreground">
             <p className="text-center text-lg font-semibold">Kasa Ilaya Assistant</p>
