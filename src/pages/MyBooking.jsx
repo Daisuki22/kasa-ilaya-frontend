@@ -126,7 +126,7 @@ const formatDate = (value) => {
 };
 
 const canLeaveReview = (booking) => {
-  if (!booking || ["cancelled", "rejected", "pending"].includes(booking.status)) {
+  if (!booking || booking.status !== "completed") {
     return false;
   }
 
