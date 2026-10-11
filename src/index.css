@@ -998,8 +998,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-letterhead img {
   display: block;
-  width: 34mm;
-  max-height: 21mm;
+  width: 52mm;
+  max-height: 32mm;
   margin: 1mm auto 1.5mm;
   object-fit: contain;
 }
@@ -1164,8 +1164,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-letterhead img {
     display: block;
-    width: 34mm;
-    max-height: 21mm;
+    width: 52mm;
+    max-height: 32mm;
     margin: 1mm auto 1.5mm;
     object-fit: contain;
   }
