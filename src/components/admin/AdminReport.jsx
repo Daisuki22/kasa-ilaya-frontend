@@ -886,14 +886,16 @@ export default function AdminReport() {
             <div className="profit-report-page">
               <header className="profit-report-letterhead">
                 <div className="profit-report-rule" />
-                <img
-                  src={siteSettings?.logo_url || "/img/apple-touch-icon.png"}
-                  alt="Kasa Ilaya Resort and Event Place logo"
-                  onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src = "/img/apple-touch-icon.png";
-                  }}
-                />
+                <div className="profit-report-logo-frame">
+                  <img
+                    src={siteSettings?.logo_url || "/img/apple-touch-icon.png"}
+                    alt="Kasa Ilaya Resort and Event Place logo"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = "/img/apple-touch-icon.png";
+                    }}
+                  />
+                </div>
                 <h2>Kasa Ilaya Resort and Event Place &mdash; Private</h2>
                 <p>Sitio Pook na Munti, Brgy. Kaong, Silang, Cavite</p>
                 <div className="profit-report-rule" />

@@ -996,11 +996,19 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .profit-report-letterhead { text-align: center; }
 
-.profit-report-letterhead img {
-  display: block;
+.profit-report-logo-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 52mm;
-  max-height: 32mm;
+  height: 32mm;
   margin: 1mm auto 1.5mm;
+}
+
+.profit-report-logo-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -1162,12 +1170,10 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-letterhead { text-align: center; color: #24302D !important; }
 
-  .profit-report-letterhead img {
-    display: block;
+  .profit-report-logo-frame {
     width: 52mm;
-    max-height: 32mm;
+    height: 32mm;
     margin: 1mm auto 1.5mm;
-    object-fit: contain;
   }
 
   .profit-report-letterhead h2 {
