@@ -1062,7 +1062,7 @@ export default function Chatbot() {
       setAttentionBounce(true);
       window.clearTimeout(resetTimeout);
       resetTimeout = window.setTimeout(() => setAttentionBounce(false), 850);
-    }, 60000);
+    }, 10000);
 
     return () => {
       window.clearInterval(bounceInterval);
