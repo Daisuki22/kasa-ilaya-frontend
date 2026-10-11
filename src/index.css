@@ -1001,8 +1001,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
   align-items: center;
   justify-content: center;
   width: 52mm;
-  height: 32mm;
-  margin: 1mm auto 1.5mm;
+  height: 22mm;
+  margin: 0.5mm auto;
 }
 
 .profit-report-logo-frame img {
@@ -1015,8 +1015,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .profit-report-letterhead h2 { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.2; }
 .profit-report-letterhead p { margin: 1mm 0 0; font-size: 11px; line-height: 1.2; }
 .profit-report-rule { height: 1px; margin: 0 0 1mm; background: #52615D; }
-.profit-report-letterhead .profit-report-rule:last-child { margin: 1.5mm 0 0; }
-.profit-report-title { margin-top: 2.5mm; text-align: center; }
+.profit-report-letterhead .profit-report-rule:last-child { margin: 0.5mm 0 0; }
+.profit-report-title { margin-top: 1mm; text-align: center; }
 .profit-report-title h1 { margin: 0; font-size: 20px; font-weight: 700; }
 .profit-report-title p { margin: 1mm 0 0; font-size: 12px; font-style: italic; }
 
@@ -1172,8 +1172,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
   .profit-report-logo-frame {
     width: 52mm;
-    height: 32mm;
-    margin: 1mm auto 1.5mm;
+    height: 22mm;
+    margin: 0.5mm auto;
   }
 
   .profit-report-letterhead h2 {
@@ -1191,8 +1191,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
   }
 
   .profit-report-rule { height: 1px; margin: 0 0 1mm; background: #52615D !important; }
-  .profit-report-letterhead .profit-report-rule:last-child { margin: 1.5mm 0 0; }
-  .profit-report-title { margin-top: 2mm; text-align: center; }
+  .profit-report-letterhead .profit-report-rule:last-child { margin: 0.5mm 0 0; }
+  .profit-report-title { margin-top: 1mm; text-align: center; }
 
   .profit-report-title h1 {
     margin: 0;
