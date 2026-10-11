@@ -295,12 +295,20 @@ export default function Layout({ children, currentPageName }) {
     };
 
     if (mobileOpen) {
+      const previousBodyOverflow = document.body.style.overflow;
+      const previousDocumentOverflow = document.documentElement.style.overflow;
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
       window.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = previousBodyOverflow;
+        document.documentElement.style.overflow = previousDocumentOverflow;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
     }
 
     return () => {
-      document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [mobileOpen]);

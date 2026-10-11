@@ -99,11 +99,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-html,
+html {
+  max-width: 100%;
+  overflow-x: clip;
+  overflow-y: auto;
+}
+
 body,
 #root {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 img,
