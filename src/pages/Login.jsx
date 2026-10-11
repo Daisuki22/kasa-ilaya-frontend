@@ -358,9 +358,10 @@ export default function Login() {
 
         google.accounts.id.initialize({
           client_id: googleConfig.client_id,
-          callback: handleGoogleCredential,
           ux_mode: isIosBrowser ? 'redirect' : 'popup',
-          ...(isIosBrowser ? { login_uri: googleLoginUri.toString() } : {}),
+          ...(isIosBrowser
+            ? { login_uri: googleLoginUri.toString() }
+            : { callback: handleGoogleCredential }),
         });
 
         googleButtonRef.current.innerHTML = '';
