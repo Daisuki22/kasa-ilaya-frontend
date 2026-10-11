@@ -666,8 +666,8 @@ export default function AdminPaymentMonitoring() {
                             <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} title="View payment details">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {additionalFeeStatus !== "paid" ? (
-                              <Button variant="ghost" size="icon" onClick={() => openAdditionalFeeDialog(booking)} disabled={String(booking.payment_status || "").toLowerCase() !== "paid"} title={String(booking.payment_status || "").toLowerCase() === "paid" ? "Add additional fee for broken property" : "Booking payment must be paid before adding a damage fee"}>
+                            {additionalFeeStatus !== "paid" && String(booking.payment_status || "").toLowerCase() === "paid" ? (
+                              <Button variant="ghost" size="icon" onClick={() => openAdditionalFeeDialog(booking)} title="Add additional fee for broken property">
                                 <Plus className="h-4 w-4" />
                               </Button>
                             ) : null}
@@ -832,10 +832,10 @@ export default function AdminPaymentMonitoring() {
                   Review the proof in Reservation Management. Accepting the booking verifies this payment automatically.
                 </p>
               ) : null}
-              {normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) !== "paid" ? (
-                <Button variant="outline" className="w-full gap-2" onClick={() => openAdditionalFeeDialog(selectedBooking)} disabled={String(selectedBooking.payment_status || "").toLowerCase() !== "paid"}>
+              {normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) !== "paid" && String(selectedBooking.payment_status || "").toLowerCase() === "paid" ? (
+                <Button variant="outline" className="w-full gap-2" onClick={() => openAdditionalFeeDialog(selectedBooking)}>
                   <Plus className="h-4 w-4" />
-                  {String(selectedBooking.payment_status || "").toLowerCase() === "paid" ? "Add or Update Damage Fee" : "Booking Must Be Paid First"}
+                  Add or Update Damage Fee
                 </Button>
               ) : null}
               {Number(selectedBooking.additional_fee_amount || 0) > 0 && normalizeAdditionalFeeStatus(selectedBooking.additional_fee_status) === "unpaid" ? (
