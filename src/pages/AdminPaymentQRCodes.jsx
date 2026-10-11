@@ -4,6 +4,7 @@ import { Archive, ImagePlus, Loader2, Pencil, QrCode, Upload } from "lucide-reac
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import PaymentMethodImage from "@/components/PaymentMethodImage";
+import { optimizeImageFile } from "@/lib/optimizeImageFile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,42 @@ const createDefaultForm = () => ({
   display_order: 1,
   is_active: true,
 });
+
+const qrImageToDataUrl = async (file) => {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    throw new Error('Choose a JPG, PNG, or WebP QR image.');
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    throw new Error('QR image must be 8 MB or smaller.');
+  }
+
+  const optimized = await optimizeImageFile(file, 512);
+  const image = await createImageBitmap(optimized);
+  try {
+    let width = image.width;
+    let height = image.height;
+    const scale = Math.min(1, 512 / Math.max(width, height));
+    width = Math.max(1, Math.round(width * scale));
+    height = Math.max(1, Math.round(height * scale));
+
+    while (Math.max(width, height) >= 192 && Math.min(width, height) >= 64) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Unable to prepare this QR image.');
+      context.imageSmoothingEnabled = false;
+      context.drawImage(image, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL('image/png');
+      if (dataUrl.length <= 60000) return dataUrl;
+      width = Math.floor(width * 0.8);
+      height = Math.floor(height * 0.8);
+    }
+    throw new Error('This QR image is too detailed to store safely. Crop it around the QR code and upload again.');
+  } finally {
+    image.close();
+  }
+};
 
 export default function AdminPaymentQRCodes() {
   const queryClient = useQueryClient();
@@ -78,9 +115,9 @@ export default function AdminPaymentQRCodes() {
     setUploadingImage(true);
 
     try {
-      const { file_url } = await baseClient.integrations.Core.UploadFile({ file });
-      setForm((prev) => ({ ...prev, image_url: file_url }));
-      toast.success("QR code image uploaded.");
+      const imageDataUrl = await qrImageToDataUrl(file);
+      setForm((prev) => ({ ...prev, image_url: imageDataUrl }));
+      toast.success("QR image prepared. Save the payment method to store it permanently.");
     } catch (error) {
       toast.error(error?.message || "Unable to upload QR code image.");
     } finally {
@@ -169,7 +206,7 @@ export default function AdminPaymentQRCodes() {
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Manage Payment QR Codes</h1>
-          <p className="mt-1 text-muted-foreground">Upload and manage up to 3 QR codes for reservation fee payments.</p>
+              <p className="mt-1 text-muted-foreground">Upload and manage up to 3 QR codes for reservation fee payments. QR images are saved with the payment method; re-upload older QR images if they no longer appear.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => { setEditingCode(null); setFormOpen(true); }} className="w-full gap-2 sm:w-auto" disabled={!canAddMore}>

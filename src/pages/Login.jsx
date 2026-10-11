@@ -196,7 +196,17 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      await completeGoogleLogin(response.credential);
+      const signupDetails = activeTab === 'signup' ? signUpFormRef.current : null;
+      const age = signupDetails ? calculateAge(signupDetails.birth_date) : null;
+      const canFinishSignupInOneStep = signupDetails
+        && age !== null
+        && age >= MIN_SIGNUP_AGE
+        && isValidPhoneNumber(String(signupDetails.phone || '').trim());
+
+      await completeGoogleLogin(response.credential, canFinishSignupInOneStep ? {
+        birth_date: signupDetails.birth_date,
+        phone: String(signupDetails.phone).trim(),
+      } : {});
     } catch (error) {
       if (error?.code === 'google_signup_details_required') {
         setPendingGoogleCredential(response.credential);
@@ -211,7 +221,7 @@ export default function Login() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [completeGoogleLogin]);
+  }, [activeTab, completeGoogleLogin]);
 
   useEffect(() => {
     let isMounted = true;
@@ -608,6 +618,12 @@ export default function Login() {
                         Continue with Google
                       </Button>
                     )}
+
+                    {activeTab === 'signup' ? (
+                      <p className="text-center text-xs leading-5 text-muted-foreground">
+                        For a new Google account, enter your birthday and phone number below first to finish sign-up in one step.
+                      </p>
+                    ) : null}
 
                     <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                       <div className="h-px flex-1 bg-border" />

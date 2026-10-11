@@ -98,9 +98,9 @@ const clearClientAuthState = () => {
   });
 };
 
-const dispatchAuthChange = () => {
+const dispatchAuthChange = (user = null) => {
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("auth-changed"));
+    window.dispatchEvent(new CustomEvent("auth-changed", { detail: { user } }));
     window.dispatchEvent(new CustomEvent("local-auth-changed"));
   }
 };
@@ -579,7 +579,7 @@ export const baseClient = {
         markClientAuthenticated();
       }
 
-      dispatchAuthChange();
+      dispatchAuthChange(payload?.user);
 
       return payload;
     },
@@ -601,7 +601,7 @@ export const baseClient = {
         markClientAuthenticated();
       }
 
-      dispatchAuthChange();
+      dispatchAuthChange(payload?.user);
 
       return payload;
     },
@@ -615,7 +615,7 @@ export const baseClient = {
         }
       );
 
-      dispatchAuthChange();
+      dispatchAuthChange(payload?.user);
 
       return payload;
     },
@@ -629,7 +629,7 @@ export const baseClient = {
         }
       );
 
-      dispatchAuthChange();
+      dispatchAuthChange(user);
 
       return user;
     },
@@ -686,7 +686,7 @@ export const baseClient = {
       if (payload?.user) {
         markClientAuthenticated();
       }
-      dispatchAuthChange();
+      dispatchAuthChange(payload?.user);
 
       return payload;
     },

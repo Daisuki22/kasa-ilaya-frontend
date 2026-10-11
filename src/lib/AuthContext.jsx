@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
     const [authError, setAuthError] = useState(null);
     const [appPublicSettings, setAppPublicSettings] = useState(null);
     const authCheckRef = useRef(null);
+    const authVersionRef = useRef(0);
 
     const navigateToLogin = () => {
         baseClient.auth.redirectToLogin(window.location.href);
@@ -28,19 +29,26 @@ export const AuthProvider = ({ children }) => {
 
         setIsLoadingAuth(true);
 
+        const authVersion = authVersionRef.current;
         const check = (async () => {
             try {
                 const currentUser = await baseClient.auth.me();
-                setUser(currentUser);
-                setIsAuthenticated(true);
-                setAuthError(null);
+                if (authVersionRef.current === authVersion) {
+                    setUser(currentUser);
+                    setIsAuthenticated(true);
+                    setAuthError(null);
+                }
                 return currentUser;
             } catch {
-                resetAuthState();
-                setAuthError(null);
+                if (authVersionRef.current === authVersion) {
+                    resetAuthState();
+                    setAuthError(null);
+                }
                 return null;
             } finally {
-                setIsLoadingAuth(false);
+                if (authVersionRef.current === authVersion) {
+                    setIsLoadingAuth(false);
+                }
             }
         })();
 
@@ -79,7 +87,17 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         checkAppState();
 
-        const syncAuthState = () => {
+        const syncAuthState = (event) => {
+            if (event.detail?.user) {
+                authVersionRef.current += 1;
+                setUser(event.detail.user);
+                setIsAuthenticated(true);
+                setAuthError(null);
+                setIsLoadingAuth(false);
+                setIsLoadingPublicSettings(false);
+                return;
+            }
+
             checkAppState();
         };
 

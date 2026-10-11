@@ -730,7 +730,8 @@ export default function BookingForm() {
       const ocr = uploadResult.ocr_summary || {};
       const extracted = [
         ocr.provider ? `Provider: ${ocr.provider}` : null,
-        Number.isFinite(Number(ocr.amount)) && Number(ocr.amount) > 0 ? `Amount: ₱${Number(ocr.amount).toFixed(2)}` : null,
+        Number.isFinite(Number(ocr.amount)) && Number(ocr.amount) > 0 ? `Amount: ${ocr.amount_currency === "USD" ? "$" : ocr.amount_currency && ocr.amount_currency !== "PHP" ? `${ocr.amount_currency} ` : "₱"}${Number(ocr.amount).toFixed(2)}` : null,
+        Number.isFinite(Number(ocr.php_equivalent)) && Number(ocr.php_equivalent) > 0 ? `PHP equivalent: ₱${Number(ocr.php_equivalent).toFixed(2)}` : null,
         ocr.payment_number ? `Payment number: ${ocr.payment_number}` : null,
         ocr.reference ? `Reference: ${ocr.reference}` : null,
         ocr.date ? `Date: ${ocr.date}` : null,
