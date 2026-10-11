@@ -147,7 +147,8 @@ const AuthenticatedApp = () => {
   }, [location.pathname]);
 
   // Show loading spinner while checking app public settings or auth
-  if (!hasResolvedInitialLoad.current && (isLoadingPublicSettings || isLoadingAuth)) {
+  const canRenderWhileAuthLoads = location.pathname === "/";
+  if (!hasResolvedInitialLoad.current && !canRenderWhileAuthLoads && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin"></div>

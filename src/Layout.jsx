@@ -21,6 +21,7 @@ import { canAccessAdminPage } from "@/lib/adminAccess";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/lib/AuthContext";
 import { handleImageFallback, LOGO_IMAGE_FALLBACK } from "@/lib/imageFallback";
+import SiteLogo from "@/components/common/SiteLogo";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 import { toast } from "sonner";
 import { RESORT_CONTACT } from "@/lib/resortContact";
@@ -143,11 +144,10 @@ export default function Layout({ children, currentPageName }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
-  const [logoImageFailed, setLogoImageFailed] = useState(false);
   const initializedChatNotifications = useRef(false);
   const deliveredChatNotifications = useRef(new Set());
   const chatNotificationUserKey = useRef("");
-  const { settings: siteSettings, isLoading: isLoadingSiteSettings } = useSiteSettings();
+  const { settings: siteSettings } = useSiteSettings();
   const { theme, resolvedTheme, setTheme } = useTheme();
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdminUser = Boolean(
@@ -671,18 +671,11 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const logoUrl = resolveAssetUrl(siteSettings?.logo_url || "");
-  useEffect(() => {
-    setLogoImageFailed(false);
-  }, [logoUrl]);
 
   const renderBrandMark = (compact = false, onHero = false) => (
     <div className="flex min-w-0 items-center gap-3">
       <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl ${onHero ? "bg-white/15 backdrop-blur-sm" : "bg-primary/10"} sm:h-16 sm:w-16`}>
-        {!isLoadingSiteSettings && logoUrl && !logoImageFailed ? (
-          <img src={logoUrl} alt={`${siteName} logo`} loading="eager" decoding="async" onError={() => setLogoImageFailed(true)} className="h-full w-full object-contain" />
-        ) : (
-          null
-        )}
+        <SiteLogo src={logoUrl} alt={`${siteName} logo`} className="h-full w-full object-contain" />
       </div>
       {!compact ? (
         <div>
@@ -981,11 +974,7 @@ export default function Layout({ children, currentPageName }) {
                 <div className="grid gap-8 border-b border-white/15 py-9 sm:py-11 md:grid-cols-[minmax(0,1.4fr)_auto] md:items-center md:gap-10">
                   <div className="flex items-start gap-4">
                     <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-2 sm:h-20 sm:w-20">
-                      {!isLoadingSiteSettings && logoUrl && !logoImageFailed ? (
-                        <img src={logoUrl} alt={`${siteName} logo`} loading="lazy" decoding="async" onError={() => setLogoImageFailed(true)} className="h-full w-full object-contain" />
-                      ) : (
-                        null
-                      )}
+                      <SiteLogo src={logoUrl} alt={`${siteName} logo`} loading="lazy" className="h-full w-full object-contain" />
                     </Link>
                     <div className="min-w-0 max-w-xl">
                       <p className="font-display text-xl font-bold tracking-tight sm:text-2xl">{siteName} Resort</p>
