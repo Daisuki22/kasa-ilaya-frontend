@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { baseClient } from '@/api/baseClient';
@@ -7,264 +7,293 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { resolveAssetUrl } from '@/lib/assetUrls';
 import { optimizeImageFile } from '@/lib/optimizeImageFile';
-import { Camera, Loader2, Upload } from 'lucide-react';
+import {
+  Activity, Clock3, KeyRound, Laptop, Loader2,
+  LockKeyhole, LogOut, MonitorSmartphone, ShieldCheck, ShieldQuestion,
+  Upload, UserRound, Bell, Eye, Database, RefreshCw,
+} from 'lucide-react';
 import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
-const toDateInputValue = (value) => (value ? String(value).slice(0, 10) : '');
-const todayDateInputValue = () => {
+const dateInput = (value) => (value ? String(value).slice(0, 10) : '');
+const dateLabel = (value, fallback = 'Not available') => {
+  if (!value) return fallback;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback : new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+};
+const localToday = () => {
   const today = new Date();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${today.getFullYear()}-${month}-${day}`;
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+};
+const describeDevice = (agent = '') => {
+  const ua = String(agent);
+  const browser = /Edg\//.test(ua) ? 'Microsoft Edge' : /OPR\//.test(ua) ? 'Opera' : /CriOS|Chrome\//.test(ua) ? 'Chrome' : /FxiOS|Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const os = /iPhone|iPad|iPod/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
+  const device = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android device' : /Mobile/.test(ua) ? 'Mobile device' : 'Computer';
+  return { browser, os, device };
 };
 
-const formatBirthDate = (value) => {
-  const dateValue = toDateInputValue(value);
-  if (!dateValue) return 'No birthday added';
-
-  const date = new Date(`${dateValue}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? 'No birthday added'
-    : new Intl.DateTimeFormat('en-PH', { dateStyle: 'long' }).format(date);
-};
-
-export default function ProfileSettings({
-  title = 'Profile settings',
-  description = 'Manage your personal details and account password.',
-  legacySpacing = false,
-}) {
+export default function ProfileSettings({ legacySpacing = false }) {
   const [user, setUser] = useState(null);
-  const [profileForm, setProfileForm] = useState({ full_name: '', email: '', phone: '', birth_date: '', profile_image_url: '' });
-  const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ full_name: '', phone: '', birth_date: '', profile_image_url: '' });
+  const [password, setPassword] = useState({ current_password: '', new_password: '', confirmPassword: '' });
+  const [sessions, setSessions] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityHasMore, setActivityHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [loadingActivity, setLoadingActivity] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [busy, setBusy] = useState('');
   const [profileImageUnavailable, setProfileImageUnavailable] = useState(false);
 
-  const syncProfileState = (currentUser) => {
-    setUser(currentUser);
+  const syncUser = (current) => {
+    setUser(current);
     setProfileImageUnavailable(false);
-    setProfileForm({
-      full_name: currentUser.full_name || '',
-      email: currentUser.email || '',
-      phone: currentUser.phone || '',
-      birth_date: toDateInputValue(currentUser.birth_date),
-      profile_image_url: currentUser.profile_image_url || '',
+    setForm({
+      full_name: current.full_name || '',
+      phone: current.phone || '',
+      birth_date: dateInput(current.birth_date),
+      profile_image_url: current.profile_image_url || '',
     });
   };
 
-  useEffect(() => {
-    baseClient.auth.me()
-      .then((currentUser) => {
-        syncProfileState(currentUser);
-      })
-      .catch(() => {
-        baseClient.auth.redirectToLogin(window.location.href);
-      })
-      .finally(() => setLoading(false));
+  const loadSessions = useCallback(async () => {
+    setLoadingSessions(true);
+    try { setSessions(await baseClient.auth.accountSessions()); }
+    catch (error) { toast.error(error.message || 'Unable to load signed-in devices.'); }
+    finally { setLoadingSessions(false); }
   }, []);
 
-  const handleProfileSubmit = async (event) => {
+  const loadActivity = useCallback(async (page = 1, append = false) => {
+    setLoadingActivity(true);
+    try {
+      const result = await baseClient.auth.accountActivity(page);
+      setActivity((current) => append ? [...current, ...result.items] : result.items);
+      setActivityPage(result.page);
+      setActivityHasMore(result.has_more);
+    } catch (error) { toast.error(error.message || 'Unable to load account activity.'); }
+    finally { setLoadingActivity(false); }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    baseClient.auth.me()
+      .then((current) => { if (active) syncUser(current); })
+      .catch(() => { if (active) baseClient.auth.redirectToLogin(window.location.href); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    void loadSessions();
+    void loadActivity(1);
+  }, [user?.id, loadSessions, loadActivity]);
+
+  const saveProfile = async (event) => {
     event.preventDefault();
     setSavingProfile(true);
-
     try {
-      const updatedUser = await baseClient.auth.updateMe(profileForm);
-      syncProfileState(updatedUser);
-      toast.success('Profile updated successfully.');
-    } catch (error) {
-      toast.error(error.message || 'Unable to update profile.');
-    } finally {
-      setSavingProfile(false);
-    }
+      syncUser(await baseClient.auth.updateMe({ full_name: form.full_name, phone: form.phone, birth_date: form.birth_date, profile_image_url: form.profile_image_url }));
+      toast.success('Account information saved.');
+    } catch (error) { toast.error(error.message || 'Unable to update account information.'); }
+    finally { setSavingProfile(false); }
   };
 
-  const handleProfilePhotoUpload = async (event) => {
+  const uploadPhoto = async (event) => {
     const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Please upload a JPG, PNG, or WebP profile photo.');
-      event.target.value = '';
-      return;
+      toast.error('Choose a JPG, PNG, or WebP photo.'); event.target.value = ''; return;
     }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Profile photo must be 5 MB or smaller.');
-      event.target.value = '';
-      return;
-    }
-
-    setUploadingPhoto(true);
-
+    if (file.size > 5 * 1024 * 1024) { toast.error('Profile photo must be 5 MB or smaller.'); event.target.value = ''; return; }
+    setBusy('photo');
     try {
-      const optimizedFile = await optimizeImageFile(file, 800);
-      const { file_url } = await baseClient.integrations.Core.UploadFile({ file: optimizedFile, purpose: 'profile_image' });
-      const updatedUser = await baseClient.auth.updateMe({ profile_image_url: file_url });
-      syncProfileState(updatedUser);
+      const optimized = await optimizeImageFile(file, 800);
+      const uploaded = await baseClient.integrations.Core.UploadFile({ file: optimized, purpose: 'profile_image' });
+      syncUser(await baseClient.auth.updateMe({ profile_image_url: uploaded.file_url }));
       toast.success('Profile photo updated.');
-    } catch (error) {
-      toast.error(error?.message || 'Unable to upload profile photo.');
-    } finally {
-      setUploadingPhoto(false);
-      event.target.value = '';
-    }
+    } catch (error) { toast.error(error.message || 'Unable to upload profile photo.'); }
+    finally { setBusy(''); event.target.value = ''; }
   };
 
-  const handleRemoveProfilePhoto = async () => {
-    setUploadingPhoto(true);
-
-    try {
-      const updatedUser = await baseClient.auth.updateMe({ profile_image_url: '' });
-      syncProfileState(updatedUser);
-      toast.success('Profile photo removed.');
-    } catch (error) {
-      toast.error(error?.message || 'Unable to remove profile photo.');
-    } finally {
-      setUploadingPhoto(false);
-    }
+  const removePhoto = async () => {
+    setBusy('photo');
+    try { syncUser(await baseClient.auth.updateMe({ profile_image_url: '' })); toast.success('Profile photo removed.'); }
+    catch (error) { toast.error(error.message || 'Unable to remove profile photo.'); }
+    finally { setBusy(''); }
   };
 
-  const handlePasswordSubmit = async (event) => {
+  const changePassword = async (event) => {
     event.preventDefault();
-
-    if (passwordForm.new_password !== passwordForm.confirmPassword) {
-      toast.error('New passwords do not match.');
-      return;
-    }
-    if (!passwordMeetsRequirements(passwordForm.new_password)) {
-      toast.error('Password must be at least 10 characters and include uppercase, lowercase, number, and special character.');
-      return;
-    }
-
+    if (password.new_password !== password.confirmPassword) { toast.error('New passwords do not match.'); return; }
+    if (!passwordMeetsRequirements(password.new_password)) { toast.error('Use at least 10 characters with uppercase, lowercase, a number, and a special character.'); return; }
     setSavingPassword(true);
     try {
-      await baseClient.auth.changePassword({
-        current_password: passwordForm.current_password,
-        new_password: passwordForm.new_password,
-      });
-      setPasswordForm({ current_password: '', new_password: '', confirmPassword: '' });
-      toast.success('Password updated successfully.');
-    } catch (error) {
-      toast.error(error.message || 'Unable to update password.');
-    } finally {
-      setSavingPassword(false);
-    }
+      await baseClient.auth.changePassword({ current_password: password.current_password, new_password: password.new_password });
+      setPassword({ current_password: '', new_password: '', confirmPassword: '' });
+      toast.success('Password changed. Other devices were signed out.');
+      await Promise.all([loadSessions(), loadActivity(1)]);
+    } catch (error) { toast.error(error.message || 'Unable to change password.'); }
+    finally { setSavingPassword(false); }
   };
 
-  if (loading) {
-    return <div className="px-4 py-10 text-sm text-muted-foreground">Loading profile...</div>;
-  }
+  const revokeSession = async (session) => {
+    const device = describeDevice(session.user_agent);
+    if (!window.confirm(`Sign out ${device.device} (${device.browser})? That device will need to sign in again.`)) return;
+    setBusy(session.id);
+    try {
+      await baseClient.auth.revokeSession(session.id);
+      toast.success('Device signed out.');
+      await Promise.all([loadSessions(), loadActivity(1)]);
+    } catch (error) { toast.error(error.message || 'Unable to sign out that device.'); }
+    finally { setBusy(''); }
+  };
 
-  if (!user) {
-    return null;
-  }
+  const revokeOthers = async () => {
+    if (!window.confirm('Sign out all other devices? This device will stay signed in.')) return;
+    setBusy('others');
+    try {
+      const result = await baseClient.auth.revokeOtherSessions();
+      toast.success(`${result.revoked_count} other device${result.revoked_count === 1 ? '' : 's'} signed out.`);
+      await Promise.all([loadSessions(), loadActivity(1)]);
+    } catch (error) { toast.error(error.message || 'Unable to sign out other devices.'); }
+    finally { setBusy(''); }
+  };
+
+  if (loading) return <div className="px-4 py-10 text-sm text-muted-foreground">Loading account settings…</div>;
+  if (!user) return null;
+
+  const verified = Boolean(user.is_verified);
+  const tabs = [
+    ['overview', UserRound, 'Overview'], ['review', ShieldCheck, 'Account review'],
+    ['security', KeyRound, 'Login & security'], ['sessions', MonitorSmartphone, 'Devices'],
+    ['activity', Activity, 'Activity'], ['preferences', Bell, 'Preferences'], ['privacy', Eye, 'Privacy'],
+  ];
 
   return (
-    <div className={`w-full ${legacySpacing ? 'max-w-none' : 'app-content-container'} px-2 py-6 sm:px-3 lg:px-4`}>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold text-foreground">{title}</h1>
-        <p className="mt-2 text-muted-foreground">{description}</p>
-      </div>
+    <main className={`w-full ${legacySpacing ? 'max-w-none' : 'app-content-container'} px-2 py-6 sm:px-3 lg:px-4`}>
+      <header className="mb-6">
+        <p className="text-sm font-medium text-primary">Your account</p>
+        <h1 className="mt-1 font-display text-3xl font-bold text-foreground">Account Settings</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">Manage your resort account, sign-in security, and devices.</p>
+      </header>
 
-      <Card className="mb-6">
-        <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
-          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-primary/10">
-            {profileForm.profile_image_url && !profileImageUnavailable ? (
-              <img src={resolveAssetUrl(profileForm.profile_image_url)} alt={profileForm.full_name || 'Profile photo'} onError={() => setProfileImageUnavailable(true)} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-primary">
-                {profileForm.full_name?.[0]?.toUpperCase() || 'U'}
-              </div>
-            )}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center bg-background/80 py-1 backdrop-blur">
-              <Camera className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-lg font-semibold text-foreground">{profileForm.full_name || 'Unnamed user'}</p>
-            <p className="break-all text-sm text-muted-foreground">{profileForm.email}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{profileForm.phone || 'No phone number added'}</p>
-            <p className="mt-1 text-sm text-muted-foreground">Birthday: {formatBirthDate(profileForm.birth_date)}</p>
-            <p className="mt-2 inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground">
-              {(user.role || 'guest').replace(/_/g, ' ')}
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:items-end">
-            <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-              {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              <span>{uploadingPhoto ? 'Uploading...' : 'Upload Photo'}</span>
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleProfilePhotoUpload} disabled={uploadingPhoto} />
-            </label>
-            {profileForm.profile_image_url ? (
-              <Button type="button" variant="outline" size="sm" onClick={handleRemoveProfilePhoto} disabled={uploadingPhoto}>
-                Remove Photo
-              </Button>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="overview" className="space-y-5">
+        <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1.5">
+          {tabs.map(([value, Icon, label]) => <TabsTrigger key={value} value={value} className="gap-2 px-3 py-2.5"><Icon className="h-4 w-4" /><span>{label}</span></TabsTrigger>)}
+        </TabsList>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile details</CardTitle>
-            <CardDescription>Update the information associated with your account.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-4" onSubmit={handleProfileSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="profile-name">Full name</Label>
-                <Input id="profile-name" value={profileForm.full_name} onChange={(event) => setProfileForm((current) => ({ ...current, full_name: event.target.value }))} required />
+        <TabsContent value="overview" className="space-y-5">
+          <Card>
+            <CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-border bg-primary/10">
+                {form.profile_image_url && !profileImageUnavailable ? <img src={resolveAssetUrl(form.profile_image_url)} alt={`${form.full_name || 'Account'} profile`} onError={() => setProfileImageUnavailable(true)} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-2xl font-semibold text-primary">{form.full_name?.[0]?.toUpperCase() || 'U'}</div>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="profile-email">Email</Label>
-                <Input id="profile-email" type="email" value={profileForm.email} onChange={(event) => setProfileForm((current) => ({ ...current, email: event.target.value }))} required />
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-xl font-semibold">{form.full_name || 'Unnamed account'}</h2>
+                <p className="break-all text-sm text-muted-foreground">{user.email}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge variant={verified ? 'default' : 'secondary'}>{verified ? 'Email verified' : 'Email pending verification'}</Badge>
+                  <Badge variant="outline" className="capitalize">{(user.role || 'guest').replace(/_/g, ' ')}</Badge>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="profile-phone">Phone number</Label>
-                <Input id="profile-phone" value={profileForm.phone} onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))} />
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                  {busy === 'photo' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {busy === 'photo' ? 'Saving…' : 'Change photo'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={uploadPhoto} disabled={busy === 'photo'} />
+                </label>
+                {form.profile_image_url ? <Button variant="outline" onClick={removePhoto} disabled={busy === 'photo'}>Remove</Button> : null}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="profile-birthday">Birthday</Label>
-                <Input id="profile-birthday" type="date" max={todayDateInputValue()} value={profileForm.birth_date} onChange={(event) => setProfileForm((current) => ({ ...current, birth_date: event.target.value }))} />
-                <p className="text-xs text-muted-foreground">You must be at least 18 years old.</p>
-              </div>
-              <Button className="w-full sm:w-auto" disabled={savingProfile} type="submit">Save changes</Button>
-            </form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+            <Card>
+              <CardHeader><CardTitle>Personal information</CardTitle><CardDescription>Update the details used for your resort account.</CardDescription></CardHeader>
+              <CardContent>
+                <form className="grid gap-4 sm:grid-cols-2" onSubmit={saveProfile}>
+                  <div className="space-y-2 sm:col-span-2"><Label htmlFor="account-email">Sign-in email</Label><Input id="account-email" type="email" value={user.email || ''} readOnly aria-describedby="email-help" /><p id="email-help" className="text-xs text-muted-foreground">Email changes require a verified-email process. Contact support to request one.</p></div>
+                  <div className="space-y-2 sm:col-span-2"><Label htmlFor="account-name">Full name</Label><Input id="account-name" value={form.full_name} maxLength={120} onChange={(event) => setForm((old) => ({ ...old, full_name: event.target.value }))} required /></div>
+                  <div className="space-y-2"><Label htmlFor="account-phone">Phone number</Label><Input id="account-phone" inputMode="tel" value={form.phone} onChange={(event) => setForm((old) => ({ ...old, phone: event.target.value }))} /></div>
+                  <div className="space-y-2"><Label htmlFor="account-birthday">Birthday</Label><Input id="account-birthday" type="date" max={localToday()} value={form.birth_date} onChange={(event) => setForm((old) => ({ ...old, birth_date: event.target.value }))} /><p className="text-xs text-muted-foreground">Account holders must be at least 18.</p></div>
+                  <div className="sm:col-span-2"><Button disabled={savingProfile} type="submit">{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save information</Button></div>
+                </form>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Account summary</CardTitle><CardDescription>Details currently stored for this account.</CardDescription></CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Account created</span><span className="text-right font-medium">{dateLabel(user.created_date, 'Not recorded')}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Account type</span><span className="capitalize font-medium">{(user.role || 'guest').replace(/_/g, ' ')}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Sign-in method</span><span className="font-medium">{user.has_local_password ? 'Email and password' : 'Google'}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Active devices</span><span className="font-medium">{loadingSessions ? 'Loading…' : sessions.length}</span></div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{user.has_local_password ? 'Update password' : 'Google Sign-In'}</CardTitle>
-            <CardDescription>{user.has_local_password ? 'Use your current password to set a new one.' : 'This account uses Google Sign-In. Password management is handled by Google.'}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {user.has_local_password ? (
-            <form className="space-y-4" onSubmit={handlePasswordSubmit}>
-              <PasswordInput id="current-password" label="Current password" value={passwordForm.current_password} onChange={(event) => setPasswordForm((current) => ({ ...current, current_password: event.target.value }))} autoComplete="current-password" required />
-              <PasswordInput id="new-password" label="New password" value={passwordForm.new_password} onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus requirementsPlacement="top" confirmValue={passwordForm.confirmPassword} required />
-              <PasswordInput id="confirm-password" label="Confirm new password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={passwordForm.new_password} required />
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Button className="w-full sm:w-auto" disabled={savingPassword || !passwordMeetsRequirements(passwordForm.new_password) || passwordForm.new_password !== passwordForm.confirmPassword} type="submit">Update password</Button>
-                <Link
-                  to={`${createPageUrl('ForgotPassword')}?email=${encodeURIComponent(profileForm.email || user.email || '')}`}
-                  className="text-center text-sm text-primary hover:underline sm:text-left"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-            </form>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        <TabsContent value="review">
+          <Card><CardHeader><CardTitle className="flex items-center gap-2"><ShieldQuestion className="h-5 w-5 text-primary" />Account review</CardTitle><CardDescription>Verification status from the account record.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3"><Badge variant={verified ? 'default' : 'secondary'}>{verified ? 'Verified' : 'Pending email verification'}</Badge><span className="text-sm text-muted-foreground">{verified ? 'Your email address is verified.' : 'Verify the email address used to create your account before signing in.'}</span></div>
+              {!verified && <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm">The system currently tracks email verification only. It does not provide a separate resort-admin account review status or action-required reason.</p>}
+              {verified && <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm">No additional account review or action requirement is recorded.</p>}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-5">
+          <Card><CardHeader><CardTitle className="flex items-center gap-2"><LockKeyhole className="h-5 w-5 text-primary" />Login methods</CardTitle><CardDescription>Sign-in methods currently connected to this account.</CardDescription></CardHeader><CardContent className="space-y-3 text-sm"><p><span className="font-medium">Email:</span> {user.email}</p><p><span className="font-medium">Method:</span> {user.has_local_password ? 'Email and password' : 'Google Sign-In'}</p>{!user.has_local_password && <p className="rounded-lg bg-muted/50 p-3 text-muted-foreground">Password settings are managed by Google for this account.</p>}</CardContent></Card>
+          {user.has_local_password ? <Card><CardHeader><CardTitle>Change password</CardTitle><CardDescription>Changing your password signs out other active devices.</CardDescription></CardHeader><CardContent><form className="max-w-xl space-y-4" onSubmit={changePassword}>
+            <PasswordInput id="current-password" label="Current password" value={password.current_password} onChange={(event) => setPassword((old) => ({ ...old, current_password: event.target.value }))} autoComplete="current-password" required />
+            <PasswordInput id="new-password" label="New password" value={password.new_password} onChange={(event) => setPassword((old) => ({ ...old, new_password: event.target.value }))} autoComplete="new-password" showRequirements showRequirementsOnFocus requirementsPlacement="top" confirmValue={password.confirmPassword} required />
+            <PasswordInput id="confirm-password" label="Confirm new password" value={password.confirmPassword} onChange={(event) => setPassword((old) => ({ ...old, confirmPassword: event.target.value }))} autoComplete="new-password" showMatch confirmValue={password.new_password} required />
+            <Button disabled={savingPassword || !passwordMeetsRequirements(password.new_password) || password.new_password !== password.confirmPassword}>{savingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Update password</Button>
+          </form></CardContent></Card> : <Card><CardContent className="flex gap-3 p-5 text-sm text-muted-foreground"><ShieldCheck className="h-5 w-5 shrink-0 text-primary" />Password management is handled by the Google account provider.</CardContent></Card>}
+          <Card><CardHeader><CardTitle>Verification & recovery</CardTitle><CardDescription>Keep your contact details current so account recovery can reach you.</CardDescription></CardHeader><CardContent className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Email verification: {verified ? 'Complete' : 'Not complete'} · Last successful login is recorded from the session history below.</p><Link to={`${createPageUrl('ForgotPassword')}?email=${encodeURIComponent(user.email || '')}`} className="text-sm font-medium text-primary hover:underline">Forgot password?</Link></CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="sessions">
+          <Card><CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3"><div><CardTitle className="flex items-center gap-2"><MonitorSmartphone className="h-5 w-5 text-primary" />Active sessions & devices</CardTitle><CardDescription>Sessions that are currently valid on the server.</CardDescription></div><Button variant="outline" size="sm" onClick={() => void loadSessions()} disabled={loadingSessions}><RefreshCw className={`mr-2 h-4 w-4 ${loadingSessions ? 'animate-spin' : ''}`} />Refresh</Button></CardHeader>
+            <CardContent className="space-y-4">
+              {sessions.filter((session) => !session.current).length > 0 && <Button variant="outline" onClick={revokeOthers} disabled={busy === 'others'}>{busy === 'others' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}<LogOut className="mr-2 h-4 w-4" />Sign out all other devices</Button>}
+              {loadingSessions ? <p className="py-8 text-center text-sm text-muted-foreground">Loading sessions…</p> : sessions.length === 0 ? <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No active sessions are available. Sign in again to create a tracked session.</p> : <div className="space-y-3">{sessions.map((session) => {
+                const device = describeDevice(session.user_agent);
+                return <article key={session.id} className="flex flex-col gap-3 rounded-xl border border-border p-4 sm:flex-row sm:items-center">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Laptop className="h-5 w-5" /></div>
+                  <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2 font-medium">{device.device} · {device.browser}{session.current && <Badge>Current device</Badge>}</div><p className="text-sm text-muted-foreground">{device.os || 'Operating system unavailable'} · Signed in {dateLabel(session.created_at)}</p><p className="text-xs text-muted-foreground">Last active {dateLabel(session.last_seen_at)}</p></div>
+                  {session.current ? <Button variant="outline" size="sm" onClick={() => { if (window.confirm('Sign out this device now?')) void baseClient.auth.logout('/'); }}><LogOut className="mr-2 h-4 w-4" />Sign out this device</Button> : <Button variant="destructive" size="sm" onClick={() => void revokeSession(session)} disabled={busy === session.id}>{busy === session.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}Sign out</Button>}
+                </article>;
+              })}</div>}
+              <p className="text-xs text-muted-foreground">Browser and device names are estimated from the browser's user-agent string. Sessions created before this security feature was enabled are not listed.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <Card><CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3"><div><CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" />Account activity</CardTitle><CardDescription>Successful sign-ins and security changes recorded by the server.</CardDescription></div><Button variant="outline" size="sm" onClick={() => void loadActivity(1)} disabled={loadingActivity}><RefreshCw className={`mr-2 h-4 w-4 ${loadingActivity ? 'animate-spin' : ''}`} />Refresh</Button></CardHeader>
+            <CardContent className="space-y-3">{activity.map((item, index) => <div key={`${item.created_at}-${index}`} className="flex gap-3 rounded-lg border border-border p-3"><Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><div><p className="text-sm font-medium">{item.description}</p><p className="text-xs text-muted-foreground">{dateLabel(item.created_at)}</p></div></div>)}{!loadingActivity && activity.length === 0 && <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No account activity has been recorded yet.</p>}{activityHasMore && <Button variant="outline" onClick={() => void loadActivity(activityPage + 1, true)} disabled={loadingActivity}>{loadingActivity && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Load older activity</Button>}<p className="text-xs text-muted-foreground">History starts when server-side account tracking is enabled; earlier activity is not available.</p></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preferences">
+          <Card><CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />Notifications & preferences</CardTitle><CardDescription>Booking and payment alerts are managed by the resort system.</CardDescription></CardHeader><CardContent><p className="rounded-lg border border-border bg-muted/30 p-4 text-sm">Per-account notification preferences are not currently stored or enforced by the backend, so there are no preference switches here that could give a false impression of being saved.</p></CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="privacy">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card><CardHeader><CardTitle className="flex items-center gap-2"><Database className="h-5 w-5 text-primary" />Information on this account</CardTitle><CardDescription>Personal information currently available to you.</CardDescription></CardHeader><CardContent className="space-y-3 text-sm"><p><span className="font-medium">Identity:</span> {form.full_name || 'Name not set'}, {user.email}</p><p><span className="font-medium">Contact:</span> {form.phone || 'No phone number'} · Birthday {dateInput(form.birth_date) || 'not provided'}</p><p><span className="font-medium">Profile photo:</span> {form.profile_image_url ? 'Photo stored' : 'No photo stored'}</p><p className="text-muted-foreground">Your booking and payment records are managed separately from profile settings.</p></CardContent></Card>
+            <Card><CardHeader><CardTitle>Account management</CardTitle><CardDescription>Requests involving account data or account closure.</CardDescription></CardHeader><CardContent className="space-y-3 text-sm"><p>Self-service account deletion is not available. Booking and payment records may need to be retained for resort operations.</p><p>To request an account-data correction or deletion review, contact resort support so the request can be handled safely.</p><Button asChild variant="outline"><Link to={createPageUrl('Contact')}>Contact resort support</Link></Button></CardContent></Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </main>
   );
 }

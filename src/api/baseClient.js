@@ -653,6 +653,28 @@ export const baseClient = {
       );
     },
 
+    async accountSessions() {
+      return request("/auth.php?action=account-sessions");
+    },
+
+    async revokeSession(sessionId) {
+      return request("/auth.php?action=revoke-session", {
+        method: "POST",
+        body: { session_id: sessionId },
+      });
+    },
+
+    async revokeOtherSessions() {
+      return request("/auth.php?action=revoke-other-sessions", {
+        method: "POST",
+        body: {},
+      });
+    },
+
+    async accountActivity(page = 1) {
+      return request(`/auth.php?action=account-activity&page=${encodeURIComponent(page)}`);
+    },
+
     async forgotPassword(data) {
       return request(
         "/auth.php?action=forgot-password",

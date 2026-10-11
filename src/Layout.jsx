@@ -658,7 +658,7 @@ export default function Layout({ children, currentPageName }) {
             <DropdownMenuItem asChild>
               <Link to={createPageUrl(profilePageTarget)}>
                 <Settings className="mr-2 h-4 w-4" />
-                Profile Settings
+                Account Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -769,13 +769,13 @@ export default function Layout({ children, currentPageName }) {
               {/* Theme toggle */}
               <ThemeToggle />
 
-              {/* Profile Settings */}
+              {/* Account Settings */}
               <Link
                 to={createPageUrl(profilePageTarget)}
                 className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Settings className="h-4 w-4" />
-                Profile Settings
+                Account Settings
               </Link>
 
               {/* Logout */}
@@ -941,7 +941,7 @@ export default function Layout({ children, currentPageName }) {
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Settings className="h-4 w-4" />
-                  Profile Settings
+                  Account Settings
                 </Link>
 
                 <button
