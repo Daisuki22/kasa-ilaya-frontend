@@ -166,7 +166,7 @@ const getCancellationLockedReason = (booking) => {
   }
 
   if (daysUntilBooking <= REBOOKING_NOTICE_DAYS) {
-    return "Online cancellation is no longer available within 7 days of your reservation date. You may request a reschedule.";
+    return "Within 7 days, cancellation is closed. You may request a reschedule.";
   }
 
   return "";
