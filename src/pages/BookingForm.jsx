@@ -1437,7 +1437,7 @@ export default function BookingForm() {
                             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
                           </label>
                           <p className="text-xs text-muted-foreground">
-                            JPG, PNG, or WebP images up to 8 MB. Clear mismatches are declined automatically; incomplete reads stay Pending for admin review.
+                            JPG, PNG, or WebP images up to 8 MB. Images with no visible payment details are declined; unclear receipts may be sent for admin review.
                           </p>
                           {receiptValidation?.status === "checking" ? (
                             <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
