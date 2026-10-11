@@ -711,10 +711,10 @@ export default function MyBookings() {
             {filteredBookings.map((booking) => (
               <Card key={booking.id} className="overflow-hidden border-border/80 shadow-sm transition hover:border-primary/30 hover:shadow-md">
                 <CardContent className="p-0">
-                  <div className="grid gap-0 lg:grid-cols-[1fr_auto]">
+                  <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_18rem]">
                     <div className="p-5 sm:p-6">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
+                        <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-display text-2xl font-bold text-foreground">{booking.package_name || "Resort Package"}</h3>
                             <Badge className={statusColors[booking.status] || statusColors.pending} variant="outline">
@@ -725,7 +725,7 @@ export default function MyBookings() {
                             Reservation for {booking.guest_count || 0} guest{Number(booking.guest_count || 0) === 1 ? "" : "s"}.
                           </p>
                         </div>
-                        <div className="text-left sm:text-right">
+                        <div className="shrink-0 text-left sm:text-right">
                           <p className="text-sm text-muted-foreground">Total amount</p>
                           <p className="text-2xl font-bold text-secondary">{formatMoney(booking.total_amount)}</p>
                         </div>
@@ -751,8 +751,8 @@ export default function MyBookings() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col justify-center gap-3 border-t border-border bg-muted/25 p-5 lg:min-w-64 lg:border-l lg:border-t-0">
-                      <Badge className={`${paymentColors[getDisplayPaymentStatus(booking)] || paymentColors.unpaid} justify-center py-1.5`}>
+                    <div className="flex flex-col justify-center gap-3 border-t border-border bg-muted/25 p-5 lg:w-full lg:border-l lg:border-t-0">
+                      <Badge className={`${paymentColors[getDisplayPaymentStatus(booking)] || paymentColors.unpaid} min-h-9 justify-center py-1.5`}>
                         {formatStatusLabel(getDisplayPaymentStatus(booking))}
                       </Badge>
                       {(booking.rebooking_status || "none") !== "none" ? (
