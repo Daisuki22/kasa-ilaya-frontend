@@ -1156,13 +1156,13 @@ export default function Chatbot() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(82dvh,680px)] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(700px,calc(100dvh-8rem))] sm:w-[420px] sm:max-w-[calc(100vw-48px)]">
+        <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(82dvh,680px)] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(700px,calc(100dvh-8rem))] sm:w-[420px] sm:max-w-[calc(100vw-48px)]">
           {/* Header */}
-          <div className="relative flex min-h-16 items-center justify-center bg-black px-4 py-3 text-white">
+          <div className="relative flex min-h-16 items-center justify-center bg-primary px-4 py-3 text-primary-foreground">
             <p className="text-center text-lg font-semibold">Kasa Ilaya Assistant</p>
             <button
               type="button"
-              className="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-primary-foreground transition-colors hover:bg-primary-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
               onClick={() => setOpen(false)}
               aria-label="Minimize chatbot"
             >
@@ -1173,7 +1173,7 @@ export default function Chatbot() {
           {/* Messages */}
           <div
             ref={messagesContainerRef}
-            className="flex-1 space-y-4 overflow-y-auto bg-white p-4 sm:p-5"
+            className="flex-1 space-y-4 overflow-y-auto bg-card p-4 sm:p-5"
             role="log"
             aria-live="polite"
             aria-relevant="additions"
@@ -1181,12 +1181,12 @@ export default function Chatbot() {
             {messages.map((msg, i) => (
               <div key={i} role="group" aria-label={msg.role === "user" ? "Your message" : "Kasa Ilaya Assistant message"} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
-                  <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-800" aria-hidden="true">
+                  <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-secondary" aria-hidden="true">
                     <TreePalm className="h-4 w-4" />
                   </span>
                 )}
                 <div className={`flex min-w-0 max-w-[86%] flex-col gap-2 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                  <div className={`min-w-0 break-words rounded-2xl px-4 py-3 text-base leading-6 [overflow-wrap:anywhere] ${msg.role === "user" ? "rounded-br-md bg-black text-white" : "rounded-bl-md bg-neutral-100 text-neutral-800"}`}>
+                  <div className={`min-w-0 break-words rounded-2xl px-4 py-3 text-base leading-6 [overflow-wrap:anywhere] ${msg.role === "user" ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-muted text-foreground"}`}>
                     {msg.role === "user" ? (
                       <p className="m-0 whitespace-pre-wrap">{msg.content}</p>
                     ) : (
@@ -1197,21 +1197,21 @@ export default function Chatbot() {
                   </div>
                   {msg.suggestions?.length > 0 && (
                     <div className="w-full space-y-2" aria-label="Related FAQ articles">
-                      <p className="px-1 text-sm text-neutral-600">Here are some questions that may help:</p>
+                      <p className="px-1 text-sm text-muted-foreground">Here are some questions that may help:</p>
                       {msg.suggestions.map((suggestion) => (
                         <button
                           key={suggestion.question}
                           type="button"
-                          className="flex w-full items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3 text-left text-sm text-blue-700 shadow-sm transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="flex w-full items-start gap-3 rounded-xl border border-border bg-card p-3 text-left text-sm text-primary shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           onClick={() => processMessage(suggestion.question)}
                           disabled={loading}
                         >
-                          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                           <span className="min-w-0 flex-1">
                             <span className="block font-medium">{suggestion.question}</span>
-                            <span className="mt-1 block text-xs text-neutral-500">{suggestion.category}</span>
+                            <span className="mt-1 block text-xs text-muted-foreground">{suggestion.category}</span>
                           </span>
-                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                         </button>
                       ))}
                     </div>
@@ -1226,7 +1226,7 @@ export default function Chatbot() {
                 role="status"
                 aria-label="Assistant is responding"
               >
-                <div className="rounded-2xl rounded-bl-md bg-neutral-100 px-4 py-3">
+                <div className="rounded-2xl rounded-bl-md bg-muted px-4 py-3">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
               </div>
@@ -1234,18 +1234,18 @@ export default function Chatbot() {
 
             {!showFaq && messages.length === 2 && (
               <section className="ml-12 space-y-2" aria-label="Suggested questions">
-                <p className="px-1 text-sm text-neutral-600">Popular questions</p>
+                <p className="px-1 text-sm text-muted-foreground">Popular questions</p>
                 {FAQ_CATEGORIES.slice(0, 4).map((category) => (
                   <button
                     key={category.title}
                     type="button"
-                    className="block max-w-full rounded-full bg-black px-4 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="block max-w-full rounded-full bg-primary px-4 py-2 text-left text-sm text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={() => processMessage(category.questions[0])}
                   >
                     {category.questions[0]}
                   </button>
                 ))}
-                <button type="button" className="text-sm font-medium text-blue-700 underline underline-offset-2" onClick={() => setShowFaq(true)}>
+                <button type="button" className="text-sm font-medium text-primary underline underline-offset-2" onClick={() => setShowFaq(true)}>
                   Browse all frequently asked questions
                 </button>
               </section>
@@ -1254,7 +1254,7 @@ export default function Chatbot() {
             {!showFaq && messages.length > 2 && (
               <button
                 type="button"
-                className="ml-12 inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="ml-12 inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => setShowFaq(true)}
               >
                 <Search className="h-4 w-4" aria-hidden="true" />
@@ -1266,7 +1266,7 @@ export default function Chatbot() {
               <section className="space-y-5 pt-2" aria-labelledby="chatbot-faq-title">
                 <button
                   type="button"
-                  className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() => setShowFaq(false)}
                 >
                   <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -1359,12 +1359,12 @@ export default function Chatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-neutral-200 bg-white px-4 pb-4 pt-3">
+          <div className="border-t border-border bg-card px-4 pb-4 pt-3">
             <div className="mb-3 flex justify-end">
               <Link
                 to={createPageUrl("Contact")}
                 onClick={() => setOpen(false)}
-                className="inline-flex min-h-10 items-center rounded-full border border-black px-4 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-10 items-center rounded-full border border-primary px-4 text-sm font-medium text-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Get in touch
               </Link>
@@ -1389,12 +1389,12 @@ export default function Chatbot() {
                 }
               }}
               placeholder="Type your question here..."
-              className="min-h-16 min-w-0 flex-1 resize-y rounded-lg border-2 border-neutral-300 bg-white px-3 py-3 text-base text-foreground outline-none placeholder:text-neutral-400 focus-visible:border-neutral-500 focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-h-16 min-w-0 flex-1 resize-y rounded-lg border-2 border-input bg-background px-3 py-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
               disabled={loading}
             />
             <button
               type="submit"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Send question"
               disabled={loading || !draftMessage.trim()}
             >
