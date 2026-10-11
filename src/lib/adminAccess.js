@@ -2,8 +2,9 @@ const ADMIN_ALLOWED_PAGES = new Set([
   "AdminDashboard",
   "AdminCalendar",
   "AdminInquiries",
+  "AdminPaymentMonitoring",
+  "AdminReport",
   "AdminProfileSettings",
-  "AdminLegalSettings",
 ]);
 
 export const isAdminUser = (user) => user?.role === "admin" || user?.role === "super_admin";
