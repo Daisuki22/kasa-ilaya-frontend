@@ -1065,7 +1065,7 @@ export default function Chatbot() {
     };
 
     triggerBounce();
-    const bounceInterval = window.setInterval(triggerBounce, 10000);
+    const bounceInterval = window.setInterval(triggerBounce, 3000);
 
     return () => {
       window.clearInterval(bounceInterval);
