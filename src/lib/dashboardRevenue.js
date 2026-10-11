@@ -21,6 +21,11 @@ export const getSubmittedBookingPayment = (booking) => (
   0
 );
 
+export const getBookingTotalWithPaidFees = (booking) => (
+  toFiniteAmount(booking?.total_amount) +
+  (booking?.additional_fee_status === "paid" ? toFiniteAmount(booking?.additional_fee_amount) : 0)
+);
+
 export const isRevenueEligibleBooking = (booking) => (
   booking?.payment_status === "paid" &&
   !["cancelled", "archived"].includes(booking?.status)

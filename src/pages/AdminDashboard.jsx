@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import RevenueCards from "@/components/admin/RevenueCards";
 import RevenueChart from "@/components/admin/RevenueChart";
-import { calculateDashboardRevenue, formatPHPAmount, toFiniteAmount } from "@/lib/dashboardRevenue";
+import { calculateDashboardRevenue, formatPHPAmount, getBookingTotalWithPaidFees } from "@/lib/dashboardRevenue";
 import { parseSafeDate } from "@/lib/safeDate";
 
 const currency = new Intl.NumberFormat("en-PH", {
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     const revenue = calculateDashboardRevenue(visibleBookings);
     const confirmedOrCompleted = visibleBookings.filter((booking) => ["confirmed", "completed"].includes(booking.status));
 
-    const totalRevenue = confirmedOrCompleted.reduce((sum, booking) => sum + toFiniteAmount(booking.total_amount), 0);
+    const totalRevenue = confirmedOrCompleted.reduce((sum, booking) => sum + getBookingTotalWithPaidFees(booking), 0);
     const totalPaidRevenue = revenue.totalRevenue;
 
     const byStatus = {
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
         const pkgBookings = visibleBookings.filter((booking) => booking.package_name === pkg.name);
         const pkgRevenue = pkgBookings
           .filter((booking) => ["confirmed", "completed"].includes(booking.status))
-          .reduce((sum, booking) => sum + toFiniteAmount(booking.total_amount), 0);
+          .reduce((sum, booking) => sum + getBookingTotalWithPaidFees(booking), 0);
         return { id: pkg.id, name: pkg.name, bookingCount: pkgBookings.length, revenue: pkgRevenue };
       })
       .sort((a, b) => b.bookingCount - a.bookingCount)
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
       });
       const monthRevenue = monthBookings
         .filter((booking) => ["confirmed", "completed"].includes(booking.status))
-        .reduce((sum, booking) => sum + toFiniteAmount(booking.total_amount), 0);
+        .reduce((sum, booking) => sum + getBookingTotalWithPaidFees(booking), 0);
       return { key, label, bookings: monthBookings.length, revenue: monthRevenue };
     });
 
