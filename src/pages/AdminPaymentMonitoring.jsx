@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle2, ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
 import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 import PaginationControls from "@/components/admin/PaginationControls";
 
 const paymentColors = {
@@ -142,6 +143,11 @@ export default function AdminPaymentMonitoring() {
   const [feePaymentConfirmation, setFeePaymentConfirmation] = useState(null);
   const [feeForm, setFeeForm] = useState({ items: [createDamageItem()], notes: "", status: "unpaid" });
   const [savingFeeId, setSavingFeeId] = useState(null);
+  const [receiptUnavailable, setReceiptUnavailable] = useState(false);
+
+  useEffect(() => {
+    setReceiptUnavailable(false);
+  }, [selectedBooking?.id, selectedBooking?.receipt_url]);
 
   const confirmAdditionalFeePayment = async () => {
     if (!feePaymentConfirmation) return;
@@ -412,6 +418,10 @@ export default function AdminPaymentMonitoring() {
       setSavingFeeId(null);
     }
   };
+
+  const selectedReceiptUrl = selectedBooking?.receipt_url
+    ? resolveAssetUrl(selectedBooking.receipt_url)
+    : "";
 
   return (
     <div className="w-full max-w-none px-2 py-6 sm:px-3 lg:px-4">
@@ -791,12 +801,18 @@ export default function AdminPaymentMonitoring() {
                     <p><span className="text-muted-foreground">OCR confidence:</span> {Number(selectedBooking.payment_proof_ocr_confidence || 0).toFixed(0)}%</p>
                     <p><span className="text-muted-foreground">Expected submitted amount:</span> {formatMoney(getSubmittedPaymentAmount(selectedBooking))}</p>
                   </div>
-                  <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-muted/20">
-                    <img src={selectedBooking.receipt_url} alt="Payment proof" className="max-h-[50vh] w-full bg-white object-contain" />
-                  </a>
-                  <a href={selectedBooking.receipt_url} target="_blank" rel="noreferrer" className="inline-flex max-w-full break-words text-sm text-primary underline-offset-4 hover:underline">
-                    Open uploaded payment proof
-                  </a>
+                  {receiptUnavailable ? (
+                    <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">Payment proof image is unavailable. Check that the upload is present on the payment server.</p>
+                  ) : (
+                    <a href={selectedReceiptUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-muted/20">
+                      <img src={selectedReceiptUrl} alt="Payment proof" onError={() => setReceiptUnavailable(true)} className="max-h-[50vh] w-full bg-white object-contain" />
+                    </a>
+                  )}
+                  {selectedReceiptUrl ? (
+                    <a href={selectedReceiptUrl} target="_blank" rel="noreferrer" className="inline-flex max-w-full break-words text-sm text-primary underline-offset-4 hover:underline">
+                      Open uploaded payment proof
+                    </a>
+                  ) : null}
                 </div>
               ) : (
                 <div className="flex min-h-32 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-sm text-muted-foreground">
