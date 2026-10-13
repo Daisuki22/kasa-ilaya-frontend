@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/AuthContext";
-import { Archive, CalendarPlus, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { resolveAssetUrl } from "@/lib/assetUrls";
+import { Archive, CalendarPlus, CheckCircle2, Eye, Loader2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import PaginationControls from "@/components/admin/PaginationControls";
 import { Search } from "lucide-react";
@@ -48,6 +49,8 @@ export default function AdminReservationManagement() {
   const { user } = useAuth();
   const [archiveId, setArchiveId] = useState(null);
   const [archiving, setArchiving] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState(null);
+  const [acceptingBooking, setAcceptingBooking] = useState(false);
   const [rescheduleBooking, setRescheduleBooking] = useState(null);
   const [rescheduleForm, setRescheduleForm] = useState({ booking_date: "", note: "" });
   const [rescheduling, setRescheduling] = useState(false);
@@ -78,6 +81,9 @@ export default function AdminReservationManagement() {
   const { data: bookingPage, isLoading, error: bookingPageError } = useQuery({
     queryKey: ["admin-bookings", reservationFilters],
     queryFn: () => baseClient.entities.Booking.adminPage(reservationFilters),
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
   const { data: packages = [] } = useQuery({
     queryKey: ["admin-reservation-package-filters"],
@@ -102,6 +108,26 @@ export default function AdminReservationManagement() {
     } finally {
       setArchiving(false);
       setArchiveId(null);
+    }
+  };
+
+  const handleAcceptBooking = async () => {
+    if (!reviewBooking) return;
+    setAcceptingBooking(true);
+    try {
+      await baseClient.entities.Booking.accept(reviewBooking.id);
+      toast.success("Booking accepted and payment manually verified.");
+      setReviewBooking(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["my-bookings"] }),
+      ]);
+    } catch (error) {
+      toast.error(error?.message || "Unable to accept this booking.");
+    } finally {
+      setAcceptingBooking(false);
     }
   };
 
@@ -213,6 +239,7 @@ export default function AdminReservationManagement() {
             <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
+            <option value="rejected">Rejected</option>
             <option value="archived">Archived</option>
           </select>
         </Label>
@@ -223,6 +250,7 @@ export default function AdminReservationManagement() {
             <option value="unpaid">Unpaid</option>
             <option value="pending_verification">Pending verification</option>
             <option value="paid">Paid</option>
+            <option value="declined">Declined</option>
           </select>
         </Label>
         <Label className="space-y-1 text-xs text-muted-foreground">
@@ -335,6 +363,11 @@ export default function AdminReservationManagement() {
                                 <CalendarPlus className="h-4 w-4" /> Reschedule
                               </Button>
                             ) : null}
+                            {booking.status === "pending" ? (
+                              <Button variant="outline" size="sm" className="gap-2" onClick={() => setReviewBooking(booking)}>
+                                <Eye className="h-4 w-4" /> Review
+                              </Button>
+                            ) : null}
                             {rebookingStatus === "pending" ? (
                               <Button variant="outline" size="sm" className="gap-2" onClick={() => openRebookingReview(booking)}>
                                 <CalendarPlus className="h-4 w-4" /> Review
@@ -361,6 +394,50 @@ export default function AdminReservationManagement() {
         </CardContent>
         {!isLoading && !bookingPageError ? <PaginationControls page={currentPage} pageSize={pageSize} total={pagination.total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
       </Card>
+
+      <Dialog open={!!reviewBooking} onOpenChange={(open) => !open && !acceptingBooking && setReviewBooking(null)}>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto sm:max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Review booking and payment</DialogTitle>
+          </DialogHeader>
+          {reviewBooking ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2">
+                <div><p className="text-xs text-muted-foreground">Booking reference</p><p className="font-mono font-semibold">{reviewBooking.booking_reference || reviewBooking.id}</p></div>
+                <div><p className="text-xs text-muted-foreground">Guest</p><p className="font-semibold">{reviewBooking.customer_name || "Guest"}</p><p className="break-all text-sm text-muted-foreground">{reviewBooking.customer_email}</p></div>
+                <div><p className="text-xs text-muted-foreground">Package and date</p><p className="font-medium">{reviewBooking.package_name || "Package"} · {reviewBooking.booking_date}</p></div>
+                <div><p className="text-xs text-muted-foreground">Payment to verify</p><p className="font-semibold">{formatMoney(reviewBooking.payment_amount_due)}</p><p className="text-sm text-muted-foreground">{reviewBooking.payment_mode || reviewBooking.payment_qr_code_label || "Payment method unavailable"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Payment number</p><p className="break-all">{reviewBooking.payment_number || "Not extracted"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Reference number</p><p className="break-all">{reviewBooking.payment_reference_number || "Not provided"}</p></div>
+              </div>
+              <div className="rounded-lg border bg-muted/10 p-4 text-sm">
+                <p className="font-semibold">Receipt scan summary</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <p>OCR amount: {reviewBooking.payment_proof_ocr_amount ? formatMoney(reviewBooking.payment_proof_ocr_amount) : "Not detected"}</p>
+                  <p>OCR reference: <span className="break-all">{reviewBooking.payment_proof_ocr_reference || "Not detected"}</span></p>
+                  <p>OCR date: {reviewBooking.payment_proof_ocr_date || "Not detected"}</p>
+                  <p>OCR confidence: {Number(reviewBooking.payment_proof_ocr_confidence || 0).toFixed(0)}%</p>
+                </div>
+                <p className="mt-2 text-muted-foreground">OCR is only a reading aid. Confirm the original GCash receipt and payment details before accepting.</p>
+              </div>
+              {reviewBooking.receipt_url ? (
+                <a href={resolveAssetUrl(reviewBooking.receipt_url)} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border bg-white">
+                  <img src={resolveAssetUrl(reviewBooking.receipt_url)} alt={`Payment receipt for ${reviewBooking.booking_reference || "booking"}`} className="max-h-[50vh] w-full object-contain" />
+                </a>
+              ) : (
+                <p className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">No receipt is attached to this booking.</p>
+              )}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewBooking(null)} disabled={acceptingBooking}>Close</Button>
+            <Button onClick={handleAcceptBooking} disabled={acceptingBooking || reviewBooking?.status !== "pending" || reviewBooking?.payment_status !== "pending_verification" || !reviewBooking?.receipt_url} className="gap-2">
+              {acceptingBooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              Accept booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!archiveId} onOpenChange={(open) => !open && setArchiveId(null)}>
         <AlertDialogContent>
