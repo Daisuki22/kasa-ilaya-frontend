@@ -321,20 +321,20 @@ export default function BookingForm() {
   const displayStep = isBookingModalOpen ? modalStep + 1 : 1;
   const modalStepDetails = {
     1: {
+      title: "Terms and Conditions",
+      description: "Review and accept the terms and privacy notice before continuing with your booking.",
+    },
+    2: {
       title: "Booking Details",
       description: "Confirm the reservation date and fill in your customer details before continuing.",
     },
-    2: {
+    3: {
       title: "Review Booking",
       description: "Double-check your reservation summary before choosing your payment.",
     },
-    3: {
+    4: {
       title: "Payment",
       description: "Choose downpayment or full payment, select your payment method, and upload proof.",
-    },
-    4: {
-      title: "Terms and Conditions",
-      description: "Review and accept the terms before final booking submission.",
     },
   };
 
@@ -1072,8 +1072,8 @@ export default function BookingForm() {
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             <AnimatePresence mode="wait">
-              {modalStep === 1 && (
-                <motion.div key="modal-step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              {modalStep === 2 && (
+                <motion.div key="modal-step-booking-details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                     <div className="space-y-5">
                       <div className="rounded-lg border border-border bg-muted/30 p-5">
@@ -1244,7 +1244,7 @@ export default function BookingForm() {
                       <Button variant="outline" onClick={() => handleBookingModalChange(false)}>
                         Back
                       </Button>
-                      <Button className="flex-1" disabled={!selectedTour || isAvailabilityError || isLoadingAvailability || isSelectedDateFull || !isCustomerInfoComplete} onClick={() => setModalStep(2)}>
+                      <Button className="flex-1" disabled={!selectedTour || isAvailabilityError || isLoadingAvailability || isSelectedDateFull || !isCustomerInfoComplete} onClick={() => setModalStep(3)}>
                         Next: Review
                       </Button>
                     </div>
@@ -1252,7 +1252,7 @@ export default function BookingForm() {
                 </motion.div>
               )}
 
-              {modalStep === 2 && (
+              {modalStep === 3 && (
                 <motion.div key="modal-step-review" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="space-y-6">
                     <div className="rounded-lg bg-muted p-8 text-center">
@@ -1284,10 +1284,10 @@ export default function BookingForm() {
 
                     <div className="sticky bottom-0 mt-6 border-t border-border bg-background/95 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
                       <div className="flex flex-col gap-3 sm:flex-row">
-                        <Button variant="outline" onClick={() => setModalStep(1)}>
+                        <Button variant="outline" onClick={() => setModalStep(2)}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={() => setModalStep(3)}>
+                        <Button className="flex-1" onClick={() => setModalStep(4)}>
                           Next: Payment
                         </Button>
                       </div>
@@ -1296,7 +1296,7 @@ export default function BookingForm() {
                 </motion.div>
               )}
 
-              {modalStep === 3 && (
+              {modalStep === 4 && (
                 <motion.div key="modal-step-payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="space-y-6">
                     <div className="rounded-lg bg-muted p-8 text-center">
@@ -1496,7 +1496,9 @@ export default function BookingForm() {
                       <div className="mb-4 rounded-lg border border-border bg-muted/20 p-4">
                         <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                           <span>
-                            {receiptValidation?.status === "manual_review"
+                            {receiptValidation?.status === "duplicate"
+                              ? "This receipt has already been used. Submitting the booking will mark it as declined."
+                              : receiptValidation?.status === "manual_review"
                               ? "Receipt sent. The admin will manually check your payment before approval."
                               : "Upload a readable payment proof before continuing."}
                           </span>
@@ -1507,11 +1509,12 @@ export default function BookingForm() {
                       </div>
 
                       <div className="flex gap-3">
-                        <Button variant="outline" onClick={() => setModalStep(2)}>
+                        <Button variant="outline" onClick={() => setModalStep(3)}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={() => setModalStep(4)} disabled={isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !["manual_review", "duplicate"].includes(receiptValidation?.status)}>
-                          Next: Terms
+                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || !["manual_review", "duplicate"].includes(receiptValidation?.status) || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
+                          {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                          {submitting ? "Processing Booking..." : "Submit Booking"}
                         </Button>
                       </div>
                     </div>
@@ -1519,7 +1522,7 @@ export default function BookingForm() {
                 </motion.div>
               )}
 
-              {modalStep === 4 && (
+              {modalStep === 1 && (
                 <motion.div key="modal-step-terms" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="space-y-5">
                     <div className="rounded-lg border border-info/20 bg-info/10 p-4 text-sm leading-6 text-foreground">
@@ -1562,12 +1565,11 @@ export default function BookingForm() {
 
                     <div className="sticky bottom-0 mt-6 border-t border-border bg-background/95 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
                       <div className="flex flex-col gap-3 sm:flex-row">
-                        <Button variant="outline" onClick={() => setModalStep(3)} disabled={submitting}>
-                          Back
+                        <Button variant="outline" onClick={() => handleBookingModalChange(false)} disabled={submitting}>
+                          Back to Date
                         </Button>
-                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || !["manual_review", "duplicate"].includes(receiptValidation?.status) || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
-                          {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                          {submitting ? "Processing Booking..." : "Submit Booking"}
+                        <Button className="flex-1" onClick={() => setModalStep(2)} disabled={isLoadingLegalDocuments || !hasPublishedLegalDocuments || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
+                          Continue: Booking Details
                         </Button>
                       </div>
                     </div>
