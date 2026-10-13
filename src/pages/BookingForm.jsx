@@ -404,7 +404,7 @@ export default function BookingForm() {
       return;
     }
 
-    if (receiptValidation?.status !== "manual_review") {
+    if (!["manual_review", "duplicate"].includes(receiptValidation?.status)) {
       toast.error("Upload a readable payment proof image before submitting.");
       return;
     }
@@ -753,7 +753,10 @@ export default function BookingForm() {
       const duplicateNotice = ocr.duplicate_image
         ? " This image matches a previous upload and will receive additional admin review."
         : "";
-      if (uploadResult.validation === "declined") {
+      if (uploadResult.validation === "duplicate") {
+        setReceiptValidation({ status: "duplicate", message: uploadResult.message || "This exact receipt image has already been submitted. The booking will be declined when you submit it." });
+        toast.error("This receipt was already used. Submitting this booking will mark it as declined.");
+      } else if (uploadResult.validation === "declined") {
         setReceiptValidation({ status: "rejected", message: uploadResult.message || "Receipt does not match the selected payment details." });
         toast.error(`Payment proof rejected: ${uploadResult.message || "Receipt details do not match."}`);
       } else {
@@ -1459,6 +1462,10 @@ export default function BookingForm() {
                                 <div className="flex items-center gap-2 font-medium text-destructive">
                                   <ShieldCheck className="h-4 w-4" /> {receiptValidation?.message?.startsWith("Receipt is outdated.") ? "Declined — Outdated Receipt" : receiptValidation?.message?.startsWith("Receipt date is invalid.") ? "Declined — Invalid Receipt Date" : "Declined — Receipt Does Not Match"}
                                 </div>
+                              ) : receiptValidation?.status === "duplicate" ? (
+                                <div className="flex items-center gap-2 font-medium text-destructive">
+                                  <ShieldCheck className="h-4 w-4" /> Duplicate Receipt Detected — Booking Will Be Declined
+                                </div>
                               ) : (
                                 <div className="flex items-center gap-2 text-warning">
                                   <ShieldCheck className="h-4 w-4" /> Sent — Pending Manual Admin Check
@@ -1503,7 +1510,7 @@ export default function BookingForm() {
                         <Button variant="outline" onClick={() => setModalStep(2)}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={() => setModalStep(4)} disabled={isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || receiptValidation?.status !== "manual_review"}>
+                        <Button className="flex-1" onClick={() => setModalStep(4)} disabled={isUploadingReceipt || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !["manual_review", "duplicate"].includes(receiptValidation?.status)}>
                           Next: Terms
                         </Button>
                       </div>
@@ -1558,7 +1565,7 @@ export default function BookingForm() {
                         <Button variant="outline" onClick={() => setModalStep(3)} disabled={submitting}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || receiptValidation?.status !== "manual_review" || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
+                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || !["manual_review", "duplicate"].includes(receiptValidation?.status) || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
                           {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                           {submitting ? "Processing Booking..." : "Submit Booking"}
                         </Button>
