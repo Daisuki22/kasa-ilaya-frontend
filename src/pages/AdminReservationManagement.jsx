@@ -250,7 +250,6 @@ export default function AdminReservationManagement() {
             <option value="unpaid">Unpaid</option>
             <option value="pending_verification">Pending verification</option>
             <option value="paid">Paid</option>
-            <option value="declined">Declined</option>
           </select>
         </Label>
         <Label className="space-y-1 text-xs text-muted-foreground">
