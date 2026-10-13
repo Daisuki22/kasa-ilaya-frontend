@@ -145,6 +145,7 @@ export default function BookingForm() {
   const [receiptFileName, setReceiptFileName] = useState("");
   const [receiptUploadToken, setReceiptUploadToken] = useState("");
   const [receiptValidation, setReceiptValidation] = useState(null);
+  const [receiptOcrSummary, setReceiptOcrSummary] = useState(null);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
@@ -355,6 +356,7 @@ export default function BookingForm() {
     setReceiptFileName("");
     setReceiptUploadToken("");
     setReceiptValidation(null);
+    setReceiptOcrSummary(null);
   };
 
   const handleSubmit = async () => {
@@ -701,6 +703,7 @@ export default function BookingForm() {
     setReceiptUrl("");
     setReceiptFileName("");
     setReceiptUploadToken("");
+    setReceiptOcrSummary(null);
     setForm((previous) => ({ ...previous, payment_number: "", payment_reference_number: "" }));
     setReceiptValidation({ status: "checking", message: "Checking image readability and upload requirements..." });
 
@@ -728,6 +731,7 @@ export default function BookingForm() {
       setReceiptFileName(file.name);
       setReceiptUploadToken(proof_upload_token);
       const ocr = uploadResult.ocr_summary || {};
+      setReceiptOcrSummary(ocr);
       const extracted = [
         ocr.provider ? `Provider: ${ocr.provider}` : null,
         Number.isFinite(Number(ocr.amount)) && Number(ocr.amount) > 0 ? `Amount: ${ocr.amount_currency === "USD" ? "$" : ocr.amount_currency && ocr.amount_currency !== "PHP" ? `${ocr.amount_currency} ` : "₱"}${Number(ocr.amount).toFixed(2)}` : null,
@@ -1463,6 +1467,13 @@ export default function BookingForm() {
                               {receiptFileName ? <p className="mt-2 break-all text-xs font-medium text-foreground">Uploaded: {receiptFileName}</p> : null}
                               {receiptValidation?.message ? (
                                 <p className="mt-1 text-xs text-muted-foreground">{receiptValidation.message}</p>
+                              ) : null}
+                              {receiptOcrSummary && (receiptOcrSummary.date || receiptOcrSummary.payment_number || receiptOcrSummary.reference) ? (
+                                <div className="mt-3 grid grid-cols-1 gap-2 rounded-md border border-border/70 bg-background/70 p-3 text-xs sm:grid-cols-3">
+                                  {receiptOcrSummary.date ? <p><span className="text-muted-foreground">Receipt date:</span> <span className="font-medium text-foreground">{receiptOcrSummary.date}</span></p> : null}
+                                  {receiptOcrSummary.reference ? <p className="break-all"><span className="text-muted-foreground">Reference:</span> <span className="font-medium text-foreground">{receiptOcrSummary.reference}</span></p> : null}
+                                  {receiptOcrSummary.payment_number ? <p className="break-all"><span className="text-muted-foreground">GCash/payment number:</span> <span className="font-medium text-foreground">{receiptOcrSummary.payment_number}</span></p> : null}
+                                </div>
                               ) : null}
                               <a href={receiptUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline">
                                 <QrCode className="h-4 w-4" /> View uploaded proof
