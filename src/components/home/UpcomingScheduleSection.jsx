@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarCheck, Clock3, Loader2, MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
+import { CalendarCheck, Loader2, MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseSafeDate, safeFormatDate } from "@/lib/safeDate";
 import { useConfirmation } from "@/hooks/useConfirmation";
@@ -41,23 +41,9 @@ const getDateField = (record, field) => {
 const createEmptyForm = (date) => ({
   title: "",
   schedule_date: format(date, "yyyy-MM-dd"),
-  start_time: "",
-  end_time: "",
   location: "",
   description: "",
 });
-
-const formatTimeRange = (schedule) => {
-  if (schedule.start_time && schedule.end_time) {
-    return `${schedule.start_time} - ${schedule.end_time}`;
-  }
-
-  if (schedule.start_time) {
-    return `Starts at ${schedule.start_time}`;
-  }
-
-  return "Time to be announced";
-};
 
 const bookingStatusColors = {
   pending: "bg-warning/10 text-warning border-warning/30",
@@ -76,7 +62,7 @@ const getBookingDateSpan = (booking) => {
   const start = getDateField(booking, "booking_date");
   if (!start) return [];
 
-  if (booking.tour_type === "22_hours") {
+  if (["night_tour", "22_hours"].includes(booking.tour_type)) {
     return [start, addDays(start, 1)];
   }
   return [start];
@@ -126,6 +112,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
   const selectedDateBookings = upcomingBookings.filter((booking) =>
     getBookingDateSpan(booking).some((date) => isSameDay(date, selectedDate))
   );
+  const selectedDateUnavailable = selectedDateSchedules.length > 0 || selectedDateBookings.length > 0;
 
   const featuredUpcomingSchedules = [
     ...upcomingSchedules.map((schedule) => ({
@@ -133,7 +120,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       type: "schedule",
       title: schedule.title,
       date: getDateField(schedule, "schedule_date"),
-      timeLabel: schedule.start_time || "All day",
+      timeLabel: "All day",
     })),
     ...upcomingBookings.map((booking) => ({
       id: `booking-${booking.id}`,
@@ -153,6 +140,10 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
     if (!canManageSchedules) {
       return;
     }
+    if (selectedDateUnavailable) {
+      toast.error("This date already has a booking or schedule. Choose another date.");
+      return;
+    }
     setEditingSchedule(null);
     setForm(createEmptyForm(selectedDate));
     setDialogOpen(true);
@@ -167,8 +158,6 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
     setForm({
       title: schedule.title || "",
       schedule_date: format(scheduleDate, "yyyy-MM-dd"),
-      start_time: schedule.start_time || "",
-      end_time: schedule.end_time || "",
       location: schedule.location || "",
       description: schedule.description || "",
     });
@@ -186,6 +175,21 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       return;
     }
 
+    const dateHasBooking = upcomingBookings.some((booking) =>
+      getBookingDateSpan(booking).some((date) => isSameDay(date, scheduleDate))
+    );
+    if (dateHasBooking) {
+      toast.error("A booking already occupies this date. Choose another date for the schedule.");
+      return;
+    }
+    const dateHasOtherSchedule = upcomingSchedules.some((schedule) =>
+      schedule.id !== editingSchedule?.id && isSameDay(getDateField(schedule, "schedule_date"), scheduleDate)
+    );
+    if (dateHasOtherSchedule) {
+      toast.error("A schedule already exists on this date. Choose another date.");
+      return;
+    }
+
     if (editingSchedule && !await confirm({
       title: "Save schedule changes?",
       description: `Save changes to "${form.title.trim()}"?`,
@@ -198,8 +202,8 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       const payload = {
         title: form.title.trim(),
         schedule_date: form.schedule_date,
-        start_time: form.start_time || null,
-        end_time: form.end_time || null,
+        start_time: null,
+        end_time: null,
         location: form.location.trim() || null,
         description: form.description.trim() || null,
         created_by_name: user?.full_name || null,
@@ -292,7 +296,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
             </p>
           </div>
           {canManageSchedules && (
-            <Button className="gap-2 self-start sm:self-auto" onClick={openCreateDialog}>
+            <Button className="gap-2 self-start sm:self-auto" onClick={openCreateDialog} disabled={selectedDateUnavailable}>
               <Plus className="h-4 w-4" />
               Add Schedule
             </Button>
@@ -372,10 +376,6 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                               <div>
                                 <h3 className="font-semibold text-foreground">{schedule.title}</h3>
                                 <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                                  <p className="flex items-center gap-2">
-                                    <Clock3 className="h-4 w-4 text-primary" />
-                                    {formatTimeRange(schedule)}
-                                  </p>
                                   {schedule.location && (
                                     <p className="flex items-center gap-2">
                                       <MapPin className="h-4 w-4 text-primary" />
@@ -521,27 +521,6 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                     value={form.location}
                     onChange={(event) => setForm({ ...form, location: event.target.value })}
                     placeholder="Main pool, pavilion, cottage area"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="schedule-start">Start Time</Label>
-                  <Input
-                    id="schedule-start"
-                    type="time"
-                    value={form.start_time}
-                    onChange={(event) => setForm({ ...form, start_time: event.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="schedule-end">End Time</Label>
-                  <Input
-                    id="schedule-end"
-                    type="time"
-                    value={form.end_time}
-                    onChange={(event) => setForm({ ...form, end_time: event.target.value })}
                   />
                 </div>
               </div>

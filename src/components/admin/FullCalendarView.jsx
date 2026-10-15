@@ -44,11 +44,18 @@ const tourLabels = {
 const createEmptyForm = (date) => ({
   title: "",
   schedule_date: format(date || new Date(), "yyyy-MM-dd"),
-  start_time: "",
-  end_time: "",
   location: "",
   description: "",
 });
+
+const bookingOccupiesDate = (booking, dateKey) => {
+  const bookingDate = String(booking?.booking_date || "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(bookingDate)) return false;
+  if (bookingDate === dateKey) return true;
+  if (!["night_tour", "22_hours"].includes(booking?.tour_type)) return false;
+  const nextDate = format(addDays(new Date(`${bookingDate}T00:00:00`), 1), "yyyy-MM-dd");
+  return nextDate === dateKey;
+};
 
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 
@@ -127,11 +134,8 @@ export default function FullCalendarView({ embedded = false }) {
     ...asArray(schedules).map((schedule) => ({
       id: `schedule-${schedule.id}`,
       title: schedule.title,
-      start: schedule.start_time
-        ? `${schedule.schedule_date}T${schedule.start_time}`
-        : schedule.schedule_date,
-      end: schedule.end_time ? `${schedule.schedule_date}T${schedule.end_time}` : undefined,
-      allDay: !schedule.start_time,
+      start: schedule.schedule_date,
+      allDay: true,
       backgroundColor: SCHEDULE_COLOR,
       borderColor: SCHEDULE_COLOR,
       extendedProps: { type: "schedule", raw: schedule },
@@ -146,7 +150,7 @@ export default function FullCalendarView({ embedded = false }) {
         extendedProps: { type: "booking", raw: booking },
       };
 
-      if (booking.tour_type === "22_hours") {
+      if (["night_tour", "22_hours"].includes(booking.tour_type)) {
         return [{
           ...base,
           start: booking.booking_date,
@@ -168,12 +172,22 @@ export default function FullCalendarView({ embedded = false }) {
 
   const handleDateClick = (info) => {
     if (!canManage) return;
+    const clickedDateKey = info.dateStr.slice(0, 10);
     const clickedDate = new Date(info.dateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     if (clickedDate < today) {
       toast.error("You cannot add a schedule on a past date.");
+      return;
+    }
+
+    if (asArray(bookings).some((booking) => bookingOccupiesDate(booking, clickedDateKey))) {
+      toast.error("A booking already occupies this date. Choose another date for the schedule.");
+      return;
+    }
+    if (asArray(schedules).some((schedule) => String(schedule.schedule_date || "").slice(0, 10) === clickedDateKey)) {
+      toast.error("A schedule already exists on this date. Choose another date.");
       return;
     }
 
@@ -197,8 +211,6 @@ export default function FullCalendarView({ embedded = false }) {
     setForm({
       title: raw.title || "",
       schedule_date: raw.schedule_date,
-      start_time: raw.start_time || "",
-      end_time: raw.end_time || "",
       location: raw.location || "",
       description: raw.description || "",
     });
@@ -222,6 +234,15 @@ export default function FullCalendarView({ embedded = false }) {
       return;
     }
 
+    if (asArray(bookings).some((booking) => bookingOccupiesDate(booking, form.schedule_date))) {
+      toast.error("A booking already occupies this date. Choose another date for the schedule.");
+      return;
+    }
+    if (asArray(schedules).some((schedule) => schedule.id !== editingSchedule?.id && String(schedule.schedule_date || "").slice(0, 10) === form.schedule_date)) {
+      toast.error("A schedule already exists on this date. Choose another date.");
+      return;
+    }
+
     if (editingSchedule && !await confirm({
       title: "Save schedule changes?",
       description: `Save changes to "${form.title.trim()}"?`,
@@ -233,8 +254,8 @@ export default function FullCalendarView({ embedded = false }) {
       const payload = {
         title: form.title.trim(),
         schedule_date: form.schedule_date,
-        start_time: form.start_time || null,
-        end_time: form.end_time || null,
+        start_time: null,
+        end_time: null,
         location: form.location.trim() || null,
         description: form.description.trim() || null,
         created_by_name: user?.full_name || null,
@@ -411,26 +432,6 @@ export default function FullCalendarView({ embedded = false }) {
                 value={form.schedule_date}
                 onChange={(event) => setForm((current) => ({ ...current, schedule_date: event.target.value }))}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="fc-start">Start Time</Label>
-                <Input
-                  id="fc-start"
-                  type="time"
-                  value={form.start_time}
-                  onChange={(event) => setForm((current) => ({ ...current, start_time: event.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="fc-end">End Time</Label>
-                <Input
-                  id="fc-end"
-                  type="time"
-                  value={form.end_time}
-                  onChange={(event) => setForm((current) => ({ ...current, end_time: event.target.value }))}
-                />
-              </div>
             </div>
             <div>
               <Label htmlFor="fc-location">Location</Label>
