@@ -113,7 +113,15 @@ export default function ResetPassword() {
     try {
       const response = await baseClient.auth.resendResetOtp(resetIdentifierPayload());
 
-      if (response.sample_reset_otp) {
+      if (response.account_status === 'not_found') {
+        toast.error('No existing account was found for this email address.');
+        navigate(`${createPageUrl('ForgotPassword')}?email=${encodeURIComponent(form.email)}`);
+        return;
+      } else if (response.account_status === 'google_only') {
+        toast.error('This account uses Google Sign-In. Choose Continue with Google to sign in.');
+        navigate(createPageUrl('Login'));
+        return;
+      } else if (response.sample_reset_otp) {
         setForm((current) => ({ ...current, code: response.sample_reset_otp, password: '', confirmPassword: '' }));
         toast.success(`Temporary development reset code: ${response.sample_reset_otp}`);
       } else if (response.delivery_method === 'server_log') {

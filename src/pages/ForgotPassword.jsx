@@ -24,7 +24,11 @@ export default function ForgotPassword() {
         email,
       });
 
-      if (response.sample_reset_otp) {
+      if (response.account_status === 'not_found') {
+        toast.error('No existing account was found for this email address.');
+      } else if (response.account_status === 'google_only') {
+        toast.error('This account uses Google Sign-In. Choose Continue with Google to sign in.');
+      } else if (response.sample_reset_otp) {
         toast.success(`Temporary development reset code: ${response.sample_reset_otp}`);
         const params = new URLSearchParams({ method: 'email', email });
         params.set('sample_otp', response.sample_reset_otp);
