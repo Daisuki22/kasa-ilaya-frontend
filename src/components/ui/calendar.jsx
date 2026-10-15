@@ -34,11 +34,11 @@ export const resortCalendarClassNames = {
   head_cell: 'flex h-8 items-center justify-center rounded-md text-xs font-medium text-muted-foreground sm:h-10 sm:text-sm',
   row: 'grid grid-cols-7 gap-y-1 sm:gap-y-2',
   cell: 'flex h-10 min-w-0 items-center justify-center p-0 text-center text-sm sm:h-14',
-  day: 'flex h-9 w-9 items-center justify-center rounded-xl p-0 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-selected:opacity-100 sm:h-12 sm:w-12',
+  day: 'flex h-9 w-9 items-center justify-center rounded-xl p-0 text-sm font-medium transition-colors hover:bg-secondary hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-selected:opacity-100 sm:h-12 sm:w-12',
   day_selected: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
   day_today: 'bg-secondary/10 font-semibold text-secondary ring-1 ring-secondary/40',
   day_outside: 'day-outside text-muted-foreground',
-  day_disabled: 'text-muted-foreground hover:bg-transparent',
+  day_disabled: 'text-muted-foreground hover:bg-transparent hover:text-muted-foreground',
   day_hidden: 'invisible',
 };
 
@@ -59,7 +59,7 @@ export function Calendar({ className, classNames, components, showOutsideDays = 
         head_cell: 'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
         row: 'flex w-full mt-2',
         cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md focus-within:relative focus-within:z-20',
-        day: 'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md',
+        day: 'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-secondary hover:text-secondary-foreground rounded-md',
         day_range_end: 'day-range-end',
         day_selected: 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
         day_today: 'bg-accent text-accent-foreground',
