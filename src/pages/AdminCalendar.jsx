@@ -16,6 +16,10 @@ import {
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Archive,
@@ -145,6 +149,8 @@ export default function AdminCalendar() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [archiveBookingTarget, setArchiveBookingTarget] = useState(null);
+  const [isArchivingBooking, setIsArchivingBooking] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [user, setUser] = useState(null);
   const [selectedRescheduleRequest, setSelectedRescheduleRequest] = useState(null);
@@ -238,7 +244,8 @@ export default function AdminCalendar() {
   }, [activeBookings]);
 
   const archiveBooking = async (bookingId) => {
-    const booking = bookings.find((item) => item.id === bookingId);
+    const booking = bookings.find((item) => String(item.id) === String(bookingId));
+    setIsArchivingBooking(true);
 
     try {
       await baseClient.entities.Booking.update(bookingId, {
@@ -259,8 +266,11 @@ export default function AdminCalendar() {
       queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       closeSelectedBooking();
+      setArchiveBookingTarget(null);
     } catch (error) {
       toast.error(error?.message || "Unable to archive booking.");
+    } finally {
+      setIsArchivingBooking(false);
     }
   };
 
@@ -600,7 +610,7 @@ export default function AdminCalendar() {
                                 size="icon"
                                 className="text-muted-foreground hover:text-foreground"
                                 title="Archive booking"
-                                onClick={() => archiveBooking(booking.id)}
+                                onClick={() => setArchiveBookingTarget(booking)}
                               >
                                 <Archive className="h-4 w-4" />
                               </Button>
@@ -771,6 +781,27 @@ export default function AdminCalendar() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={Boolean(archiveBookingTarget)} onOpenChange={(open) => { if (!open && !isArchivingBooking) setArchiveBookingTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archive this booking?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to archive booking {archiveBookingTarget?.booking_reference || "this booking"}? It will be removed from the active reservations list and can be viewed in the archive.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isArchivingBooking}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isArchivingBooking}
+                onClick={(event) => { event.preventDefault(); void archiveBooking(archiveBookingTarget?.id); }}
+              >
+                {isArchivingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />}
+                Archive booking
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

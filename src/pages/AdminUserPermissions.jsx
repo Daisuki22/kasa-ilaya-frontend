@@ -51,6 +51,7 @@ export default function AdminUserPermissions() {
   const [pageSize, setPageSize] = useState(10);
   const [savingKey, setSavingKey] = useState("");
   const [resetTarget, setResetTarget] = useState(null);
+  const [archiveTarget, setArchiveTarget] = useState(null);
 
   useEffect(() => {
     baseClient.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -160,6 +161,7 @@ export default function AdminUserPermissions() {
       toast.success(nextDisabled ? "User disabled." : "User enabled.");
       queryClient.invalidateQueries({ queryKey: ["admin-user-permissions"] });
       queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] });
+      if (nextDisabled) setArchiveTarget(null);
     } catch (error) {
       toast.error(error?.message || "Unable to update user status.");
     } finally {
@@ -318,7 +320,7 @@ export default function AdminUserPermissions() {
                             variant="outline"
                             size="sm"
                             className="gap-2"
-                            onClick={() => updateDisabledState(targetUser, true)}
+                            onClick={() => setArchiveTarget(targetUser)}
                             disabled={statusSaving || isSelf(targetUser.id)}
                           >
                             <Archive className="h-4 w-4" />
@@ -355,6 +357,27 @@ export default function AdminUserPermissions() {
             >
               {savingKey === `reset-${resetTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
               Send link
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={Boolean(archiveTarget)} onOpenChange={(open) => { if (!open && !savingKey) setArchiveTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive this user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to archive {archiveTarget?.full_name || archiveTarget?.email}? They will lose access to their account and can be restored from the archive later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(savingKey)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={Boolean(savingKey)}
+              onClick={(event) => { event.preventDefault(); void updateDisabledState(archiveTarget, true); }}
+            >
+              {savingKey === `status-${archiveTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />}
+              Archive user
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
