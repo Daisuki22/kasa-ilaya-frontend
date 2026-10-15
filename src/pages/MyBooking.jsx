@@ -103,7 +103,7 @@ const statusFilters = [
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 const formatMoneyWithCents = (value) => `PHP ${Number(value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const CANCELLATION_NOTICE_DAYS = 7;
-const RESCHEDULE_CUTOFF_DAYS = 5;
+const RESCHEDULE_CUTOFF_DAYS = 7;
 
 const formatDate = (value) => {
   if (!value) {
@@ -169,7 +169,7 @@ const getCancellationLockedReason = (booking) => {
   if (daysUntilBooking <= CANCELLATION_NOTICE_DAYS) {
     return getRescheduleDeadlineReason(booking)
       ? "Cancellation is closed within 7 calendar days, and the reschedule deadline has passed."
-      : "Cancellation is closed within 7 calendar days. You may request a reschedule until 5 days before the tour begins.";
+      : "Cancellation is closed within 7 calendar days. You may request a reschedule until 7 days before the tour begins.";
   }
 
   return "";
@@ -203,7 +203,7 @@ const getRescheduleDeadlineReason = (booking) => {
   const startTime = getBookingStartDateTime(booking);
   if (!startTime) return "This booking's reschedule deadline cannot be checked.";
   const cutoff = startTime.getTime() - RESCHEDULE_CUTOFF_DAYS * 24 * 60 * 60 * 1000;
-  return Date.now() >= cutoff ? "Rescheduling is unavailable starting 5 days before the tour begins." : "";
+  return Date.now() >= cutoff ? "Rescheduling is unavailable starting 7 days before the tour begins." : "";
 };
 
 const canRequestRebooking = (booking) => getRebookingLockedReason(booking) === "";
@@ -1000,7 +1000,7 @@ export default function MyBookings() {
                 <p className="font-semibold">Reschedule Policy</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   <li>One reschedule request is allowed per active reservation, subject to resort approval and schedule availability.</li>
-                  <li>Submit reschedule requests more than 5 days before the tour begins. Requests are closed during the final 5 days.</li>
+                  <li>Submit reschedule requests more than 7 days before the tour begins. Requests are closed during the final 7 days.</li>
                   <li>The package and tour time stay the same. Only the date can be changed.</li>
                   <li>Existing payment details are preserved; rescheduling does not create a refund.</li>
                 </ul>

@@ -280,7 +280,7 @@ const buildLocalResponse = (
       bullets: [
         "The reservation must be pending or confirmed.",
         "Only one rebooking can be approved per reservation.",
-        "Submit the request more than 5 days before the tour begins. Rescheduling is closed during the final 5 days.",
+        "Submit the request more than 7 days before the tour begins. Rescheduling is closed during the final 7 days.",
         "The new date must be available for the same package and tour type.",
       ],
       important:
@@ -504,13 +504,13 @@ const buildLocalResponse = (
     "what is the cancellation policy?": assistantReply({
       title: "Cancellation policy",
       intro: CANCELLATION_REBOOKING_NOTICE,
-      bullets: ["Online cancellation is available only more than 7 days before the reservation date.", "Rescheduling is available only more than 5 days before the tour begins and requires resort approval.", "Paid bookings are not refunded when cancelled."],
+      bullets: ["Online cancellation is available only more than 7 days before the reservation date.", "Rescheduling is available only more than 7 days before the tour begins and requires resort approval.", "Paid bookings are not refunded when cancelled."],
       nextStep: "Review the full current terms during booking or contact the resort about your reservation.",
     }),
 
     "can i cancel my reservation?": assistantReply({
       title: "Cancel a reservation",
-      intro: "You can cancel online if your reservation is more than 7 days away. Paid reservations are non-refundable. Reschedule requests require resort approval and close 5 days before the tour begins.",
+      intro: "You can cancel online if your reservation is more than 7 days away. Paid reservations are non-refundable. Reschedule requests require resort approval and close 7 days before the tour begins.",
       nextStep: "Open My Booking to review available actions or contact the resort team for help.",
     }),
 
@@ -833,7 +833,7 @@ const buildLocalResponse = (
       bullets: [
         "The booking must be pending or confirmed.",
         "Only one rebooking can be approved per reservation.",
-        "Submit the request more than 5 days before the tour begins. Rescheduling is closed during the final 5 days.",
+        "Submit the request more than 7 days before the tour begins. Rescheduling is closed during the final 7 days.",
         "Choose an available date for the same package and tour type.",
       ],
       important:

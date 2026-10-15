@@ -640,7 +640,7 @@ export default function AdminReservationManagement() {
               </div>
 
               <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm leading-6 text-warning">
-                Policy: one approved rebooking per reservation. Requests must be submitted more than 5 days before the reservation starts. Payment stays non-refundable and transfers to the approved new date.
+                Policy: one approved rebooking per reservation. Requests must be submitted more than 7 days before the reservation starts. Payment stays non-refundable and transfers to the approved new date.
               </div>
 
               <div>
