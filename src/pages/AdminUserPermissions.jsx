@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Archive, Loader2, Search } from "lucide-react";
+import { Archive, Loader2, Mail, Search } from "lucide-react";
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PaginationControls from "@/components/admin/PaginationControls";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const roleBadgeClass = {
   super_admin: "bg-primary/10 text-primary border-primary/30",
@@ -40,6 +50,7 @@ export default function AdminUserPermissions() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [savingKey, setSavingKey] = useState("");
+  const [resetTarget, setResetTarget] = useState(null);
 
   useEffect(() => {
     baseClient.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -77,6 +88,9 @@ export default function AdminUserPermissions() {
   const visibleUsers = useMemo(() => filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredUsers, currentPage, pageSize]);
 
   const isSelf = (userId) => currentUser?.id && userId === currentUser.id;
+  const isSuperAdmin = currentUser?.role === "super_admin"
+    || currentUser?.app_role === "super_admin"
+    || currentUser?._app_role === "super_admin";
 
   const updateRole = async (targetUser, nextRole) => {
     if (!targetUser || targetUser.role === nextRole) {
@@ -153,6 +167,22 @@ export default function AdminUserPermissions() {
     }
   };
 
+  const sendPasswordResetLink = async () => {
+    if (!resetTarget) return;
+
+    const saveId = `reset-${resetTarget.id}`;
+    setSavingKey(saveId);
+    try {
+      await baseClient.auth.sendAdminPasswordResetLink(resetTarget.id);
+      toast.success(`Password reset link sent to ${resetTarget.email}.`);
+      setResetTarget(null);
+    } catch (error) {
+      toast.error(error?.message || "Unable to send the password reset link.");
+    } finally {
+      setSavingKey("");
+    }
+  };
+
   return (
     <div className="w-full max-w-none space-y-6 px-2 py-6 sm:px-3 lg:px-4">
       <div>
@@ -202,6 +232,7 @@ export default function AdminUserPermissions() {
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Account Status</TableHead>
+                  {isSuperAdmin ? <TableHead>Password</TableHead> : null}
                   <TableHead className="text-right">Archive</TableHead>
                   <TableHead>Registered</TableHead>
                 </TableRow>
@@ -209,7 +240,7 @@ export default function AdminUserPermissions() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={isSuperAdmin ? 7 : 6} className="py-10 text-center text-muted-foreground">
                       No users found.
                     </TableCell>
                   </TableRow>
@@ -217,6 +248,7 @@ export default function AdminUserPermissions() {
                   visibleUsers.map((targetUser) => {
                     const roleSaving = savingKey === `role-${targetUser.id}`;
                     const statusSaving = savingKey === `status-${targetUser.id}`;
+                    const resetSaving = savingKey === `reset-${targetUser.id}`;
 
                     return (
                       <TableRow key={targetUser.id}>
@@ -263,6 +295,24 @@ export default function AdminUserPermissions() {
                             {statusSaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
                           </div>
                         </TableCell>
+                        {isSuperAdmin ? (
+                          <TableCell>
+                            {targetUser.has_local_password ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => setResetTarget(targetUser)}
+                                disabled={Boolean(savingKey)}
+                              >
+                                {resetSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                                Send reset link
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Google-managed</span>
+                            )}
+                          </TableCell>
+                        ) : null}
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -288,6 +338,27 @@ export default function AdminUserPermissions() {
         {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredUsers.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
       </Card>
       )}
+
+      <AlertDialog open={Boolean(resetTarget)} onOpenChange={(open) => { if (!open && !savingKey) setResetTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send password reset link?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to send a forgot password link to {resetTarget?.email}? The link will let them create a new password and expires after 15 minutes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(savingKey)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={Boolean(savingKey)}
+              onClick={(event) => { event.preventDefault(); void sendPasswordResetLink(); }}
+            >
+              {savingKey === `reset-${resetTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Send link
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

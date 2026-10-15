@@ -685,6 +685,13 @@ export const baseClient = {
       );
     },
 
+    async sendAdminPasswordResetLink(userId) {
+      return request("/auth.php?action=admin-send-password-reset-link", {
+        method: "POST",
+        body: { user_id: userId },
+      });
+    },
+
     async resendResetOtp(data) {
       return request(
         "/auth.php?action=resend-reset-otp",
