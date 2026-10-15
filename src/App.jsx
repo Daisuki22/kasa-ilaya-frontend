@@ -13,6 +13,7 @@ import WelcomeIntro from '@/components/common/WelcomeIntro';
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+const INTRO_SUPPRESSED_AFTER_LOGOUT_KEY = 'ki-intro-suppressed-after-logout';
 
 const PageLoadingFallback = () => (
   <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
@@ -111,15 +112,26 @@ const WelcomeIntroGate = () => {
   const { user, isLoadingAuth } = useAuth();
   const hasShownIntro = useRef(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [wasLoggedOutThisTab, setWasLoggedOutThisTab] = useState(() => {
+    try {
+      return window.sessionStorage.getItem(INTRO_SUPPRESSED_AFTER_LOGOUT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
-    const handleLogoutStart = () => setIsLoggingOut(true);
+    const handleLogoutStart = () => {
+      setIsLoggingOut(true);
+      setWasLoggedOutThisTab(true);
+    };
     window.addEventListener('auth-logout-start', handleLogoutStart);
     return () => window.removeEventListener('auth-logout-start', handleLogoutStart);
   }, []);
 
   if (
     isLoggingOut ||
+    wasLoggedOutThisTab ||
     location.pathname !== '/' ||
     isLoadingAuth ||
     user?.role === 'admin' ||

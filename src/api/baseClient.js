@@ -789,6 +789,9 @@ export const baseClient = {
       }
 
       clearClientAuthState();
+      try {
+        window.sessionStorage.setItem("ki-intro-suppressed-after-logout", "true");
+      } catch {}
       dispatchAuthChange();
 
       if (typeof window !== "undefined") {
