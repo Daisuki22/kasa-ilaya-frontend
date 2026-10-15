@@ -152,6 +152,8 @@ export default function AdminCalendar() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [acceptBookingTarget, setAcceptBookingTarget] = useState(null);
+  const [isAcceptingBooking, setIsAcceptingBooking] = useState(false);
   const [archiveBookingTarget, setArchiveBookingTarget] = useState(null);
   const [isArchivingBooking, setIsArchivingBooking] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -329,6 +331,17 @@ export default function AdminCalendar() {
         return;
       }
       toast.error(error?.message || "Unable to update reservation.");
+    }
+  };
+
+  const confirmAcceptBooking = async () => {
+    if (!acceptBookingTarget) return;
+    setIsAcceptingBooking(true);
+    try {
+      await updateStatus(acceptBookingTarget.id, "confirmed");
+    } finally {
+      setIsAcceptingBooking(false);
+      setAcceptBookingTarget(null);
     }
   };
 
@@ -728,7 +741,7 @@ export default function AdminCalendar() {
 
                 {selectedBooking.status === "pending" && selectedBooking.payment_status !== "declined" && !isBookingExpired(selectedBooking) && (
                   <div className="space-y-3 border-t border-border pt-4">
-                    <Button className="w-full gap-2" onClick={() => updateStatus(selectedBooking.id, "confirmed")}>
+                    <Button className="w-full gap-2" onClick={() => setAcceptBookingTarget(selectedBooking)}>
                       <CheckCircle2 className="h-4 w-4" />
                       Approve Booking
                     </Button>
@@ -793,6 +806,24 @@ export default function AdminCalendar() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={Boolean(acceptBookingTarget)} onOpenChange={(open) => { if (!open && !isAcceptingBooking) setAcceptBookingTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Accept this booking request?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Accept {acceptBookingTarget?.booking_reference || "this booking"} for {formatDate(acceptBookingTarget?.booking_date)}? This confirms the reservation and marks its submitted payment as manually verified. You can accept it until the tour checkout time.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isAcceptingBooking}>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={isAcceptingBooking} onClick={(event) => { event.preventDefault(); void confirmAcceptBooking(); }}>
+                {isAcceptingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {isAcceptingBooking ? "Accepting…" : "Accept booking"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <AlertDialog open={Boolean(archiveBookingTarget)} onOpenChange={(open) => { if (!open && !isArchivingBooking) setArchiveBookingTarget(null); }}>
           <AlertDialogContent>

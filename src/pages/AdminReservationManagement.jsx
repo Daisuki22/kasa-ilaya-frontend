@@ -51,6 +51,7 @@ export default function AdminReservationManagement() {
   const [archiving, setArchiving] = useState(false);
   const [reviewBooking, setReviewBooking] = useState(null);
   const [acceptingBooking, setAcceptingBooking] = useState(false);
+  const [acceptConfirmOpen, setAcceptConfirmOpen] = useState(false);
   const [rescheduleBooking, setRescheduleBooking] = useState(null);
   const [rescheduleForm, setRescheduleForm] = useState({ booking_date: "", note: "" });
   const [rescheduling, setRescheduling] = useState(false);
@@ -118,6 +119,7 @@ export default function AdminReservationManagement() {
       await baseClient.entities.Booking.accept(reviewBooking.id);
       toast.success("Booking accepted and payment manually verified.");
       setReviewBooking(null);
+      setAcceptConfirmOpen(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
         queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] }),
@@ -430,13 +432,31 @@ export default function AdminReservationManagement() {
           ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewBooking(null)} disabled={acceptingBooking}>Close</Button>
-            <Button onClick={handleAcceptBooking} disabled={acceptingBooking || reviewBooking?.status !== "pending" || reviewBooking?.payment_status !== "pending_verification" || !reviewBooking?.receipt_url} className="gap-2">
+            <Button onClick={() => setAcceptConfirmOpen(true)} disabled={acceptingBooking || reviewBooking?.status !== "pending" || reviewBooking?.payment_status !== "pending_verification" || !reviewBooking?.receipt_url} className="gap-2">
               {acceptingBooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Accept booking
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={acceptConfirmOpen} onOpenChange={(open) => { if (!acceptingBooking) setAcceptConfirmOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Accept this booking request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Accept {reviewBooking?.booking_reference || "this booking"} for {reviewBooking?.booking_date || "the selected date"}? This confirms the reservation and marks its submitted payment as manually verified. Requests can be accepted until the tour checkout time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={acceptingBooking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={acceptingBooking} onClick={(event) => { event.preventDefault(); void handleAcceptBooking(); }}>
+              {acceptingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+              {acceptingBooking ? "Accepting…" : "Accept booking"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!archiveId} onOpenChange={(open) => !open && setArchiveId(null)}>
         <AlertDialogContent>
