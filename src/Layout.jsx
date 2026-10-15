@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
   Menu, X, User, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
@@ -395,6 +395,19 @@ export default function Layout({ children, currentPageName }) {
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
     .slice(0, 12);
 
+  const notificationGroups = ["New", "Yesterday", "Older"].map((label) => ({
+    label,
+    items: notifications.filter((item) => {
+      const date = new Date(item.createdAt);
+      const group = Number.isNaN(date.getTime()) || isToday(date)
+        ? "New"
+        : isYesterday(date)
+          ? "Yesterday"
+          : "Older";
+      return group === label;
+    }),
+  })).filter((group) => group.items.length > 0);
+
   const unreadCount = Number(persistedUnreadCount.count || 0) + notifications.filter((item) => !item.isPersistent && new Date(item.createdAt).getTime() > notificationSeenAt).length;
 
   const markNotificationsAsRead = async () => {
@@ -517,44 +530,77 @@ export default function Layout({ children, currentPageName }) {
             </Button>
           )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[min(92vw,28rem)] p-0">
-          <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Notifications</p>
-              <p className="text-xs text-muted-foreground">{notificationSubtitle}</p>
+        <DropdownMenuContent align="end" className="w-[min(94vw,26rem)] overflow-hidden rounded-xl border-border p-0 shadow-xl">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Bell className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Notifications</p>
+                <p className="truncate text-xs text-muted-foreground">{unreadCount ? `${unreadCount} unread · ${notificationSubtitle}` : notificationSubtitle}</p>
+              </div>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" onClick={markNotificationsAsRead}>
+            <Button variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-xs" onClick={markNotificationsAsRead} disabled={!unreadCount}>
               <CheckCheck className="h-3.5 w-3.5" /> Mark all as read
             </Button>
           </div>
 
-          <div className="max-h-[24rem] overflow-y-auto">
+          <div className="max-h-[min(70vh,30rem)] overflow-y-auto p-2">
             {notifications.length === 0 ? (
-              <div className="px-3 py-6 text-center text-sm text-muted-foreground">No notifications yet.</div>
+              <div className="px-3 py-10 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground"><Bell className="h-5 w-5" /></div>
+                <p className="mt-3 text-sm font-medium text-foreground">You’re all caught up</p>
+                <p className="mt-1 text-xs text-muted-foreground">New notifications will show up here.</p>
+              </div>
             ) : (
-              notifications.map((item) => {
-                const eventTime = new Date(item.createdAt);
-                const isUnread = item.isPersistent ? !item.is_read : eventTime.getTime() > notificationSeenAt;
-                return (
-                  <DropdownMenuItem key={item.id} asChild>
-                    <Link
-                      to={item.link || createPageUrl("MyBookings")}
-                      className={`flex flex-col items-start gap-1 border-b border-border/60 px-3 py-3 ${isUnread ? "bg-primary/5" : ""}`}
-                    >
-                      <div className="flex w-full items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-foreground">{item.title}</span>
-                        {isUnread ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
-                      </div>
-                      <span className="text-xs text-muted-foreground">{item.description}</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {Number.isNaN(eventTime.getTime())
-                          ? "Just now"
-                          : `${formatDistanceToNow(eventTime, { addSuffix: true })}`}
-                      </span>
-                    </Link>
-                  </DropdownMenuItem>
-                );
-              })
+              notificationGroups.map((group) => (
+                <section key={group.label} className="mb-2 last:mb-0">
+                  <h3 className="sticky top-0 z-10 rounded-md bg-popover/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground backdrop-blur">
+                    {group.label}
+                  </h3>
+                  <div className="space-y-1">
+                    {group.items.map((item) => {
+                      const eventTime = new Date(item.createdAt);
+                      const isUnread = item.isPersistent ? !item.is_read : eventTime.getTime() > notificationSeenAt;
+                      const profileName = user.full_name || user.email || "User";
+                      const initials = profileName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "U";
+                      return (
+                        <DropdownMenuItem key={item.id} asChild>
+                          <Link
+                            to={item.link || createPageUrl("MyBookings")}
+                            className={`flex items-start gap-3 whitespace-normal rounded-lg px-3 py-3 focus:bg-muted ${isUnread ? "bg-primary/5" : "hover:bg-muted/60"}`}
+                          >
+                            <div className="relative mt-0.5 h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary/10 text-primary ring-1 ring-border/70">
+                              <span className="flex h-full w-full items-center justify-center text-xs font-semibold">{initials}</span>
+                              {user.profile_image_url ? (
+                                <img
+                                  src={resolveAssetUrl(user.profile_image_url)}
+                                  alt=""
+                                  loading="lazy"
+                                  className="absolute inset-0 h-full w-full object-cover"
+                                  onError={(event) => { event.currentTarget.style.display = "none"; }}
+                                />
+                              ) : null}
+                              {isUnread ? <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-primary" /> : null}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">{item.title}</p>
+                                <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground">
+                                  {Number.isNaN(eventTime.getTime()) ? "Now" : isToday(eventTime) || isYesterday(eventTime) ? format(eventTime, "h:mm a") : format(eventTime, "MMM d")}
+                                </span>
+                              </div>
+                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{item.description}</p>
+                              {isUnread ? <span className="mt-2 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">Unread</span> : null}
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))
             )}
           </div>
         </DropdownMenuContent>
