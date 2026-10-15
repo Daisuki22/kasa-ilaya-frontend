@@ -1,6 +1,26 @@
 import React from 'react';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, Day as DayPickerDay, useActiveModifiers, useDayPicker } from 'react-day-picker';
 import { cn } from '@/lib/utils';
+
+function CalendarDay(props) {
+  const { classNames, formatters, locale, showOutsideDays } = useDayPicker();
+  const modifiers = useActiveModifiers(props.date, props.displayMonth);
+
+  const hidden = modifiers.hidden || (modifiers.outside && !showOutsideDays);
+  if (!hidden) {
+    return <DayPickerDay {...props} />;
+  }
+
+  return (
+    <div
+      role="gridcell"
+      aria-label={formatters.labelDay(props.date, { locale })}
+      className={cn(classNames.day, classNames.day_disabled)}
+    >
+      {formatters.formatDay(props.date, { locale })}
+    </div>
+  );
+}
 
 export const resortCalendarClassNames = {
   months: 'flex w-full justify-center',
@@ -22,7 +42,7 @@ export const resortCalendarClassNames = {
   day_hidden: 'invisible',
 };
 
-export function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
+export function Calendar({ className, classNames, components, showOutsideDays = true, ...props }) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -49,6 +69,7 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
         day_hidden: 'invisible',
         ...classNames,
       }}
+      components={{ ...components, Day: CalendarDay }}
       {...props}
     />
   );

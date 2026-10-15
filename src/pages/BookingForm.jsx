@@ -1605,7 +1605,6 @@ export default function BookingForm() {
               </ol>
               <p className="mt-2 text-muted-foreground">You can also open this booking page on the phone that has the receipt and upload it directly.</p>
             </section>
-            <p className="rounded-lg border border-info/20 bg-info/10 p-3 text-muted-foreground">Make sure the receipt is readable and shows the payment date, amount, and transaction details. Upload the original receipt screenshot; never share your payment PIN or one-time password.</p>
             <p className="text-xs text-muted-foreground">Accepted formats: JPG, PNG, or WebP, up to 8 MB.</p>
           </div>
           <div className="flex justify-end"><Button onClick={() => setReceiptHelpOpen(false)}>Got it</Button></div>
