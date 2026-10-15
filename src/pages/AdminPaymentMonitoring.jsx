@@ -393,6 +393,9 @@ export default function AdminPaymentMonitoring() {
       return;
     }
 
+    const feeAction = statusOverride === "pending" ? "save this damage fee as a draft" : "bill this damage fee to the guest";
+    if (!window.confirm(`Are you sure you want to ${feeAction} for booking ${feeDialogBooking.booking_reference || feeDialogBooking.id}? Total: ${formatMoney(feeAmount)}.`)) return;
+
     setSavingFeeId(feeDialogBooking.id);
 
     try {

@@ -204,6 +204,13 @@ export default function AdminInquiries() {
       return;
     }
 
+    const currentStatus = selectedThread?.inquiry?.status || "open";
+    if (statusValue === currentStatus) {
+      toast.info("The inquiry already has this status.");
+      return;
+    }
+    if (!window.confirm(`Update this inquiry's status from ${currentStatus.replace(/_/g, " ")} to ${statusValue.replace(/_/g, " ")}?`)) return;
+
     try {
       setIsUpdatingStatus(true);
       await baseClient.inquiries.updateStatus(selectedInquiryId, statusValue);

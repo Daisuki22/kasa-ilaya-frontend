@@ -57,6 +57,8 @@ export default function ResortRulesManager({ user }) {
       return;
     }
 
+    if (editingRule && !window.confirm(`Save changes to the resort rule "${form.title.trim()}"?`)) return;
+
     setSaving(true);
 
     const payload = {

@@ -128,6 +128,8 @@ export default function AdminPaymentQRCodes() {
       return;
     }
 
+    if (editingCode && !window.confirm(`Save changes to the ${form.label} payment QR code?`)) return;
+
     setSaving(true);
 
     const payload = {

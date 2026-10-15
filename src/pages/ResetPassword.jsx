@@ -160,6 +160,8 @@ export default function ResetPassword() {
       return;
     }
 
+    if (!window.confirm('Update your password now?')) return;
+
     setIsSubmitting(true);
     try {
       await baseClient.auth.resetPassword(

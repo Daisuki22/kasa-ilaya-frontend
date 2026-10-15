@@ -99,6 +99,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
 
   const saveProfile = async (event) => {
     event.preventDefault();
+    if (!window.confirm("Save changes to your account information?")) return;
     setSavingProfile(true);
     try {
       syncUser(await baseClient.auth.updateMe({ full_name: form.full_name, phone: form.phone, birth_date: form.birth_date, profile_image_url: form.profile_image_url }));
@@ -137,6 +138,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
     event.preventDefault();
     if (password.new_password !== password.confirmPassword) { toast.error('New passwords do not match.'); return; }
     if (!passwordMeetsRequirements(password.new_password)) { toast.error('Use at least 10 characters with uppercase, lowercase, a number, and a special character.'); return; }
+    if (!window.confirm('Change your password now? Other active devices will be signed out.')) return;
     setSavingPassword(true);
     try {
       await baseClient.auth.changePassword({ current_password: password.current_password, new_password: password.new_password });

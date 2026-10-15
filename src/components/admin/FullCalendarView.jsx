@@ -220,6 +220,8 @@ export default function FullCalendarView({ embedded = false }) {
       return;
     }
 
+    if (editingSchedule && !window.confirm(`Save changes to "${form.title.trim()}"?`)) return;
+
     setIsSaving(true);
     try {
       const payload = {
