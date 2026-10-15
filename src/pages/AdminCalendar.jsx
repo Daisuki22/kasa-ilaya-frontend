@@ -156,6 +156,8 @@ export default function AdminCalendar() {
   const [isAcceptingBooking, setIsAcceptingBooking] = useState(false);
   const [archiveBookingTarget, setArchiveBookingTarget] = useState(null);
   const [isArchivingBooking, setIsArchivingBooking] = useState(false);
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [isBulkArchiveDialogOpen, setIsBulkArchiveDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [user, setUser] = useState(null);
   const [selectedRescheduleRequest, setSelectedRescheduleRequest] = useState(null);
@@ -282,6 +284,54 @@ export default function AdminCalendar() {
     } finally {
       setIsArchivingBooking(false);
     }
+  };
+
+  const toggleArchiveSelection = (bookingId) => {
+    setSelectedArchiveIds((current) => current.includes(bookingId)
+      ? current.filter((id) => id !== bookingId)
+      : [...current, bookingId]);
+  };
+
+  const toggleAllVisibleArchiveSelection = () => {
+    const visibleIds = filteredBookings.map((booking) => booking.id);
+    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedArchiveIds.includes(id));
+    setSelectedArchiveIds((current) => allVisibleSelected
+      ? current.filter((id) => !visibleIds.includes(id))
+      : [...new Set([...current, ...visibleIds])]);
+  };
+
+  const archiveSelectedBookings = async () => {
+    const selectedBookings = bookings.filter((booking) => selectedArchiveIds.includes(booking.id) && booking.status !== "archived");
+    if (!selectedBookings.length) return;
+
+    setIsArchivingBooking(true);
+    const results = await Promise.allSettled(selectedBookings.map(async (booking) => {
+      await baseClient.entities.Booking.update(booking.id, { status: "archived" });
+      await baseClient.entities.ActivityLog.create({
+        user_email: user?.email,
+        user_name: user?.full_name,
+        action: "Booking archived",
+        entity_type: "Booking",
+        entity_id: booking.id,
+        details: `Archived booking ${booking.booking_reference}`,
+      });
+      return booking.id;
+    }));
+    const archivedIds = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = results.length - archivedIds.length;
+
+    if (archivedIds.length) {
+      setSelectedArchiveIds((current) => current.filter((id) => !archivedIds.includes(id)));
+      toast.success(`${archivedIds.length} booking${archivedIds.length === 1 ? "" : "s"} archived.`);
+      queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-bookings-archived"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+    }
+    if (failedCount) toast.error(`${failedCount} booking${failedCount === 1 ? "" : "s"} could not be archived.`);
+    setIsArchivingBooking(false);
+    setIsBulkArchiveDialogOpen(false);
   };
 
   const updateStatus = async (bookingId, newStatus) => {
@@ -516,6 +566,16 @@ export default function AdminCalendar() {
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
+              {selectedArchiveIds.length > 0 ? (
+                <Button
+                  variant="outline"
+                  className="gap-2 text-warning"
+                  onClick={() => setIsBulkArchiveDialogOpen(true)}
+                  disabled={isArchivingBooking}
+                >
+                  <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
+                </Button>
+              ) : null}
               <div className="relative min-w-0 sm:w-72">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -547,6 +607,7 @@ export default function AdminCalendar() {
               <div className="overflow-x-auto">
                 <Table className="min-w-[1300px] table-fixed">
                   <colgroup>
+                    <col className="w-[52px]" />
                     <col className="w-[150px]" />
                     <col className="w-[136px]" />
                     <col className="w-[190px]" />
@@ -559,6 +620,15 @@ export default function AdminCalendar() {
                   </colgroup>
                   <TableHeader>
                     <TableRow className="bg-muted/40">
+                      <TableHead className="text-center">
+                        <input
+                          type="checkbox"
+                          aria-label="Select all visible reservations for archive"
+                          checked={filteredBookings.length > 0 && filteredBookings.every((booking) => selectedArchiveIds.includes(booking.id))}
+                          onChange={toggleAllVisibleArchiveSelection}
+                          className="h-4 w-4 cursor-pointer accent-primary"
+                        />
+                      </TableHead>
                       <TableHead>Reference</TableHead>
                       <TableHead>Guest</TableHead>
                       <TableHead>Package</TableHead>
@@ -574,6 +644,15 @@ export default function AdminCalendar() {
                     {filteredBookings.length ? (
                       filteredBookings.map((booking) => (
                         <TableRow key={booking.id} className="align-top">
+                          <TableCell className="text-center">
+                            <input
+                              type="checkbox"
+                              aria-label={`Select reservation ${booking.booking_reference || booking.id} for archive`}
+                              checked={selectedArchiveIds.includes(booking.id)}
+                              onChange={() => toggleArchiveSelection(booking.id)}
+                              className="mt-1 h-4 w-4 cursor-pointer accent-primary"
+                            />
+                          </TableCell>
                           <TableCell>
                             <p className="font-mono text-sm font-semibold text-foreground">{booking.booking_reference || "-"}</p>
                             <p className="mt-1 text-xs text-muted-foreground">{formatDate(booking.created_date)}</p>
@@ -650,7 +729,7 @@ export default function AdminCalendar() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="py-16 text-center">
+                        <TableCell colSpan={10} className="py-16 text-center">
                           <CalendarCheck className="mx-auto h-10 w-10 text-muted-foreground" />
                           <p className="mt-3 font-medium text-foreground">No reservations found</p>
                           <p className="mt-1 text-sm text-muted-foreground">Try a different status filter or search keyword.</p>
@@ -846,6 +925,27 @@ export default function AdminCalendar() {
               >
                 {isArchivingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />}
                 Archive booking
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isBulkArchiveDialogOpen} onOpenChange={(open) => { if (!open && !isArchivingBooking) setIsBulkArchiveDialogOpen(false); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archive selected reservations?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to archive {selectedArchiveIds.length} selected reservation{selectedArchiveIds.length === 1 ? "" : "s"}? You can restore them later from the Archive page.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isArchivingBooking}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isArchivingBooking || selectedArchiveIds.length === 0}
+                onClick={(event) => { event.preventDefault(); void archiveSelectedBookings(); }}
+              >
+                {isArchivingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />}
+                Archive selected
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
