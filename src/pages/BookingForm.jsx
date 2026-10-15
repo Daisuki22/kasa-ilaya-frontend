@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   CalendarCheck, User, Mail, Phone, Loader2,
-  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles
+  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -122,6 +122,7 @@ export default function BookingForm() {
   const packageId = urlParams.get("packageId");
 
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [receiptHelpOpen, setReceiptHelpOpen] = useState(false);
   const [policyDialogType, setPolicyDialogType] = useState(null);
   const [modalStep, setModalStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -1436,7 +1437,12 @@ export default function BookingForm() {
                       </div>
 
                       <div>
-                        <Label>Send Payment Receipt or Screenshot *</Label>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Label>Send Payment Receipt or Screenshot *</Label>
+                          <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs text-primary" onClick={() => setReceiptHelpOpen(true)}>
+                            <CircleHelp className="h-4 w-4" /> How to submit
+                          </Button>
+                        </div>
                         <div className="mt-2 space-y-3">
                           <label className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
                             {isUploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -1572,6 +1578,37 @@ export default function BookingForm() {
               )}
             </AnimatePresence>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={receiptHelpOpen} onOpenChange={setReceiptHelpOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">How to submit your payment receipt</DialogTitle>
+            <DialogDescription>Upload a clear image of the receipt from the phone where you made the payment.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-6 text-foreground">
+            <section className="rounded-lg border border-border bg-muted/20 p-4">
+              <h3 className="font-semibold">If you are booking on the same phone</h3>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                <li>Open your payment app and find the completed transaction receipt.</li>
+                <li>Take a screenshot or save the receipt image to your Photos or Gallery.</li>
+                <li>Return here, tap <span className="font-medium text-foreground">Choose receipt or screenshot</span>, then select that image.</li>
+              </ol>
+            </section>
+            <section className="rounded-lg border border-border bg-muted/20 p-4">
+              <h3 className="font-semibold">If the receipt is on another phone</h3>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                <li>On the phone used to pay, take a screenshot of the completed receipt.</li>
+                <li>Send the screenshot to the phone you are booking with using Bluetooth, AirDrop/Nearby Share, email, or a messaging app.</li>
+                <li>Download or save the image on the booking phone, then choose it from Photos, Gallery, or Files.</li>
+              </ol>
+              <p className="mt-2 text-muted-foreground">You can also open this booking page on the phone that has the receipt and upload it directly.</p>
+            </section>
+            <p className="rounded-lg border border-info/20 bg-info/10 p-3 text-muted-foreground">Make sure the receipt is readable and shows the payment date, amount, and transaction details. Upload the original receipt screenshot; never share your payment PIN or one-time password.</p>
+            <p className="text-xs text-muted-foreground">Accepted formats: JPG, PNG, or WebP, up to 8 MB.</p>
+          </div>
+          <div className="flex justify-end"><Button onClick={() => setReceiptHelpOpen(false)}>Got it</Button></div>
         </DialogContent>
       </Dialog>
 
