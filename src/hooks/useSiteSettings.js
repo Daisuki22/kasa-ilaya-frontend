@@ -161,8 +161,8 @@ export const defaultSiteSettings = {
     "2. Guests must provide accurate personal information and valid contact details during reservation.\n\n" +
     "3. A reservation payment is required to process the booking. Submitted payment proofs are reviewed before final confirmation.\n\n" +
     "4. All payments are non-refundable. Guests may cancel online only when the reservation date is more than 7 calendar days away. Cancelling a paid booking does not result in a refund.\n\n" +
-    "5. One reschedule request is allowed per active reservation, subject to the existing rescheduling rules, schedule availability, and resort approval. Approved reschedules carry prior payments to the new reservation date, and the original booking remains active until the resort approves the request.\n\n" +
-    "6. Online cancellation is unavailable within 7 days of the reservation date. Guests may request a reschedule according to the existing rescheduling rules.\n\n" +
+    "5. One reschedule request is allowed per active reservation, subject to schedule availability and resort approval. Requests must be submitted more than 5 days before the tour begins; rescheduling is unavailable during the final 5 days. Approved reschedules carry prior payments to the new reservation date, and the original booking remains active until the resort approves the request.\n\n" +
+    "6. Online cancellation is unavailable within 7 days of the reservation date. Reschedule requests close 5 days before the tour begins.\n\n" +
     "7. Guests must follow resort rules, safety guidelines, staff instructions, and capacity limits throughout their stay.\n\n" +
     "8. One guest is included in the package price. Each additional guest is welcome for the displayed additional guest fee. Other charges may apply for overstaying the reserved schedule or damaging resort property.\n\n" +
     "9. Kasa Ilaya Resort may decline or cancel a booking for policy violations, fraudulent transactions, safety concerns, or force majeure events.\n\n" +

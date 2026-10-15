@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import LeaveReviewDialog from "@/components/mybookings/LeaveReviewDialog.jsx";
 import { addDays, format } from "date-fns";
-import { calendarDaysUntil, getBookingEndDateTime as getBookingEndTime } from "@/lib/bookingTimes";
+import { calendarDaysUntil, getBookingEndDateTime as getBookingEndTime, getBookingStartDateTime } from "@/lib/bookingTimes";
 import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 import { createPageUrl } from "@/utils";
 import { resolveAssetUrl } from "@/lib/assetUrls";
@@ -102,7 +102,8 @@ const statusFilters = [
 
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 const formatMoneyWithCents = (value) => `PHP ${Number(value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const REBOOKING_NOTICE_DAYS = 7;
+const CANCELLATION_NOTICE_DAYS = 7;
+const RESCHEDULE_CUTOFF_DAYS = 5;
 
 const formatDate = (value) => {
   if (!value) {
@@ -165,8 +166,10 @@ const getCancellationLockedReason = (booking) => {
     return "Reservations on today or past dates cannot be cancelled online.";
   }
 
-  if (daysUntilBooking <= REBOOKING_NOTICE_DAYS) {
-    return "Within 7 days, cancellation is closed. You may request a reschedule.";
+  if (daysUntilBooking <= CANCELLATION_NOTICE_DAYS) {
+    return getRescheduleDeadlineReason(booking)
+      ? "Cancellation is closed within 7 calendar days, and the reschedule deadline has passed."
+      : "Cancellation is closed within 7 calendar days. You may request a reschedule until 5 days before the tour begins.";
   }
 
   return "";
@@ -189,7 +192,18 @@ const getRebookingLockedReason = (booking) => {
     return "This booking has already used its one allowed rebooking.";
   }
 
+  if (getRescheduleDeadlineReason(booking)) {
+    return getRescheduleDeadlineReason(booking);
+  }
+
   return "";
+};
+
+const getRescheduleDeadlineReason = (booking) => {
+  const startTime = getBookingStartDateTime(booking);
+  if (!startTime) return "This booking's reschedule deadline cannot be checked.";
+  const cutoff = startTime.getTime() - RESCHEDULE_CUTOFF_DAYS * 24 * 60 * 60 * 1000;
+  return Date.now() >= cutoff ? "Rescheduling is unavailable starting 5 days before the tour begins." : "";
 };
 
 const canRequestRebooking = (booking) => getRebookingLockedReason(booking) === "";
@@ -786,6 +800,11 @@ export default function MyBookings() {
                           {getCancellationLockedReason(booking)}
                         </p>
                       ) : null}
+                      {getRescheduleDeadlineReason(booking) ? (
+                        <p className="rounded-md border border-warning/30 bg-warning/10 p-2 text-xs leading-5 text-warning">
+                          {getRescheduleDeadlineReason(booking)}
+                        </p>
+                      ) : null}
                       {!isLoadingReviews && canLeaveReview(booking) && !blockedReviewBookingIds.has(booking.id) && !reviewedBookingIds.has(booking.id) ? (
                         <Button
                           variant="outline"
@@ -908,6 +927,11 @@ export default function MyBookings() {
                   {getCancellationLockedReason(selectedBooking)}
                 </div>
               ) : null}
+              {getRescheduleDeadlineReason(selectedBooking) ? (
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+                  {getRescheduleDeadlineReason(selectedBooking)}
+                </div>
+              ) : null}
               {selectedBooking.payment_status === "paid" && canCancelBooking(selectedBooking) ? (
                 <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
                   Payment is non-refundable.
@@ -976,6 +1000,7 @@ export default function MyBookings() {
                 <p className="font-semibold">Reschedule Policy</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   <li>One reschedule request is allowed per active reservation, subject to resort approval and schedule availability.</li>
+                  <li>Submit reschedule requests more than 5 days before the tour begins. Requests are closed during the final 5 days.</li>
                   <li>The package and tour time stay the same. Only the date can be changed.</li>
                   <li>Existing payment details are preserved; rescheduling does not create a refund.</li>
                 </ul>
