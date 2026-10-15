@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
 import { Star, Quote } from "lucide-react";
@@ -19,6 +19,7 @@ function StarRating({ rating }) {
 }
 
 export default function ReviewsSection() {
+  const [unavailableReviewImages, setUnavailableReviewImages] = useState(() => new Set());
   const { data: reviews = [] } = useQuery({
     queryKey: ["public-reviews"],
     queryFn: () => baseClient.entities.Review.filter({ is_approved: true }, "-created_date", 6),
@@ -55,17 +56,23 @@ export default function ReviewsSection() {
                       <p className="mb-5 line-clamp-4 min-h-20 text-sm leading-7 text-foreground">
                         “{review.review_text}”
                       </p>
-                      {review.image_url ? (
+                      {review.image_url && !unavailableReviewImages.has(review.id) ? (
                         <img
                           src={resolveAssetUrl(review.image_url)}
                           alt={`Photo shared by ${review.guest_name}`}
                           loading={copyIndex === 0 && reviewIndex < 3 ? "eager" : "lazy"}
                           decoding="async"
                           className="mb-5 max-h-44 w-full rounded-md object-cover"
+                          onError={() => setUnavailableReviewImages((current) => {
+                            if (current.has(review.id)) return current;
+                            const next = new Set(current);
+                            next.add(review.id);
+                            return next;
+                          })}
                         />
                       ) : (
                         <div
-                          aria-label="No photo was shared with this review"
+                          aria-label={review.image_url ? "The photo shared with this review is unavailable" : "No photo was shared with this review"}
                           className="relative mb-5 flex h-36 items-center justify-between overflow-hidden rounded-md border border-primary/10 bg-gradient-to-br from-primary/10 via-background to-secondary/20 px-5"
                         >
                           <div className="relative z-10 flex items-center gap-3">
@@ -74,7 +81,7 @@ export default function ReviewsSection() {
                             </span>
                             <div>
                               <p className="text-sm font-semibold text-foreground">Guest story</p>
-                              <p className="mt-1 text-xs text-muted-foreground">A photo wasn’t shared</p>
+                              <p className="mt-1 text-xs text-muted-foreground">{review.image_url ? "Photo unavailable" : "No photo submitted"}</p>
                             </div>
                           </div>
                           <Quote aria-hidden="true" className="h-20 w-20 shrink-0 text-primary/10" />
