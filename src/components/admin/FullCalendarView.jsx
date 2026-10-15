@@ -385,6 +385,12 @@ export default function FullCalendarView({ embedded = false }) {
                   day: "day",
                 }}
                 events={calendarEvents}
+                dayCellClassNames={({ date }) => {
+                  const cellDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return cellDate < today ? ["admin-past-date"] : [];
+                }}
                 dateClick={handleDateClick}
                 eventClick={handleEventClick}
                 editable={false}
