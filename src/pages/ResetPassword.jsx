@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { KeyRound } from 'lucide-react';
 import { baseClient } from '@/api/baseClient';
 import { createPageUrl } from '@/utils';
+import { useConfirmation } from '@/hooks/useConfirmation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 
 export default function ResetPassword() {
+  const { confirm, confirmationDialog } = useConfirmation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
@@ -160,7 +162,7 @@ export default function ResetPassword() {
       return;
     }
 
-    if (!window.confirm('Update your password now?')) return;
+    if (!await confirm({ title: "Update your password?", description: "Save this new password to your account?", confirmLabel: "Update password" })) return;
 
     setIsSubmitting(true);
     try {
@@ -275,6 +277,7 @@ export default function ResetPassword() {
           ) : null}
         </CardContent>
       </Card>
+      {confirmationDialog}
     </div>
   );
 }

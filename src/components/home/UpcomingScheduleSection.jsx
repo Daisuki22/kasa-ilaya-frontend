@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarCheck, Clock3, Loader2, MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseSafeDate, safeFormatDate } from "@/lib/safeDate";
+import { useConfirmation } from "@/hooks/useConfirmation";
 
 const invalidDateWarnings = new WeakMap();
 
@@ -82,6 +83,7 @@ const getBookingDateSpan = (booking) => {
 };
 
 export default function UpcomingScheduleSection({ allowAdminActions = false }) {
+  const { confirm, confirmationDialog } = useConfirmation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -184,7 +186,11 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       return;
     }
 
-    if (editingSchedule && !window.confirm(`Save changes to "${form.title.trim()}"?`)) return;
+    if (editingSchedule && !await confirm({
+      title: "Save schedule changes?",
+      description: `Save changes to "${form.title.trim()}"?`,
+      confirmLabel: "Save changes",
+    })) return;
 
     setIsSaving(true);
 
@@ -239,7 +245,12 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
       return;
     }
 
-    const confirmed = window.confirm(`Delete the schedule "${schedule.title}"?`);
+    const confirmed = await confirm({
+      title: "Delete this schedule?",
+      description: `Delete the schedule "${schedule.title}"?`,
+      confirmLabel: "Delete schedule",
+      destructive: true,
+    });
     if (!confirmed) {
       return;
     }
@@ -558,6 +569,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
             </div>
           </DialogContent>
         </Dialog>
+        {confirmationDialog}
       </div>
     </section>
   );

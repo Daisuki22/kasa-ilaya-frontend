@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Archive, Loader2, MessageSquareMore, Send } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { toast } from "sonner";
+import { useConfirmation } from "@/hooks/useConfirmation";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,7 @@ const InquiryTooltip = ({ active, payload }) => {
 };
 
 export default function AdminInquiries() {
+  const { confirm, confirmationDialog } = useConfirmation();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -209,7 +211,11 @@ export default function AdminInquiries() {
       toast.info("The inquiry already has this status.");
       return;
     }
-    if (!window.confirm(`Update this inquiry's status from ${currentStatus.replace(/_/g, " ")} to ${statusValue.replace(/_/g, " ")}?`)) return;
+    if (!await confirm({
+      title: "Update inquiry status?",
+      description: `Change this inquiry from ${currentStatus.replace(/_/g, " ")} to ${statusValue.replace(/_/g, " ")}?`,
+      confirmLabel: "Update status",
+    })) return;
 
     try {
       setIsUpdatingStatus(true);
@@ -547,6 +553,7 @@ export default function AdminInquiries() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {confirmationDialog}
     </div>
   );
 }

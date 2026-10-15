@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PencilLine, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirmation } from "@/hooks/useConfirmation";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const createDefaultForm = () => ({
 });
 
 export default function ResortRulesManager({ user }) {
+  const { confirm, confirmationDialog } = useConfirmation();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
@@ -57,7 +59,11 @@ export default function ResortRulesManager({ user }) {
       return;
     }
 
-    if (editingRule && !window.confirm(`Save changes to the resort rule "${form.title.trim()}"?`)) return;
+    if (editingRule && !await confirm({
+      title: "Save resort rule changes?",
+      description: `Save changes to the resort rule "${form.title.trim()}"?`,
+      confirmLabel: "Save changes",
+    })) return;
 
     setSaving(true);
 
@@ -226,6 +232,7 @@ export default function ResortRulesManager({ user }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {confirmationDialog}
     </Card>
   );
 }

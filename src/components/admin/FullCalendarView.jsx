@@ -8,6 +8,7 @@ import { addDays, format } from "date-fns";
 import { baseClient } from "@/api/baseClient";
 import { isBookingExpired } from "@/lib/bookingTimes";
 import { useAuth } from "@/lib/AuthContext";
+import { useConfirmation } from "@/hooks/useConfirmation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -68,6 +69,7 @@ function BookingField({ label, children }) {
 }
 
 export default function FullCalendarView({ embedded = false }) {
+  const { confirm, confirmationDialog } = useConfirmation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const calendarRef = useRef(null);
@@ -220,7 +222,11 @@ export default function FullCalendarView({ embedded = false }) {
       return;
     }
 
-    if (editingSchedule && !window.confirm(`Save changes to "${form.title.trim()}"?`)) return;
+    if (editingSchedule && !await confirm({
+      title: "Save schedule changes?",
+      description: `Save changes to "${form.title.trim()}"?`,
+      confirmLabel: "Save changes",
+    })) return;
 
     setIsSaving(true);
     try {
@@ -271,7 +277,12 @@ export default function FullCalendarView({ embedded = false }) {
 
   const handleDelete = async () => {
     if (!canManage || !editingSchedule) return;
-    if (!window.confirm(`Delete "${editingSchedule.title}"?`)) return;
+    if (!await confirm({
+      title: "Delete this schedule?",
+      description: `Delete "${editingSchedule.title}"?`,
+      confirmLabel: "Delete schedule",
+      destructive: true,
+    })) return;
 
     setDeletingId(editingSchedule.id);
     try {
@@ -535,6 +546,7 @@ export default function FullCalendarView({ embedded = false }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {confirmationDialog}
     </div>
   );
 }

@@ -29,6 +29,7 @@ import { CheckCircle2, ExternalLink, Eye, ImagePlus, Loader2, Plus, ReceiptText,
 import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 import { optimizeImageFile } from "@/lib/optimizeImageFile";
+import { useConfirmation } from "@/hooks/useConfirmation";
 import PaginationControls from "@/components/admin/PaginationControls";
 
 const paymentColors = {
@@ -146,6 +147,7 @@ const PaymentTooltip = ({ active, payload, label }) => {
 };
 
 export default function AdminPaymentMonitoring() {
+  const { confirm, confirmationDialog } = useConfirmation();
   const chartMetrics = useChartMetrics();
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
@@ -426,7 +428,11 @@ export default function AdminPaymentMonitoring() {
     }
 
     const feeAction = statusOverride === "pending" ? "save this damage fee as a draft" : "bill this damage fee to the guest";
-    if (!window.confirm(`Are you sure you want to ${feeAction} for booking ${feeDialogBooking.booking_reference || feeDialogBooking.id}? Total: ${formatMoney(feeAmount)}.`)) return;
+    if (!await confirm({
+      title: statusOverride === "pending" ? "Save damage fee draft?" : "Bill damage fee to guest?",
+      description: `Are you sure you want to ${feeAction} for booking ${feeDialogBooking.booking_reference || feeDialogBooking.id}? Total: ${formatMoney(feeAmount)}.`,
+      confirmLabel: statusOverride === "pending" ? "Save draft" : "Bill guest",
+    })) return;
 
     setSavingFeeId(feeDialogBooking.id);
 
@@ -1129,6 +1135,7 @@ export default function AdminPaymentMonitoring() {
           ) : null}
         </DialogContent>
       </Dialog>
+      {confirmationDialog}
     </div>
   );
 }

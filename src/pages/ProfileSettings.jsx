@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { resolveAssetUrl } from '@/lib/assetUrls';
 import { optimizeImageFile } from '@/lib/optimizeImageFile';
+import { useConfirmation } from '@/hooks/useConfirmation';
 import {
   Activity, Clock3, KeyRound, Laptop, Loader2,
   LockKeyhole, LogOut, MonitorSmartphone, ShieldCheck, ShieldQuestion,
@@ -37,6 +38,7 @@ const describeDevice = (agent = '') => {
 };
 
 export default function ProfileSettings({ legacySpacing = false }) {
+  const { confirm, confirmationDialog } = useConfirmation();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({ full_name: '', phone: '', birth_date: '', profile_image_url: '' });
   const [password, setPassword] = useState({ current_password: '', new_password: '', confirmPassword: '' });
@@ -99,7 +101,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
 
   const saveProfile = async (event) => {
     event.preventDefault();
-    if (!window.confirm("Save changes to your account information?")) return;
+    if (!await confirm({ title: "Save account changes?", description: "Save changes to your account information?", confirmLabel: "Save changes" })) return;
     setSavingProfile(true);
     try {
       syncUser(await baseClient.auth.updateMe({ full_name: form.full_name, phone: form.phone, birth_date: form.birth_date, profile_image_url: form.profile_image_url }));
@@ -138,7 +140,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
     event.preventDefault();
     if (password.new_password !== password.confirmPassword) { toast.error('New passwords do not match.'); return; }
     if (!passwordMeetsRequirements(password.new_password)) { toast.error('Use at least 10 characters with uppercase, lowercase, a number, and a special character.'); return; }
-    if (!window.confirm('Change your password now? Other active devices will be signed out.')) return;
+    if (!await confirm({ title: "Change your password?", description: "Change your password now? Other active devices will be signed out.", confirmLabel: "Change password" })) return;
     setSavingPassword(true);
     try {
       await baseClient.auth.changePassword({ current_password: password.current_password, new_password: password.new_password });
@@ -151,7 +153,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
 
   const revokeSession = async (session) => {
     const device = describeDevice(session.user_agent);
-    if (!window.confirm(`Sign out ${device.device} (${device.browser})? That device will need to sign in again.`)) return;
+    if (!await confirm({ title: "Sign out this device?", description: `Sign out ${device.device} (${device.browser})? That device will need to sign in again.`, confirmLabel: "Sign out" })) return;
     setBusy(session.id);
     try {
       await baseClient.auth.revokeSession(session.id);
@@ -162,7 +164,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
   };
 
   const revokeOthers = async () => {
-    if (!window.confirm('Sign out all other devices? This device will stay signed in.')) return;
+    if (!await confirm({ title: "Sign out other devices?", description: "Sign out all other devices? This device will stay signed in.", confirmLabel: "Sign out devices" })) return;
     setBusy('others');
     try {
       const result = await baseClient.auth.revokeOtherSessions();
@@ -274,7 +276,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
                 return <article key={session.id} className="flex flex-col gap-3 rounded-xl border border-border p-4 sm:flex-row sm:items-center">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Laptop className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2 font-medium">{device.device} · {device.browser}{session.current && <Badge>Current device</Badge>}</div><p className="text-sm text-muted-foreground">{device.os || 'Operating system unavailable'} · Signed in {dateLabel(session.created_at)}</p><p className="text-xs text-muted-foreground">Last active {dateLabel(session.last_seen_at)}</p></div>
-                  {session.current ? <Button variant="outline" size="sm" onClick={() => { if (window.confirm('Sign out this device now?')) void baseClient.auth.logout('/'); }}><LogOut className="mr-2 h-4 w-4" />Sign out this device</Button> : <Button variant="destructive" size="sm" onClick={() => void revokeSession(session)} disabled={busy === session.id}>{busy === session.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}Sign out</Button>}
+                  {session.current ? <Button variant="outline" size="sm" onClick={async () => { if (await confirm({ title: "Sign out this device?", description: "Sign out this device now?", confirmLabel: "Sign out" })) await baseClient.auth.logout('/'); }}><LogOut className="mr-2 h-4 w-4" />Sign out this device</Button> : <Button variant="destructive" size="sm" onClick={() => void revokeSession(session)} disabled={busy === session.id}>{busy === session.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}Sign out</Button>}
                 </article>;
               })}</div>}
               <p className="text-xs text-muted-foreground">Browser and device names are estimated from the browser's user-agent string. Sessions created before this security feature was enabled are not listed.</p>
@@ -299,6 +301,7 @@ export default function ProfileSettings({ legacySpacing = false }) {
           </div>
         </TabsContent>
       </Tabs>
+      {confirmationDialog}
     </main>
   );
 }
