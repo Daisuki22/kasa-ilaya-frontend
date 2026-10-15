@@ -138,7 +138,7 @@ const normalizeJsonField = (value, fallback) => {
 
 export const defaultSiteSettings = {
   site_name: "Kasa Ilaya",
-  logo_url: "",
+  logo_url: "/img/kasa-ilaya-main-logo.webp",
   hero_image_url: "/img/room_Resort%20View.webp",
   hero_images: DEFAULT_HERO_IMAGES,
   packages_banner_url: "/img/room_Resort%20View.webp",

@@ -887,7 +887,7 @@ export default function AdminReport() {
                 <div className="profit-report-rule" />
                 <div className="profit-report-logo-frame">
                   <img
-                    src={siteSettings?.logo_url || "/img/apple-touch-icon.png"}
+                    src={siteSettings?.logo_url || "/img/kasa-ilaya-main-logo.webp"}
                     alt="Kasa Ilaya Resort and Event Place logo"
                     onError={(event) => {
                       event.currentTarget.onerror = null;

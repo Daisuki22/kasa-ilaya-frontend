@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 
-const DEFAULT_LOGO_URL = "/img/Logo.webp";
+const DEFAULT_LOGO_URL = "/img/kasa-ilaya-main-logo.webp";
 
 export default function SiteLogo({ src, alt, className, loading = "eager" }) {
   const primarySrc = resolveAssetUrl(src?.trim() || DEFAULT_LOGO_URL);
