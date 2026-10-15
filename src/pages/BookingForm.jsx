@@ -404,7 +404,7 @@ export default function BookingForm() {
       return;
     }
 
-    if (!["manual_review", "duplicate"].includes(receiptValidation?.status)) {
+    if (receiptValidation?.status !== "manual_review") {
       toast.error("Upload a readable payment proof image before submitting.");
       return;
     }
@@ -723,6 +723,12 @@ export default function BookingForm() {
         payment_number: form.payment_number,
         payment_reference_number: form.payment_reference_number,
       });
+      if (uploadResult?.validation === "duplicate") {
+        setReceiptOcrSummary(uploadResult.ocr_summary || null);
+        setReceiptValidation({ status: "rejected", message: uploadResult.message || "This receipt has already been used. Please upload the correct payment proof." });
+        toast.error(uploadResult.message || "Duplicate receipt detected. Upload a different receipt.");
+        return;
+      }
       if (!uploadResult?.file_url || !uploadResult?.proof_upload_token) {
         throw new Error("The upload service did not return a valid payment proof reference. Please try again.");
       }
@@ -750,17 +756,11 @@ export default function BookingForm() {
       const ocrMessage = extracted.length
         ? `OCR extracted ${extracted.join(" · ")}. This is an automated reading only; an authorized admin must verify the transaction and proof authenticity.`
         : "OCR could not reliably extract receipt details. An authorized admin must review the image and verify the transaction.";
-      const duplicateNotice = ocr.duplicate_image
-        ? " This image matches a previous upload and will receive additional admin review."
-        : "";
-      if (uploadResult.validation === "duplicate") {
-        setReceiptValidation({ status: "duplicate", message: uploadResult.message || "This exact receipt image has already been submitted. The booking will be declined when you submit it." });
-        toast.error("This receipt was already used. Submitting this booking will mark it as declined.");
-      } else if (uploadResult.validation === "declined") {
+      if (uploadResult.validation === "declined") {
         setReceiptValidation({ status: "rejected", message: uploadResult.message || "Receipt does not match the selected payment details." });
         toast.error(`Payment proof rejected: ${uploadResult.message || "Receipt details do not match."}`);
       } else {
-        setReceiptValidation({ status: "manual_review", message: `${ocrMessage}${duplicateNotice}` });
+        setReceiptValidation({ status: "manual_review", message: ocrMessage });
         toast.success("Payment proof uploaded for manual review.");
       }
     } catch (error) {
@@ -1462,10 +1462,6 @@ export default function BookingForm() {
                                 <div className="flex items-center gap-2 font-medium text-destructive">
                                   <ShieldCheck className="h-4 w-4" /> {receiptValidation?.message?.startsWith("Receipt is outdated.") ? "Declined — Outdated Receipt" : receiptValidation?.message?.startsWith("Receipt date is invalid.") ? "Declined — Invalid Receipt Date" : "Declined — Receipt Does Not Match"}
                                 </div>
-                              ) : receiptValidation?.status === "duplicate" ? (
-                                <div className="flex items-center gap-2 font-medium text-destructive">
-                                  <ShieldCheck className="h-4 w-4" /> Duplicate Receipt Detected — Booking Will Be Declined
-                                </div>
                               ) : (
                                 <div className="flex items-center gap-2 text-warning">
                                   <ShieldCheck className="h-4 w-4" /> Sent — Pending Manual Admin Check
@@ -1496,9 +1492,7 @@ export default function BookingForm() {
                       <div className="mb-4 rounded-lg border border-border bg-muted/20 p-4">
                         <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                           <span>
-                            {receiptValidation?.status === "duplicate"
-                              ? "This receipt has already been used. Submitting the booking will mark it as declined."
-                              : receiptValidation?.status === "manual_review"
+                            {receiptValidation?.status === "manual_review"
                               ? "Receipt sent. The admin will manually check your payment before approval."
                               : "Upload a readable payment proof before continuing."}
                           </span>
@@ -1512,7 +1506,7 @@ export default function BookingForm() {
                         <Button variant="outline" onClick={() => setModalStep(3)}>
                           Back
                         </Button>
-                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || !["manual_review", "duplicate"].includes(receiptValidation?.status) || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
+                        <Button className="flex-1" onClick={handleSubmit} disabled={submitting || isUploadingReceipt || isLoadingLegalDocuments || !hasPublishedLegalDocuments || !activeQrCodes.length || !selectedQrCodeId || !receiptUrl || !receiptUploadToken || receiptValidation?.status !== "manual_review" || !termsAccepted || !privacyAcknowledged || !privacyConsent}>
                           {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                           {submitting ? "Processing Booking..." : "Submit Booking"}
                         </Button>
