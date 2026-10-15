@@ -65,6 +65,7 @@ export default function AdminPaymentQRCodes() {
   const [archiveId, setArchiveId] = useState(null);
   const [form, setForm] = useState(createDefaultForm());
   const [saving, setSaving] = useState(false);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
@@ -122,13 +123,25 @@ export default function AdminPaymentQRCodes() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.label || !form.image_url) {
       toast.error("Please provide a label and QR image.");
       return;
     }
 
-    if (editingCode && !window.confirm(`Save changes to the ${form.label} payment QR code?`)) return;
+    if (editingCode) {
+      setConfirmSaveOpen(true);
+      return;
+    }
+
+    void performSave();
+  };
+
+  const performSave = async () => {
+    if (!form.label || !form.image_url) {
+      toast.error("Please provide a label and QR image.");
+      return;
+    }
 
     setSaving(true);
 
@@ -169,6 +182,7 @@ export default function AdminPaymentQRCodes() {
 
       queryClient.invalidateQueries({ queryKey: ["admin-payment-qr-codes"] });
       setFormOpen(false);
+      setConfirmSaveOpen(false);
       setEditingCode(null);
       toast.success(editingCode ? "QR code updated." : "QR code added.");
     } catch (error) {
@@ -328,6 +342,24 @@ export default function AdminPaymentQRCodes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmSaveOpen} onOpenChange={(open) => { if (!saving) setConfirmSaveOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save QR code changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Save changes to the {form.label || "payment"} payment QR code?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={saving} onClick={(event) => { event.preventDefault(); void performSave(); }}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {saving ? "Saving…" : "Save changes"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!archiveId} onOpenChange={(open) => !open && setArchiveId(null)}>
         <AlertDialogContent>
