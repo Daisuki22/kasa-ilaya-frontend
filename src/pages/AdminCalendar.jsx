@@ -585,19 +585,19 @@ export default function AdminCalendar() {
                           <TableCell>
                             {isOutdatedReceipt(booking) ? (
                               <div className="flex flex-col items-start gap-1">
-                                <Badge variant="outline" className={`min-h-8 min-w-[128px] justify-center whitespace-nowrap ${statusColors.rejected}`}>
+                                <Badge variant="outline" className={`min-h-8 min-w-[128px] justify-center whitespace-nowrap uppercase ${statusColors.rejected}`}>
                                   Declined
                                 </Badge>
-                                <span className="pl-1 text-[11px] leading-4 text-destructive">Outdated receipt</span>
+                                <span className="pl-1 text-[11px] leading-4 text-destructive uppercase">Outdated receipt</span>
                               </div>
                             ) : (
-                              <Badge variant="outline" className={`min-h-8 min-w-[128px] justify-center whitespace-nowrap ${statusColors[booking.status] || statusColors.pending}`}>
+                              <Badge variant="outline" className={`min-h-8 min-w-[128px] justify-center whitespace-nowrap uppercase ${statusColors[booking.status] || statusColors.pending}`}>
                                 {isBookingExpired(booking) && !["completed", "cancelled", "rejected"].includes(booking.status) ? "expired" : bookingStatusLabel(booking)}
                               </Badge>
                             )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={`min-h-8 min-w-[128px] max-w-[128px] justify-center whitespace-normal break-words text-center leading-4 ${paymentColors[booking.payment_status] || paymentColors.unpaid}`}>
+                            <Badge variant="outline" className={`min-h-8 min-w-[128px] max-w-[128px] justify-center whitespace-normal break-words text-center leading-4 uppercase ${paymentColors[booking.payment_status] || paymentColors.unpaid}`}>
                               {(booking.payment_status || "unpaid").replace(/_/g, " ")}
                             </Badge>
                           </TableCell>
