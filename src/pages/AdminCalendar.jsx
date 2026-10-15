@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import FullCalendarView from "@/components/admin/FullCalendarView";
+import PaginationControls from "@/components/admin/PaginationControls";
 
 const statusColors = {
   pending: "border-warning/30 bg-warning/10 text-warning",
@@ -151,6 +152,8 @@ export default function AdminCalendar() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [queuePage, setQueuePage] = useState(1);
+  const [queuePageSize, setQueuePageSize] = useState(10);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [acceptBookingTarget, setAcceptBookingTarget] = useState(null);
   const [isAcceptingBooking, setIsAcceptingBooking] = useState(false);
@@ -236,6 +239,17 @@ export default function AdminCalendar() {
     });
   }, [activeBookings, searchTerm, statusFilter]);
 
+  useEffect(() => {
+    setQueuePage(1);
+  }, [searchTerm, statusFilter]);
+
+  const queueTotalPages = Math.max(1, Math.ceil(filteredBookings.length / queuePageSize));
+  const currentQueuePage = Math.min(queuePage, queueTotalPages);
+  const visibleBookings = useMemo(
+    () => filteredBookings.slice((currentQueuePage - 1) * queuePageSize, currentQueuePage * queuePageSize),
+    [filteredBookings, currentQueuePage, queuePageSize]
+  );
+
   const metrics = useMemo(() => {
     const pending = activeBookings.filter((booking) => booking.status === "pending").length;
     const confirmed = activeBookings.filter((booking) => booking.status === "confirmed").length;
@@ -293,7 +307,7 @@ export default function AdminCalendar() {
   };
 
   const toggleAllVisibleArchiveSelection = () => {
-    const visibleIds = filteredBookings.map((booking) => booking.id);
+    const visibleIds = visibleBookings.map((booking) => booking.id);
     const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedArchiveIds.includes(id));
     setSelectedArchiveIds((current) => allVisibleSelected
       ? current.filter((id) => !visibleIds.includes(id))
@@ -562,7 +576,7 @@ export default function AdminCalendar() {
             <div>
               <h2 className="font-display text-2xl font-bold text-foreground">Reservation Queue</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Showing {filteredBookings.length} of {activeBookings.length} active reservation{activeBookings.length === 1 ? "" : "s"}.
+                {filteredBookings.length} matching of {activeBookings.length} active reservation{activeBookings.length === 1 ? "" : "s"}.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -624,7 +638,7 @@ export default function AdminCalendar() {
                         <input
                           type="checkbox"
                           aria-label="Select all visible reservations for archive"
-                          checked={filteredBookings.length > 0 && filteredBookings.every((booking) => selectedArchiveIds.includes(booking.id))}
+                          checked={visibleBookings.length > 0 && visibleBookings.every((booking) => selectedArchiveIds.includes(booking.id))}
                           onChange={toggleAllVisibleArchiveSelection}
                           className="h-4 w-4 cursor-pointer accent-primary"
                         />
@@ -641,8 +655,8 @@ export default function AdminCalendar() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredBookings.length ? (
-                      filteredBookings.map((booking) => (
+                    {visibleBookings.length ? (
+                      visibleBookings.map((booking) => (
                         <TableRow key={booking.id} className="align-top">
                           <TableCell className="text-center">
                             <input
@@ -741,6 +755,13 @@ export default function AdminCalendar() {
               </div>
             )}
           </CardContent>
+          <PaginationControls
+            page={currentQueuePage}
+            pageSize={queuePageSize}
+            total={filteredBookings.length}
+            onPageChange={setQueuePage}
+            onPageSizeChange={(size) => { setQueuePageSize(size); setQueuePage(1); }}
+          />
         </section>
 
         <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && closeSelectedBooking()}>
