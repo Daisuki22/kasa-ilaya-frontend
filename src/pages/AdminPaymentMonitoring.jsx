@@ -25,9 +25,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle2, ExternalLink, Eye, Loader2, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, ExternalLink, Eye, ImagePlus, Loader2, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
 import { resolveAssetUrl } from "@/lib/assetUrls";
+import { optimizeImageFile } from "@/lib/optimizeImageFile";
 import PaginationControls from "@/components/admin/PaginationControls";
 
 const paymentColors = {
@@ -71,7 +72,7 @@ const additionalFeeStatusLabels = {
 
 const damageCategories = ["Furniture", "Linen", "Appliance", "Kitchenware", "Pool item", "Other"];
 const damageServiceRate = 0.1;
-const createDamageItem = () => ({ description: "", category: "Furniture", amount: "" });
+const createDamageItem = () => ({ description: "", category: "Furniture", amount: "", image_url: "" });
 
 const tourLabels = {
   day_tour: "Day Tour",
@@ -157,6 +158,7 @@ export default function AdminPaymentMonitoring() {
   const [feePaymentConfirmation, setFeePaymentConfirmation] = useState(null);
   const [feeForm, setFeeForm] = useState({ items: [createDamageItem()], notes: "", status: "unpaid" });
   const [savingFeeId, setSavingFeeId] = useState(null);
+  const [uploadingDamageIndex, setUploadingDamageIndex] = useState(null);
   const [receiptUnavailable, setReceiptUnavailable] = useState(false);
 
   useEffect(() => {
@@ -319,12 +321,21 @@ export default function AdminPaymentMonitoring() {
       return;
     }
     setFeeDialogBooking(booking);
+    const savedDamageItems = Array.isArray(booking.additional_fee_items) ? booking.additional_fee_items : [];
     setFeeForm({
-      items: booking.additional_fee_amount
+      items: savedDamageItems.length
+        ? savedDamageItems.map((item) => ({
+            ...createDamageItem(),
+            ...item,
+            amount: String(item.amount ?? ""),
+            image_url: item.image_url || "",
+          }))
+        : booking.additional_fee_amount
         ? [{
             description: booking.additional_fee_reason?.split("\n")[0]?.replace(/^Item:\s*/i, "") || "Damage charge",
             category: "Other",
             amount: String(Math.max(0, Number(booking.additional_fee_amount || 0) / (1 + damageServiceRate)).toFixed(2)),
+            image_url: "",
           }]
         : [createDamageItem()],
       notes: booking.additional_fee_reason || "",
@@ -357,6 +368,26 @@ export default function AdminPaymentMonitoring() {
     }));
   };
 
+  const uploadDamageImage = async (index, event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    setUploadingDamageIndex(index);
+    try {
+      const optimizedFile = await optimizeImageFile(file);
+      const result = await baseClient.integrations.Core.UploadFile({ file: optimizedFile, purpose: "damage_fee_image" });
+      if (!result?.file_url) throw new Error("The image upload did not return a file URL.");
+      updateDamageItem(index, { image_url: result.file_url });
+      toast.success("Damage photo uploaded.");
+    } catch (error) {
+      toast.error(error?.message || "Could not upload the damage photo.");
+    } finally {
+      setUploadingDamageIndex(null);
+    }
+  };
+
   const saveAdditionalFee = async (statusOverride = feeForm.status) => {
     if (!feeDialogBooking) {
       return;
@@ -373,8 +404,9 @@ export default function AdminPaymentMonitoring() {
         description: item.description.trim(),
         category: item.category,
         amount: Number(item.amount || 0),
+        image_url: item.image_url || null,
       }))
-      .filter((item) => item.description || item.amount > 0);
+      .filter((item) => item.description || item.amount > 0 || item.image_url);
     const feeAmount = Number(damageTotal.toFixed(2));
     const notes = feeForm.notes.trim();
 
@@ -409,6 +441,7 @@ export default function AdminPaymentMonitoring() {
         additional_fee_amount: feeAmount,
         additional_fee_reason: reason,
         additional_fee_status: feeAmount > 0 ? statusOverride : "unpaid",
+        additional_fee_items: filledItems,
       };
 
       const updatedBooking = await baseClient.entities.Booking.update(feeDialogBooking.id, updates);
@@ -808,6 +841,28 @@ export default function AdminPaymentMonitoring() {
                 </div>
               ) : null}
 
+              {Array.isArray(selectedBooking.additional_fee_items) && selectedBooking.additional_fee_items.some((item) => item.image_url) ? (
+                <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
+                  <span className="text-sm font-semibold text-foreground">Damage evidence</span>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {selectedBooking.additional_fee_items.filter((item) => item.image_url).map((item, index) => (
+                      <a
+                        key={`${item.image_url}-${index}`}
+                        href={resolveAssetUrl(item.image_url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group overflow-hidden rounded-lg border border-border bg-background"
+                      >
+                        <img src={resolveAssetUrl(item.image_url)} alt={`Damage evidence for ${item.description || "item"}`} className="h-44 w-full object-cover" />
+                        <p className="truncate px-3 py-2 text-sm font-medium text-foreground group-hover:text-primary">
+                          {item.description || "Damaged item"}
+                        </p>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               {selectedBooking.receipt_url ? (
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">Payment Proof</span>
@@ -942,42 +997,72 @@ export default function AdminPaymentMonitoring() {
                 <Label className="text-sm font-bold text-foreground">Damaged items</Label>
                 <div className="space-y-2.5">
                   {feeForm.items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-[1fr] gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_6.5rem_2.5rem]">
-                      <Input
-                        value={item.description}
-                        onChange={(event) => updateDamageItem(index, { description: event.target.value })}
-                        placeholder="Broken bedside lamp"
-                        className="h-11 border-input bg-background text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
-                      />
-                      <Select value={item.category} onValueChange={(category) => updateDamageItem(index, { category })}>
-                        <SelectTrigger className="h-11 border-input bg-background text-sm font-bold text-foreground focus:ring-1 focus:ring-primary focus:ring-offset-0">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {damageCategories.map((category) => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.amount}
-                        onChange={(event) => updateDamageItem(index, { amount: event.target.value })}
-                        placeholder="0"
-                        className="h-11 border-input bg-background text-right text-sm font-bold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-11 w-10 border-border bg-background text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => removeDamageItem(index)}
-                        aria-label="Remove damaged item"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div key={index} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                      <div className="grid grid-cols-[1fr] gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_6.5rem_2.5rem]">
+                        <Input
+                          value={item.description}
+                          onChange={(event) => updateDamageItem(index, { description: event.target.value })}
+                          placeholder="Broken bedside lamp"
+                          className="h-11 border-input bg-background text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
+                        />
+                        <Select value={item.category} onValueChange={(category) => updateDamageItem(index, { category })}>
+                          <SelectTrigger className="h-11 border-input bg-background text-sm font-bold text-foreground focus:ring-1 focus:ring-primary focus:ring-offset-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {damageCategories.map((category) => (
+                              <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.amount}
+                          onChange={(event) => updateDamageItem(index, { amount: event.target.value })}
+                          placeholder="0"
+                          className="h-11 border-input bg-background text-right text-sm font-bold text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-11 w-10 border-border bg-background text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => removeDamageItem(index)}
+                          disabled={uploadingDamageIndex !== null}
+                          aria-label="Remove damaged item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted">
+                          {uploadingDamageIndex === index ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                          {uploadingDamageIndex === index ? "Uploading photo…" : item.image_url ? "Replace damage photo" : "Upload damage photo"}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                            className="sr-only"
+                            disabled={uploadingDamageIndex !== null}
+                            onChange={(event) => uploadDamageImage(index, event)}
+                          />
+                        </label>
+                        <span className="text-xs text-muted-foreground">JPG, PNG, or WebP. Max 8 MB.</span>
+                        {item.image_url ? (
+                          <div className="relative ml-auto h-16 w-24 overflow-hidden rounded-md border border-border">
+                            <img src={resolveAssetUrl(item.image_url)} alt={`Proof for ${item.description || "damaged item"}`} className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => updateDamageItem(index, { image_url: "" })}
+                              className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground shadow hover:bg-background"
+                              aria-label="Remove damage photo"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -987,6 +1072,7 @@ export default function AdminPaymentMonitoring() {
                   size="sm"
                   className="h-9 border-border bg-background px-4 font-bold text-foreground hover:bg-muted"
                   onClick={addDamageItem}
+                  disabled={uploadingDamageIndex !== null}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add item
@@ -1024,7 +1110,7 @@ export default function AdminPaymentMonitoring() {
                   variant="outline"
                   className="h-11 border-border bg-card font-bold text-foreground hover:bg-muted"
                   onClick={() => saveAdditionalFee("pending")}
-                  disabled={savingFeeId === feeDialogBooking.id}
+                  disabled={savingFeeId === feeDialogBooking.id || uploadingDamageIndex !== null}
                 >
                   {savingFeeId === feeDialogBooking.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Save draft
@@ -1032,7 +1118,7 @@ export default function AdminPaymentMonitoring() {
                 <Button
                   className="h-11 bg-primary font-bold text-primary-foreground hover:bg-primary/90"
                   onClick={() => saveAdditionalFee("unpaid")}
-                  disabled={savingFeeId === feeDialogBooking.id}
+                  disabled={savingFeeId === feeDialogBooking.id || uploadingDamageIndex !== null}
                 >
                   {savingFeeId === feeDialogBooking.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Bill to guest
