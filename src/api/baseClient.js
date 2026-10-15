@@ -770,7 +770,7 @@ export const baseClient = {
       return Promise.resolve(null);
     },
 
-    async logout(redirectUrl = "/") {
+    async logout(redirectUrl = "/Login") {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("auth-logout-start"));
       }

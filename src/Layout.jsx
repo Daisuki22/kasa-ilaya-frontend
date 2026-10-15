@@ -688,7 +688,7 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = () => {
     setMobileOpen(false);
     setNotificationOpen(false);
-    void baseClient.auth.logout("/");
+    void baseClient.auth.logout("/Login");
   };
 
   const renderUserMenu = () => {
