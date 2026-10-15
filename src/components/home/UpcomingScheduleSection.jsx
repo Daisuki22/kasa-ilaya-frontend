@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarCheck, Loader2, MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
+import { CalendarCheck, Clock3, Loader2, MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseSafeDate, safeFormatDate } from "@/lib/safeDate";
 import { useConfirmation } from "@/hooks/useConfirmation";
