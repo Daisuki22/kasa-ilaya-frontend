@@ -67,14 +67,17 @@ const calculateAge = (birthDateValue, today = new Date()) => {
 
 const resolveNextPath = (nextValue) => {
   if (!nextValue) {
-    return createPageUrl('Home');
+    return '';
   }
 
   try {
     const nextUrl = new URL(nextValue, window.location.origin);
-    return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    const path = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    return ['/Login', '/ForgotPassword', '/ResetPassword', '/VerifyRegistrationOtp'].includes(nextUrl.pathname)
+      ? ''
+      : path;
   } catch {
-    return nextValue;
+    return '';
   }
 };
 
@@ -136,7 +139,9 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = useMemo(
-    () => resolveNextPath(searchParams.get('next') || readStoredGoogleNextPath()),
+    () => resolveNextPath(searchParams.get('next'))
+      || resolveNextPath(readStoredGoogleNextPath())
+      || createPageUrl('Home'),
     [searchParams],
   );
   const [activeTab, setActiveTab] = useState('signin');
@@ -209,7 +214,7 @@ export default function Login() {
           const destination = ['admin', 'super_admin'].includes(user?.role)
             ? createPageUrl('AdminDashboard')
             : nextPath;
-          navigate(destination, { replace: true });
+          window.location.replace(destination);
         })
         .catch((error) => {
           toast.error(error?.message || 'Google sign-in could not be completed. Please try again.');
@@ -267,7 +272,7 @@ export default function Login() {
       ? createPageUrl('AdminDashboard')
       : nextPath;
     clearStoredGoogleNextPath();
-    navigate(destination, { replace: true });
+    window.location.replace(destination);
   }, [navigate, nextPath]);
 
   const handleGoogleCredential = useCallback(async (response) => {

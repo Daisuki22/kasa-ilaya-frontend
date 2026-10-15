@@ -87,6 +87,8 @@ const AdminDestinationGuard = ({ user, pageName, children }) => {
 
 const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "ProfileSettings"]);
 const guestOrRegularUserPages = new Set(["About", "Contact"]);
+const GOOGLE_NEXT_PATH_SESSION_KEY = 'ki-google-signin-next-path';
+const authenticationPaths = new Set(['/Login', '/ForgotPassword', '/ResetPassword', '/VerifyRegistrationOtp']);
 
 const UserOnlyRoute = ({ isAuthenticated, children }) => {
   const location = useLocation();
@@ -159,6 +161,17 @@ const AuthenticatedApp = () => {
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (authenticationPaths.has(location.pathname)) return;
+
+    try {
+      window.sessionStorage.setItem(GOOGLE_NEXT_PATH_SESSION_KEY, JSON.stringify({
+        path: `${location.pathname}${location.search}${location.hash}`,
+        savedAt: Date.now(),
+      }));
+    } catch {}
+  }, [location.pathname, location.search, location.hash]);
 
   // Show loading spinner while checking app public settings or auth
   const canRenderWhileAuthLoads = location.pathname === "/";
