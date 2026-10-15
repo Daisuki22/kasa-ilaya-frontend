@@ -3,7 +3,7 @@ import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { resolveAssetUrl } from "@/lib/assetUrls";
-import { isBookingExpired } from "@/lib/bookingTimes";
+import { getBookingStartDateTime, isBookingExpired } from "@/lib/bookingTimes";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -202,7 +202,11 @@ export default function AdminCalendar() {
     [bookings]
   );
   const pendingRescheduleRequests = useMemo(
-    () => activeBookings.filter((booking) => booking.rebooking_status === "pending"),
+    () => activeBookings.filter((booking) => {
+      if (booking.rebooking_status !== "pending" || !["pending", "confirmed"].includes(booking.status)) return false;
+      const bookingStart = getBookingStartDateTime(booking);
+      return Boolean(bookingStart && bookingStart.getTime() > Date.now());
+    }),
     [activeBookings]
   );
 
