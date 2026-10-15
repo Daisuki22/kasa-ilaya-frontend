@@ -201,7 +201,7 @@ export default function ResetPassword() {
               {isTokenReset ? (
                 <p className="text-sm text-muted-foreground">Resetting password for <span className="font-medium text-foreground">{status.email}</span>.</p>
               ) : null}
-              {!isTokenReset ? (
+              {!isTokenReset && !isCodeVerified ? (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Email</Label>
@@ -230,15 +230,9 @@ export default function ResetPassword() {
                       <p className="text-sm text-muted-foreground">The temporary code is in your backend service logs in Render.</p>
                     ) : null}
                   </div>
-                  {!isCodeVerified ? (
-                    <Button className="w-full" disabled={isVerifyingCode} type="button" onClick={handleVerifyCode}>
-                      {isVerifyingCode ? 'Verifying code...' : 'Verify code'}
-                    </Button>
-                  ) : (
-                    <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
-                      Reset code verified. Create your new password below.
-                    </p>
-                  )}
+                  <Button className="w-full" disabled={isVerifyingCode} type="button" onClick={handleVerifyCode}>
+                    {isVerifyingCode ? 'Verifying code...' : 'Verify code'}
+                  </Button>
                 </>
               ) : null}
               {isCodeVerified ? (
@@ -250,7 +244,21 @@ export default function ResetPassword() {
                   </Button>
                 </>
               ) : null}
-              {!isTokenReset ? (
+              {!isTokenReset && isCodeVerified ? (
+                <Button
+                  className="w-full"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsCodeVerified(false);
+                    setResetToken('');
+                    setForm((current) => ({ ...current, password: '', confirmPassword: '' }));
+                  }}
+                >
+                  Use a different email or code
+                </Button>
+              ) : null}
+              {!isTokenReset && !isCodeVerified ? (
                 <Button
                   className="w-full"
                   disabled={isResending || resendSeconds > 0 || isCodeVerified}
