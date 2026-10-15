@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './page.config'
-import { Component, Suspense, useLayoutEffect, useRef } from 'react';
+import { Component, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -110,8 +110,16 @@ const WelcomeIntroGate = () => {
   const location = useLocation();
   const { user, isLoadingAuth } = useAuth();
   const hasShownIntro = useRef(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const handleLogoutStart = () => setIsLoggingOut(true);
+    window.addEventListener('auth-logout-start', handleLogoutStart);
+    return () => window.removeEventListener('auth-logout-start', handleLogoutStart);
+  }, []);
 
   if (
+    isLoggingOut ||
     location.pathname !== '/' ||
     isLoadingAuth ||
     user?.role === 'admin' ||

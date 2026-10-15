@@ -771,6 +771,9 @@ export const baseClient = {
     },
 
     async logout(redirectUrl = "/") {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-logout-start"));
+      }
       clearClientAuthState();
       dispatchAuthChange();
 
