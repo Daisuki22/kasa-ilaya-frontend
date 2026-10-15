@@ -17,7 +17,7 @@ import {
   CalendarCheck, User, Mail, Phone, Loader2,
   ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp
 } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { handleImageFallback } from "@/lib/imageFallback";
@@ -958,6 +958,7 @@ export default function BookingForm() {
                     selected={selectedDate}
                     onSelect={handleDateSelect}
                     disabled={isDateDisabled}
+                    fromDate={startOfDay(new Date())}
                     modifiers={{
                       reserved: reservedDates,
                     }}
