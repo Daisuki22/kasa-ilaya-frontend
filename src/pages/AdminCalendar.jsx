@@ -54,9 +54,12 @@ const paymentColors = {
   declined: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
+const isOutdatedReceipt = (booking) => booking?.payment_proof_review === "auto_declined"
+  && /^Receipt is outdated\./.test(booking.rejection_reason || "");
+
 const paymentStatusLabel = (booking) => booking?.status === "rejected" ? "declined" : (booking?.payment_status || "unpaid").replace(/_/g, " ");
 const bookingStatusLabel = (booking) => booking?.status === "rejected"
-  ? (booking.payment_proof_review === "auto_declined" && /^Receipt is outdated\./.test(booking.rejection_reason || "") ? "Declined — Outdated Receipt" : "Declined")
+  ? (isOutdatedReceipt(booking) ? "Declined — Outdated Receipt" : "Declined")
   : booking?.status === "confirmed" ? "approved" : (booking?.status || "pending").replace(/_/g, " ");
 
 const tourLabels = {
@@ -532,8 +535,8 @@ export default function AdminCalendar() {
                     <col className="w-[140px]" />
                     <col className="w-[125px]" />
                     <col className="w-[150px]" />
-                    <col className="w-[120px]" />
-                    <col className="w-[120px]" />
+                    <col className="w-[165px]" />
+                    <col className="w-[165px]" />
                     <col className="w-[169px]" />
                   </colgroup>
                   <TableHeader>
@@ -580,12 +583,21 @@ export default function AdminCalendar() {
                             <p className="mt-1 text-xs text-muted-foreground">{paymentTypeLabels[booking.payment_type] || "Downpayment"}</p>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={statusColors[booking.status] || statusColors.pending}>
-                              {isBookingExpired(booking) && !["completed", "cancelled", "rejected"].includes(booking.status) ? "expired" : bookingStatusLabel(booking)}
-                            </Badge>
+                            {isOutdatedReceipt(booking) ? (
+                              <div className="flex flex-col items-start gap-1">
+                                <Badge variant="outline" className={`min-h-8 min-w-[128px] justify-center whitespace-nowrap ${statusColors.rejected}`}>
+                                  Declined
+                                </Badge>
+                                <span className="pl-1 text-[11px] leading-4 text-destructive">Outdated receipt</span>
+                              </div>
+                            ) : (
+                              <Badge variant="outline" className={`min-h-8 min-w-[128px] justify-center whitespace-nowrap ${statusColors[booking.status] || statusColors.pending}`}>
+                                {isBookingExpired(booking) && !["completed", "cancelled", "rejected"].includes(booking.status) ? "expired" : bookingStatusLabel(booking)}
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={paymentColors[booking.payment_status] || paymentColors.unpaid}>
+                            <Badge variant="outline" className={`min-h-8 min-w-[128px] max-w-[128px] justify-center whitespace-normal break-words text-center leading-4 ${paymentColors[booking.payment_status] || paymentColors.unpaid}`}>
                               {(booking.payment_status || "unpaid").replace(/_/g, " ")}
                             </Badge>
                           </TableCell>
