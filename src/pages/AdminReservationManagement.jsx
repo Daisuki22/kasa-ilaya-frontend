@@ -53,6 +53,7 @@ export default function AdminReservationManagement() {
   const [archiveId, setArchiveId] = useState(null);
   const [archiving, setArchiving] = useState(false);
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [unavailableReceiptUrl, setUnavailableReceiptUrl] = useState("");
   const [acceptingBooking, setAcceptingBooking] = useState(false);
   const [acceptConfirmOpen, setAcceptConfirmOpen] = useState(false);
   const [rescheduleBooking, setRescheduleBooking] = useState(null);
@@ -105,6 +106,8 @@ export default function AdminReservationManagement() {
   const pendingBookingCount = pendingBookingPage?.pagination?.total || 0;
   const pagination = bookingPage?.pagination || { page, limit: pageSize, total: 0, totalPages: 1 };
   const currentPage = pagination.page || page;
+  const reviewReceiptUrl = reviewBooking?.receipt_url ? resolveAssetUrl(reviewBooking.receipt_url) : "";
+  const receiptImageUnavailable = Boolean(reviewReceiptUrl && unavailableReceiptUrl === reviewReceiptUrl);
   useEffect(() => {
     if (pagination.page && pagination.page !== page) setPage(pagination.page);
   }, [pagination.page, page]);
@@ -385,7 +388,7 @@ export default function AdminReservationManagement() {
                               </Button>
                             ) : null}
                             {booking.status === "pending" ? (
-                              <Button variant="outline" size="sm" className="gap-2" onClick={() => setReviewBooking(booking)}>
+                              <Button variant="outline" size="sm" className="gap-2" onClick={() => { setUnavailableReceiptUrl(""); setReviewBooking(booking); }}>
                                 <Eye className="h-4 w-4" /> Review
                               </Button>
                             ) : null}
@@ -445,7 +448,7 @@ export default function AdminReservationManagement() {
                   <Button
                     variant="outline"
                     className="shrink-0 gap-2"
-                    onClick={() => { setPendingModalOpen(false); setReviewBooking(booking); }}
+                    onClick={() => { setPendingModalOpen(false); setUnavailableReceiptUrl(""); setReviewBooking(booking); }}
                   >
                     <Eye className="h-4 w-4" /> Review booking
                   </Button>
@@ -486,10 +489,21 @@ export default function AdminReservationManagement() {
                 </div>
                 <p className="mt-2 text-muted-foreground">OCR is only a reading aid. Confirm the original GCash receipt and payment details before accepting.</p>
               </div>
-              {reviewBooking.receipt_url ? (
-                <a href={resolveAssetUrl(reviewBooking.receipt_url)} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border bg-white">
-                  <img src={resolveAssetUrl(reviewBooking.receipt_url)} alt={`Payment receipt for ${reviewBooking.booking_reference || "booking"}`} className="max-h-[50vh] w-full object-contain" />
-                </a>
+              {reviewReceiptUrl ? (
+                receiptImageUnavailable ? (
+                  <p role="status" className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-foreground">
+                    This payment proof image is unavailable on the server. Ask the guest to upload it again before accepting the booking.
+                  </p>
+                ) : (
+                  <a href={reviewReceiptUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border bg-white">
+                    <img
+                      src={reviewReceiptUrl}
+                      alt={`Payment receipt for ${reviewBooking.booking_reference || "booking"}`}
+                      className="max-h-[50vh] w-full object-contain"
+                      onError={() => setUnavailableReceiptUrl(reviewReceiptUrl)}
+                    />
+                  </a>
+                )
               ) : (
                 <p className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">No receipt is attached to this booking.</p>
               )}
@@ -497,7 +511,7 @@ export default function AdminReservationManagement() {
           ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewBooking(null)} disabled={acceptingBooking}>Close</Button>
-            <Button onClick={() => setAcceptConfirmOpen(true)} disabled={acceptingBooking || reviewBooking?.status !== "pending" || reviewBooking?.payment_status !== "pending_verification" || !reviewBooking?.receipt_url} className="gap-2">
+            <Button onClick={() => setAcceptConfirmOpen(true)} disabled={acceptingBooking || receiptImageUnavailable || reviewBooking?.status !== "pending" || reviewBooking?.payment_status !== "pending_verification" || !reviewBooking?.receipt_url} className="gap-2">
               {acceptingBooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Accept booking
             </Button>
