@@ -63,7 +63,23 @@ export default function ReviewsSection() {
                           decoding="async"
                           className="mb-5 max-h-44 w-full rounded-md object-cover"
                         />
-                      ) : null}
+                      ) : (
+                        <div
+                          aria-label="No photo was shared with this review"
+                          className="relative mb-5 flex h-36 items-center justify-between overflow-hidden rounded-md border border-primary/10 bg-gradient-to-br from-primary/10 via-background to-secondary/20 px-5"
+                        >
+                          <div className="relative z-10 flex items-center gap-3">
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
+                              {review.guest_name?.trim()?.charAt(0)?.toUpperCase() || "G"}
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">Guest story</p>
+                              <p className="mt-1 text-xs text-muted-foreground">A photo wasn’t shared</p>
+                            </div>
+                          </div>
+                          <Quote aria-hidden="true" className="h-20 w-20 shrink-0 text-primary/10" />
+                        </div>
+                      )}
                       <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 pt-4">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{review.guest_name}</p>
