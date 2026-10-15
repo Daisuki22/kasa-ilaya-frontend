@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +47,9 @@ const tomorrowInputValue = () => {
 export default function AdminReservationManagement() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const isSuperAdmin = [user?.role, user?.app_role, user?._app_role].includes("super_admin");
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
+  const autoOpenedPendingModal = useRef(false);
   const [archiveId, setArchiveId] = useState(null);
   const [archiving, setArchiving] = useState(false);
   const [reviewBooking, setReviewBooking] = useState(null);
@@ -86,16 +89,31 @@ export default function AdminReservationManagement() {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
+  const { data: pendingBookingPage, isLoading: isLoadingPendingBookings } = useQuery({
+    queryKey: ["super-admin-pending-bookings"],
+    queryFn: () => baseClient.entities.Booking.adminPage({ page: 1, limit: 50, status: "pending", sort: "-created_date" }),
+    enabled: isSuperAdmin,
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
+  });
   const { data: packages = [] } = useQuery({
     queryKey: ["admin-reservation-package-filters"],
     queryFn: () => baseClient.entities.Package.list("name"),
   });
   const bookings = bookingPage?.data || [];
+  const pendingBookings = pendingBookingPage?.data || [];
+  const pendingBookingCount = pendingBookingPage?.pagination?.total || 0;
   const pagination = bookingPage?.pagination || { page, limit: pageSize, total: 0, totalPages: 1 };
   const currentPage = pagination.page || page;
   useEffect(() => {
     if (pagination.page && pagination.page !== page) setPage(pagination.page);
   }, [pagination.page, page]);
+
+  useEffect(() => {
+    if (!isSuperAdmin || isLoadingPendingBookings || !pendingBookingPage || autoOpenedPendingModal.current) return;
+    autoOpenedPendingModal.current = true;
+    if (pendingBookingCount > 0) setPendingModalOpen(true);
+  }, [isSuperAdmin, isLoadingPendingBookings, pendingBookingPage, pendingBookingCount]);
 
   const handleArchive = async () => {
     setArchiving(true);
@@ -104,6 +122,7 @@ export default function AdminReservationManagement() {
       toast.success("Booking archived.");
       queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["admin-bookings-archived"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-pending-bookings"] });
     } catch (error) {
       toast.error(error?.message || "Unable to archive booking.");
     } finally {
@@ -122,6 +141,7 @@ export default function AdminReservationManagement() {
       setAcceptConfirmOpen(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["super-admin-pending-bookings"] }),
         queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] }),
         queryClient.invalidateQueries({ queryKey: ["my-bookings"] }),
@@ -395,6 +415,51 @@ export default function AdminReservationManagement() {
         </CardContent>
         {!isLoading && !bookingPageError ? <PaginationControls page={currentPage} pageSize={pageSize} total={pagination.total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
       </Card>
+
+      <Dialog open={isSuperAdmin && pendingModalOpen} onOpenChange={setPendingModalOpen}>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto sm:max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Pending Bookings</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {pendingBookingCount} booking{pendingBookingCount === 1 ? "" : "s"} still waiting for review.
+              {pendingBookingCount > pendingBookings.length ? ` Showing the latest ${pendingBookings.length}.` : ""}
+            </p>
+          </DialogHeader>
+          {isLoadingPendingBookings ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>
+          ) : pendingBookings.length ? (
+            <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+              {pendingBookings.map((booking) => (
+                <div key={booking.id} className="flex flex-col gap-3 rounded-lg border border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-mono text-sm font-semibold">{booking.booking_reference || booking.id}</p>
+                    <p className="truncate text-sm font-medium">{booking.customer_name || "Guest"} · {booking.package_name || "Package"}</p>
+                    <p className="text-sm text-muted-foreground">{booking.booking_date} · {tourTimeLabels[booking.tour_type] || booking.tour_type || "Tour"}</p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">Pending booking</Badge>
+                      {booking.payment_status === "pending_verification" ? (
+                        <Badge variant="outline" className="border-info/30 bg-info/10 text-primary">Payment verification</Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="shrink-0 gap-2"
+                    onClick={() => { setPendingModalOpen(false); setReviewBooking(booking); }}
+                  >
+                    <Eye className="h-4 w-4" /> Review booking
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">There are no pending bookings to review.</p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingModalOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!reviewBooking} onOpenChange={(open) => !open && !acceptingBooking && setReviewBooking(null)}>
         <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto sm:max-h-[90vh]">
