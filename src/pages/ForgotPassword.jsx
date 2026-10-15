@@ -63,9 +63,6 @@ export default function ForgotPassword() {
           <CardDescription>Enter your email and we will send a password reset code.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="mb-4 rounded-lg border border-info/20 bg-info/10 p-3 text-sm text-muted-foreground">
-            Google-only accounts do not have a resort password to reset. Go back to sign in and choose Continue with Google.
-          </p>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="forgot-email">Email</Label>
