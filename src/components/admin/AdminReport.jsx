@@ -762,7 +762,7 @@ export default function AdminReport() {
 
       <div className="report-screen-header flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Profit Report</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Revenue Reports</h1>
           <p className="mt-1 text-muted-foreground">Prepare a date-based income and expense statement for the resort.</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -901,7 +901,7 @@ export default function AdminReport() {
               </header>
 
               <div className="profit-report-title">
-                <h1>PROFIT REPORT</h1>
+                <h1>REVENUE REPORTS</h1>
                 <p>(Statement of Income and Expenses)</p>
               </div>
 

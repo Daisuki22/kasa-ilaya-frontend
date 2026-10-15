@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { baseClient } from "@/api/baseClient";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,6 +36,7 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
   const [newInclusion, setNewInclusion] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
 
   useEffect(() => {
     if (!open) {
@@ -49,7 +54,23 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
     setNewInclusion("");
     setSaving(false);
     setUploadingImages(false);
+    setPendingUpdate(null);
   }, [open, pkg]);
+
+  const savePackage = async (payload) => {
+    setSaving(true);
+
+    try {
+      await onSave(payload);
+      toast.success(pkg ? "Package updated successfully." : "Package created successfully.");
+      setPendingUpdate(null);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(error?.message || "Unable to save package.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSubmit = async () => {
     const dayTourPrice = Number(form.day_tour_price) || 0;
@@ -71,17 +92,12 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
       is_active: Boolean(form.is_active),
     };
 
-    setSaving(true);
-
-    try {
-      await onSave(payload);
-      toast.success(pkg ? "Package updated successfully." : "Package created successfully.");
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(error?.message || "Unable to save package.");
-    } finally {
-      setSaving(false);
+    if (pkg) {
+      setPendingUpdate(payload);
+      return;
     }
+
+    await savePackage(payload);
   };
 
   const handleImageUpload = async (event) => {
@@ -152,6 +168,7 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent key={pkg?.id || "new-package"} className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto sm:max-h-[90vh]">
         <DialogHeader>
@@ -294,5 +311,21 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
         </form>
       </DialogContent>
     </Dialog>
+    <AlertDialog open={Boolean(pendingUpdate)} onOpenChange={(isOpen) => { if (!isOpen && !saving) setPendingUpdate(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Update this package?</AlertDialogTitle>
+          <AlertDialogDescription>Save the changes to {pendingUpdate?.name || "this package"}? Guests will see the updated package details and prices.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+          <AlertDialogAction disabled={saving} onClick={(event) => { event.preventDefault(); if (pendingUpdate) void savePackage(pendingUpdate); }}>
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {saving ? "Updating..." : "Update Package"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -5,6 +5,10 @@ import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +65,7 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
   const [amenities, setAmenities] = useState(settings?.amenities || defaultSiteSettings.amenities);
   const [resortGallery, setResortGallery] = useState(settings?.resort_gallery || defaultSiteSettings.resort_gallery);
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingPackagesBanner, setUploadingPackagesBanner] = useState(false);
@@ -295,6 +300,7 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
 
       await queryClient.invalidateQueries({ queryKey: ["site-settings"] });
       toast.success("System settings saved.");
+      setConfirmSaveOpen(false);
     } catch (error) {
       toast.error(error?.message || "Unable to save system settings.");
     } finally {
@@ -944,11 +950,26 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
       )}
 
       <div className="flex justify-end">
-        <Button type="button" className="gap-2" onClick={handleSave} disabled={isSaving || uploadingLogo || uploadingHero || uploadingPackagesBanner || uploadingGallery}>
+        <Button type="button" className="gap-2" onClick={() => setConfirmSaveOpen(true)} disabled={isSaving || uploadingLogo || uploadingHero || uploadingPackagesBanner || uploadingGallery}>
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save System Settings
         </Button>
       </div>
+
+      <AlertDialog open={confirmSaveOpen} onOpenChange={(open) => { if (!isSaving) setConfirmSaveOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save system settings?</AlertDialogTitle>
+            <AlertDialogDescription>This will update the resort website content and settings for visitors. Do you want to continue?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isSaving} onClick={(event) => { event.preventDefault(); void handleSave(); }}>
+              {isSaving ? "Saving..." : "Save Settings"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

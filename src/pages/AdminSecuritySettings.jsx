@@ -8,6 +8,10 @@ import { useAuth } from "@/lib/AuthContext";
 import { defaultSiteSettings, useSiteSettings } from "@/hooks/useSiteSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -45,6 +49,7 @@ export default function AdminSecuritySettings() {
 
   const [form, setForm] = useState(buildForm(settings));
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
 
   useEffect(() => {
     setForm(buildForm(settings));
@@ -122,6 +127,7 @@ export default function AdminSecuritySettings() {
       await queryClient.invalidateQueries({ queryKey: ["site-settings"] });
       await queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] });
       toast.success("Security settings saved.");
+      setConfirmSaveOpen(false);
     } catch (error) {
       toast.error(error?.message || "Unable to save security settings.");
     } finally {
@@ -239,11 +245,26 @@ export default function AdminSecuritySettings() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving || Boolean(validationMessage)} className="gap-2">
+        <Button onClick={() => setConfirmSaveOpen(true)} disabled={isSaving || Boolean(validationMessage)} className="gap-2">
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {isSaving ? "Saving..." : "Save Security Settings"}
         </Button>
       </div>
+
+      <AlertDialog open={confirmSaveOpen} onOpenChange={(open) => { if (!isSaving) setConfirmSaveOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save security settings?</AlertDialogTitle>
+            <AlertDialogDescription>These changes affect account protection and sign-in behavior across the site. Do you want to continue?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isSaving} onClick={(event) => { event.preventDefault(); void handleSave(); }}>
+              {isSaving ? "Saving..." : "Save Settings"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -122,7 +122,7 @@ const adminNav = [
   { name: "Dashboard", icon: LayoutDashboard, page: "AdminDashboard" },
   { name: "Reservation Management", icon: CalendarDays, page: "AdminCalendar" },
   { name: "Package Management", icon: Package, page: "AdminPackages" },
-  { name: "Reports", icon: ChartBarIcon, page: "AdminReport" },
+  { name: "Revenue Reports", icon: ChartBarIcon, page: "AdminReport" },
   { name: "Inquiries", icon: MessageSquareMore, page: "AdminInquiries" },
   { name: "Payment Monitoring", icon: CreditCard, page: "AdminPaymentMonitoring" },
   { name: "Payment QR Codes", icon: QrCode, page: "AdminPaymentQRCodes" },

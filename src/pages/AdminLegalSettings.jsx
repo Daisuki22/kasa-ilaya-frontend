@@ -38,6 +38,7 @@ export default function AdminLegalSettings() {
   const [editingId, setEditingId] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [publishTarget, setPublishTarget] = useState(null);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const { data: documents = [], isLoading, isError, error } = useQuery({
     queryKey: ["admin-legal-documents"],
     queryFn: () => baseClient.entities.LegalDocument.list("-created_date", 100),
@@ -79,6 +80,7 @@ export default function AdminLegalSettings() {
     onSuccess: async (saved) => {
       await queryClient.invalidateQueries({ queryKey: ["admin-legal-documents"] });
       setEditingId(saved?.id || editingId);
+      setConfirmSaveOpen(false);
       toast.success("Draft saved.");
     },
     onError: (saveError) => toast.error(saveError?.status >= 500 ? "The draft could not be saved. Please try again." : saveError.message || "The draft could not be saved."),
@@ -141,7 +143,7 @@ export default function AdminLegalSettings() {
                     <Button type="button" variant="outline" onClick={() => setPreviewOpen(true)} disabled={!form.content.trim()}><Eye className="mr-2 h-4 w-4" />Preview</Button>
                     <div className="flex flex-col gap-3 sm:flex-row">
                       <Button type="button" variant="outline" onClick={() => loadDraft(activeType)} disabled={saveMutation.isPending}>Reset</Button>
-                      <Button type="button" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.title.trim() || !form.content.trim() || !form.version.trim()}><Save className="mr-2 h-4 w-4" />{saveMutation.isPending ? "Saving…" : "Save Draft"}</Button>
+                      <Button type="button" onClick={() => setConfirmSaveOpen(true)} disabled={saveMutation.isPending || !form.title.trim() || !form.content.trim() || !form.version.trim()}><Save className="mr-2 h-4 w-4" />{saveMutation.isPending ? "Saving…" : "Save Draft"}</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -159,6 +161,21 @@ export default function AdminLegalSettings() {
           <div className="border-t px-6 py-4"><Button variant="outline" onClick={() => setPreviewOpen(false)}>Close preview</Button></div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmSaveOpen} onOpenChange={(open) => { if (!saveMutation.isPending) setConfirmSaveOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save {DOCUMENTS[activeType].label} draft?</AlertDialogTitle>
+            <AlertDialogDescription>This will save version {form.version} as a draft. It will not become active for bookings until you publish it.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saveMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={saveMutation.isPending} onClick={(event) => { event.preventDefault(); saveMutation.mutate(); }}>
+              {saveMutation.isPending ? "Saving…" : "Save Draft"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={Boolean(publishTarget)} onOpenChange={(open) => { if (!open && !publishMutation.isPending) setPublishTarget(null); }}>
         <AlertDialogContent>
