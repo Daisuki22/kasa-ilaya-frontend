@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { handleImageFallback } from "@/lib/imageFallback";
 import { optimizeStaticImageUrl } from "@/hooks/useSiteSettings";
-import { CANCELLATION_REBOOKING_NOTICE } from "@/lib/resortNotices";
+import { PAYMENT_POLICY_NOTICE, RESCHEDULE_POLICY_NOTICE } from "@/lib/resortNotices";
 import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 
 const tourTypeLabels = {
@@ -53,7 +53,6 @@ const getPackagePriceByTourType = (pkg, tourType) => {
 
 const FALLBACK_PACKAGE_IMAGE = "/img/room_Resort%20View.webp";
 const defaultTour = { label: "Choose a tour type", time: "Select inside the booking modal" };
-const PAYMENT_POLICY_NOTICE = CANCELLATION_REBOOKING_NOTICE;
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
 const RECEIPT_MIN_BYTES = 1024;
@@ -1000,6 +999,10 @@ export default function BookingForm() {
                   </p>
                 </div>
               )}
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
+                <p className="font-semibold text-primary">Reschedule Policy</p>
+                <p className="mt-1">{RESCHEDULE_POLICY_NOTICE}</p>
+              </div>
               <div className="relative overflow-hidden rounded-lg border border-primary/15 bg-gradient-to-r from-primary/10 via-background to-secondary/10 px-5 py-5 shadow-sm">
                 <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
                 <div className="absolute -bottom-10 left-6 h-20 w-20 rounded-full bg-secondary/15 blur-2xl" />

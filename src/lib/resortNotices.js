@@ -1,8 +1,14 @@
 export const DATA_PRIVACY_NOTICE =
   "Kasa Ilaya Resort & Events Place is committed to protecting your personal information. All personal details and proofs of payment collected during the booking process are processed in strict compliance with Republic Act No. 10173 (Data Privacy Act of 2012). Your data is collected solely for reservation processing, identity verification, and guest management. We do not sell or share your personal details with unauthorized third parties. By proceeding with your booking, you consent to the collection and processing of your information for these purposes.";
 
+export const PAYMENT_POLICY_NOTICE =
+  "All payments are non-refundable. Online cancellation is available only when the reservation date is more than 7 calendar days away; a cancelled paid booking is not refunded.";
+
+export const RESCHEDULE_POLICY_NOTICE =
+  "Reschedule requests are subject to resort approval and are accepted only more than 7 days before the tour begins. Rescheduling is unavailable during the final 7 days. If approved, the prior payment carries over to the new reservation date.";
+
 export const CANCELLATION_REBOOKING_NOTICE =
-  "All payments are non-refundable. Online cancellation is available only when the reservation date is more than 7 calendar days away; a cancelled paid booking is not refunded. Reschedule requests are subject to resort approval and are accepted only more than 7 days before the tour begins. Rescheduling is unavailable during the final 7 days. If approved, the prior payment carries over to the new reservation date.";
+  `${PAYMENT_POLICY_NOTICE} ${RESCHEDULE_POLICY_NOTICE}`;
 
 export const normalizeTermsContent = (content = "") => {
   const sections = String(content)
