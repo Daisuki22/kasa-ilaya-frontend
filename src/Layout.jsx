@@ -350,6 +350,7 @@ export default function Layout({ children, currentPageName }) {
   if (user?.disabled) {
     accountNotifications.push({
       id: "account-disabled",
+      actorName: "Kasa Ilaya Resort",
       title: "Account access restricted",
       description: "Your account is currently disabled. Please contact resort admin support.",
       createdAt: user?.updated_date || user?.created_date || new Date().toISOString(),
@@ -369,6 +370,8 @@ export default function Layout({ children, currentPageName }) {
     return {
       ...item,
       id: `persisted-${item.id}`,
+      actorName: item.actor_name || (isAdminBookingNotification ? "Guest" : "Kasa Ilaya Resort"),
+      actorProfileImageUrl: item.actor_profile_image_url || "",
       createdAt: item.created_date,
       isPersistent: true,
       link: isAdminBookingNotification
@@ -386,6 +389,8 @@ export default function Layout({ children, currentPageName }) {
       title: isAdmin
         ? `New message from ${inquiry.last_sender_name || inquiry.guest_name || "guest"}`
         : "New reply from Kasa Ilaya",
+      actorName: inquiry.last_sender_name || inquiry.guest_name || (isAdmin ? "Guest" : "Kasa Ilaya Resort"),
+      actorProfileImageUrl: inquiry.last_sender_profile_image_url || inquiry.guest_profile_image_url || "",
       description: inquiry.last_message_preview || `Update on: ${inquiry.subject || "your inquiry"}`,
       createdAt: inquiry.last_message_at || inquiry.updated_date || inquiry.created_date || new Date().toISOString(),
       link: createPageUrl(isAdmin ? "AdminInquiries" : "Contact"),
@@ -563,7 +568,8 @@ export default function Layout({ children, currentPageName }) {
                     {group.items.map((item) => {
                       const eventTime = new Date(item.createdAt);
                       const isUnread = item.isPersistent ? !item.is_read : eventTime.getTime() > notificationSeenAt;
-                      const profileName = user.full_name || user.email || "User";
+                      const profileName = item.actorName || (item.isPersistent ? "Kasa Ilaya Resort" : user.full_name || user.email || "User");
+                      const actorImage = item.actorProfileImageUrl || "";
                       const initials = profileName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "U";
                       return (
                         <DropdownMenuItem key={item.id} asChild>
@@ -573,10 +579,10 @@ export default function Layout({ children, currentPageName }) {
                           >
                             <div className="relative mt-0.5 h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary/10 text-primary ring-1 ring-border/70">
                               <span className="flex h-full w-full items-center justify-center text-xs font-semibold">{initials}</span>
-                              {user.profile_image_url ? (
+                              {actorImage ? (
                                 <img
-                                  src={resolveAssetUrl(user.profile_image_url)}
-                                  alt=""
+                                  src={resolveAssetUrl(actorImage)}
+                                  alt={`${profileName} profile`}
                                   loading="lazy"
                                   className="absolute inset-0 h-full w-full object-cover"
                                   onError={(event) => { event.currentTarget.style.display = "none"; }}
@@ -586,7 +592,10 @@ export default function Layout({ children, currentPageName }) {
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
-                                <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">{item.title}</p>
+                                <div className="min-w-0">
+                                  <p className="truncate text-xs font-semibold text-primary">{profileName}</p>
+                                  <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">{item.title}</p>
+                                </div>
                                 <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground">
                                   {Number.isNaN(eventTime.getTime()) ? "Now" : isToday(eventTime) || isYesterday(eventTime) ? format(eventTime, "h:mm a") : format(eventTime, "MMM d")}
                                 </span>
