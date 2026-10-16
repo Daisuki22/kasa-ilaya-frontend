@@ -720,8 +720,10 @@ export default function BookingForm() {
         purpose: "payment_receipt",
         payment_qr_code_id: selectedQrCodeId,
         payment_amount_due: paymentAmountDue,
-        payment_number: form.payment_number,
-        payment_reference_number: form.payment_reference_number,
+        // A newly selected receipt starts a new payment proof. Do not send the
+        // previous receipt's details while React is still applying the reset.
+        payment_number: "",
+        payment_reference_number: "",
       });
       if (uploadResult?.validation === "duplicate") {
         setReceiptOcrSummary(uploadResult.ocr_summary || null);
@@ -1546,7 +1548,7 @@ export default function BookingForm() {
                             <Button type="button" variant="outline" size="sm" onClick={() => setPolicyDialogType("terms")}>Read terms</Button>
                           </div>
                           <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
-                            <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                            <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary" />
                             <span>I have read and agree to the Terms and Conditions, version {termsDocument.version}.</span>
                           </label>
                         </section>
@@ -1556,11 +1558,11 @@ export default function BookingForm() {
                             <Button type="button" variant="outline" size="sm" onClick={() => setPolicyDialogType("privacy")}>Read privacy notice</Button>
                           </div>
                           <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
-                            <input type="checkbox" checked={privacyAcknowledged} onChange={(event) => setPrivacyAcknowledged(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                            <input type="checkbox" checked={privacyAcknowledged} onChange={(event) => setPrivacyAcknowledged(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary" />
                             <span>I acknowledge that I have read the Privacy Notice, version {privacyDocument.version}.</span>
                           </label>
                           <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
-                            <input type="checkbox" checked={privacyConsent} onChange={(event) => setPrivacyConsent(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                            <input type="checkbox" checked={privacyConsent} onChange={(event) => setPrivacyConsent(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary" />
                             <span>I consent to the processing of my information as described in the Privacy Notice for handling this reservation.</span>
                           </label>
                         </section>

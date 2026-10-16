@@ -662,16 +662,18 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const NavbarThemeToggle = ({ onHero = false } = {}) => (
-    <div className="hidden items-center gap-2 sm:flex">
-      <ThemeModeIndicator compact onHero={onHero} />
-      <div className={`flex items-center rounded-lg border p-1 ${onHero ? "border-white/25 bg-black/20 backdrop-blur-sm" : "border-border bg-background/70"}`}>
+    <div className="hidden shrink-0 items-center gap-2 sm:flex">
+      <div className="hidden md:block">
+        <ThemeModeIndicator compact onHero={onHero} />
+      </div>
+      <div className={`flex shrink-0 items-center rounded-lg border p-1 ${onHero ? "border-white/25 bg-black/20 backdrop-blur-sm" : "border-border bg-background/70"}`}>
         {themeOptions.map(({ id, Icon, label }) => (
           <button
             key={id}
             type="button"
             onClick={() => setTheme(id)}
             title={label}
-            className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            className={`flex min-h-9 min-w-9 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors md:px-2.5 ${
               theme === id
                 ? "bg-primary text-primary-foreground"
                 : onHero ? "text-white/85 hover:bg-white/15 hover:text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"
