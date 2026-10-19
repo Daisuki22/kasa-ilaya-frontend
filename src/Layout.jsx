@@ -158,6 +158,7 @@ export default function Layout({ children, currentPageName }) {
   const isRegularAdmin = Boolean(isAdmin && !isSuperAdminUser);
   const isAdminPage = Boolean(
     currentPageName?.startsWith("Admin") ||
+    (currentPageName === "MyActivity" && isAdmin) ||
     ((currentPageName === "ForgotPassword" || currentPageName === "ResetPassword") && isAdmin)
   );
 
