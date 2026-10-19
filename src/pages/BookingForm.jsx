@@ -831,6 +831,8 @@ export default function BookingForm() {
       toast.error("Please scroll to the end of the document first.");
       return;
     }
+    if (policyDialogType === "terms") setTermsAccepted(true);
+    if (policyDialogType === "privacy") setPrivacyAcknowledged(true);
     setPolicyDialogType(null);
   };
 
