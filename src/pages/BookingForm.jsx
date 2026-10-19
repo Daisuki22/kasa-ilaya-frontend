@@ -864,7 +864,6 @@ export default function BookingForm() {
                   <SiteLogo alt="Kasa Ilaya Resort logo" className="mb-2 h-14 w-auto object-contain" />
                   <p className="font-display text-lg font-semibold text-foreground">Kasa Ilaya Resort &amp; Event Place</p>
                   <p className="whitespace-pre-line text-xs text-muted-foreground">{RESORT_CONTACT.address}</p>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Booking Receipt</p>
                 </div>
                 <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
