@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   CalendarCheck, User, Mail, Phone, Loader2,
-  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp, Sun
+  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp, Sun, Moon
 } from "lucide-react";
 import { format, addDays, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,6 +32,11 @@ const tourTypeLabels = {
   night_tour: { label: "Night Tour", time: "6 PM - 6 AM" },
   "22_hours": { label: "22 Hours", time: "6 PM – 4 PM (Next Day)" },
 };
+const availableTourChoices = [
+  { value: "day_tour", label: "Day Tour", time: "8 AM - 6 PM", Icon: Sun },
+  { value: "night_tour", label: "Night Tour", time: "6 PM - 6 AM", Icon: Moon },
+  { value: "22_hours", label: "22 Hours", time: "6 PM - 4 PM next day", Icon: Clock },
+];
 
 const getPackagePriceByTourType = (pkg, tourType) => {
   if (!pkg || !tourType) {
@@ -54,7 +59,7 @@ const getPackagePriceByTourType = (pkg, tourType) => {
 };
 
 const FALLBACK_PACKAGE_IMAGE = "/img/room_Resort%20View.webp";
-const defaultTour = { label: "Choose a tour type", time: "Select inside the booking modal" };
+const defaultTour = { label: "Choose a tour type", time: "Select an available option on the calendar" };
 const RECEIPT_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
 const RECEIPT_MIN_BYTES = 1024;
@@ -236,13 +241,6 @@ export default function BookingForm() {
     if (!policyDialogType || !content) return;
 
     content.scrollTop = 0;
-    const frame = window.requestAnimationFrame(() => {
-      if (content.scrollHeight <= content.clientHeight + 2) {
-        if (policyDialogType === "terms") setTermsReadToEnd(true);
-        if (policyDialogType === "privacy") setPrivacyReadToEnd(true);
-      }
-    });
-    return () => window.cancelAnimationFrame(frame);
   }, [policyDialogType, viewedDocument?.id, viewedDocument?.version, viewedDocument?.content]);
 
   const activeQrCodes = qrCodeRecords
@@ -338,14 +336,7 @@ export default function BookingForm() {
     const dateStr = format(date, 'yyyy-MM-dd');
 
     if (manualScheduleDatesSet.has(dateStr)) return true;
-    if (!selectedTour) return false;
-
-    const nextDateStr = format(addDays(date, 1), 'yyyy-MM-dd');
-    if (tourCrossesMidnight(selectedTour) && manualScheduleDatesSet.has(nextDateStr)) return true;
-
-    return existingBookings.some((booking) =>
-      bookingSchedulesOverlap(dateStr, selectedTour, booking.booking_date, booking.tour_type)
-    );
+    return availableTourChoices.every(({ value }) => !isTourAvailable(date, value));
   };
 
   const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
@@ -815,11 +806,14 @@ export default function BookingForm() {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
+    if (date && selectedTour && !isTourAvailable(date, selectedTour)) setSelectedTour("");
+  };
 
-    if (!date || isDateDisabled(date)) {
+  const handleBeginBooking = () => {
+    if (!selectedDate || !selectedTour || !isTourAvailable(selectedDate, selectedTour)) {
+      toast.error("Choose an available date and tour type first.");
       return;
     }
-
     setModalStep(1);
     setIsBookingModalOpen(true);
   };
@@ -1029,6 +1023,9 @@ export default function BookingForm() {
                 <div className="w-full max-w-[32rem] overflow-hidden rounded-xl border border-border bg-background p-2 sm:p-4">
                   <Calendar
                     mode="single"
+                    captionLayout="dropdown"
+                    fromYear={new Date().getFullYear()}
+                    toYear={new Date().getFullYear() + 3}
                     selected={selectedDate}
                     onSelect={handleDateSelect}
                     disabled={isDateDisabled}
@@ -1070,26 +1067,33 @@ export default function BookingForm() {
                             : "Available for reservation"
                       : isSelectedDateManuallyBlocked
                         ? "Blocked by a manual resort event or admin schedule — please choose another date"
-                        : "Choose a tour type inside the booking modal to confirm availability."}
+                        : "Choose an available tour type below to check this date."}
                   </p>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {[["day_tour", "Day Tour"], ["night_tour", "Night Tour"]].map(([tourType, label]) => {
-                      const available = isTourAvailable(selectedDate, tourType);
+                  <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {availableTourChoices.map(({ value: tourType, label, time, Icon }) => {
+                      const available = !isLoadingAvailability && isTourAvailable(selectedDate, tourType);
                       const selected = selectedTour === tourType;
                       return (
                         <button
                           key={tourType}
                           type="button"
-                          disabled={!available}
+                          disabled={!available || isLoadingAvailability}
                           onClick={() => setSelectedTour(tourType)}
                           className={`rounded-lg border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-55 ${selected ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"}`}
                         >
-                          <span className="block font-medium text-foreground">{label}</span>
+                          <span className="flex items-center gap-2 font-medium text-foreground"><Icon className="h-4 w-4" />{label}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{time}</span>
                           <span className={`mt-1 block text-xs ${available ? "text-primary" : "text-destructive"}`}>{available ? "Available" : isLoadingAvailability ? "Checking…" : "Unavailable"}</span>
                         </button>
                       );
                     })}
                   </div>
+                  {selectedTour && isTourAvailable(selectedDate, selectedTour) ? (
+                    <div className="mt-4 flex flex-col items-center gap-3 border-t border-border pt-4 sm:flex-row sm:justify-between">
+                      <p className="text-sm text-foreground"><span className="text-muted-foreground">Selected tour:</span> <span className="font-semibold">{tourTypeLabels[selectedTour]?.label}</span> <span className="text-muted-foreground">({tourTypeLabels[selectedTour]?.time})</span></p>
+                      <Button type="button" onClick={handleBeginBooking} className="w-full sm:w-auto">Continue with {tourTypeLabels[selectedTour]?.label}</Button>
+                    </div>
+                  ) : null}
                 </div>
               )}
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
@@ -1108,7 +1112,7 @@ export default function BookingForm() {
                     Finish your reservation inside the booking modal.
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    After choosing a date, select your tour type, review the resort rules, add guest details, and continue to payment review.
+                    Choose a date and an available tour type, then review the resort rules, add guest details, and continue to payment review.
                   </p>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -1118,7 +1122,7 @@ export default function BookingForm() {
                         Date first
                       </div>
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        Click an available calendar date to open the guided booking flow instantly.
+                        Select a date, choose an available tour, then continue to the guided booking flow.
                       </p>
                     </div>
                     <div className="rounded-lg border border-border/70 bg-background/85 p-4 backdrop-blur">
@@ -1178,18 +1182,11 @@ export default function BookingForm() {
                         <div className="mt-4 space-y-4">
                           <div>
                             <Label>Tour Type *</Label>
-                            <Select value={selectedTour} onValueChange={(value) => {
-                              setSelectedTour(value);
-                            }}>
-                              <SelectTrigger className="mt-1">
-                                <SelectValue placeholder="Select tour type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="day_tour"><span className="flex items-center gap-2"><Sun className="h-4 w-4 text-secondary" />Day Tour (8 AM - 6 PM)</span></SelectItem>
-                                <SelectItem value="night_tour"><span className="flex items-center gap-2"><Moon className="h-4 w-4 text-primary" />Night Tour (6 PM - 6 AM)</span></SelectItem>
-                                <SelectItem value="22_hours"><span className="flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground" />22 Hours (6 PM - 4 PM Next Day)</span></SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-border bg-background px-3 py-2.5">
+                              {selectedTour && React.createElement(availableTourChoices.find((choice) => choice.value === selectedTour)?.Icon || Clock, { className: "h-4 w-4 text-primary" })}
+                              <span className="font-medium text-foreground">{tourTypeLabels[selectedTour]?.label || "Choose a tour type"}</span>
+                              <span className="text-sm text-muted-foreground">{tourTypeLabels[selectedTour]?.time || ""}</span>
+                            </div>
                           </div>
 
                           <div className="rounded-lg border border-border bg-background px-4 py-3 text-sm">
@@ -1720,7 +1717,7 @@ export default function BookingForm() {
             <DialogTitle className="font-display text-2xl text-foreground">{viewedDocument?.title || "Legal document"}</DialogTitle>
             <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">Version {viewedDocument?.version || ""}. This is the document version associated with your booking submission.</DialogDescription>
           </DialogHeader>
-          <div ref={policyDocumentScrollRef} onScroll={handlePolicyDocumentScroll} className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{viewedDocument?.content || "Document unavailable."}</div></div>
+          <div ref={policyDocumentScrollRef} onScroll={handlePolicyDocumentScroll} className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><div className="min-h-[60vh] whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{viewedDocument?.content || "Document unavailable."}</div></div>
           <div className="flex flex-col gap-3 border-t border-border bg-background px-6 py-4 sm:flex-row sm:justify-end">
             <p className="mr-auto self-center text-sm text-muted-foreground">{viewedPolicyReadToEnd ? "You reached the end of this document." : "Scroll to the end before agreeing."}</p>
             <Button variant="outline" onClick={() => setPolicyDialogType(null)}>Close</Button>

@@ -663,9 +663,6 @@ export default function Layout({ children, currentPageName }) {
 
   const NavbarThemeToggle = ({ onHero = false } = {}) => (
     <div className="hidden shrink-0 items-center gap-2 sm:flex">
-      <div className="hidden md:block">
-        <ThemeModeIndicator compact onHero={onHero} />
-      </div>
       <div className={`flex shrink-0 items-center rounded-lg border p-1 ${onHero ? "border-white/25 bg-black/20 backdrop-blur-sm" : "border-border bg-background/70"}`}>
         {themeOptions.map(({ id, Icon, label }) => (
           <button

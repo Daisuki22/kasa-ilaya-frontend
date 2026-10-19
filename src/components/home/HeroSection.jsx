@@ -22,7 +22,6 @@ export default function HeroSection() {
     return [settings?.hero_image_url || "/img/room_Resort%20View.webp"];
   }, [settings?.hero_images, settings?.hero_image_url]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
-  const badgeText = settings?.hero_badge_text || "Welcome to Paradise";
   const titleLine1 = settings?.hero_title_line1 || "Kasa Ilaya";
   const titleLine2 = settings?.hero_title_line2 || "Resort & Event Place";
   const heroDescription =
@@ -119,9 +118,6 @@ export default function HeroSection() {
 
       <div className="hero-content-container relative w-full py-24 sm:py-28 lg:py-36">
         <div className="w-full max-w-[42rem] animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <span className="mb-6 inline-block rounded-full border border-white/30 bg-black/35 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm sm:mb-8 sm:px-5 sm:text-sm">
-            {badgeText}
-          </span>
           <h1 className="mb-6 max-w-full break-words font-display text-2xl font-bold leading-tight text-white min-[390px]:text-[1.7rem] sm:mb-8 sm:text-5xl lg:text-7xl">
             <span className="block">{titleLine1}</span>
             <span className="block max-w-full whitespace-normal text-white hero-copy-shadow">{titleLine2}</span>
