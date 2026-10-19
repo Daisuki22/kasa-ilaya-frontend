@@ -3,7 +3,7 @@ import { baseClient } from "@/api/baseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { resolveAssetUrl } from "@/lib/assetUrls";
-import { getBookingStartDateTime, isBookingExpired } from "@/lib/bookingTimes";
+import { getBookingStartDateTime, getResortDateKey, isBookingExpired } from "@/lib/bookingTimes";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +150,7 @@ function PaymentProof({ src }) {
 
 export default function AdminCalendar() {
   const queryClient = useQueryClient();
+  const [todayDateKey, setTodayDateKey] = useState(() => getResortDateKey());
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [queuePage, setQueuePage] = useState(1);
@@ -169,6 +170,16 @@ export default function AdminCalendar() {
   const [rescheduleDecisionNote, setRescheduleDecisionNote] = useState("");
   const [rescheduleDecision, setRescheduleDecision] = useState("");
   const requestedBookingId = new URLSearchParams(window.location.search).get("bookingId");
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      const nextDateKey = getResortDateKey();
+      setTodayDateKey((currentDateKey) => currentDateKey === nextDateKey ? currentDateKey : nextDateKey);
+    }, 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const isBookingDateToday = (booking) => String(booking?.booking_date || "").slice(0, 10) === todayDateKey;
 
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => {});
@@ -732,7 +743,7 @@ export default function AdminCalendar() {
                               <Button variant="ghost" size="icon" title="View reservation" onClick={() => setSelectedBooking(booking)}>
                                 <Eye className="h-4 w-4" />
                               </Button>
-                {booking.status === "confirmed" && !isBookingExpired(booking) && (
+                {booking.status === "confirmed" && isBookingDateToday(booking) && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -874,7 +885,7 @@ export default function AdminCalendar() {
                     </div>
                   </div>
                 )}
-                {selectedBooking.status === "confirmed" && !isBookingExpired(selectedBooking) && (
+                {selectedBooking.status === "confirmed" && isBookingDateToday(selectedBooking) && (
                   <div className="border-t border-border pt-4">
                     <Button className="w-full gap-2" onClick={() => setCompleteBookingTarget(selectedBooking)}>
                       <CheckCheck className="h-4 w-4" />
