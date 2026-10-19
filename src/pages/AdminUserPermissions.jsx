@@ -104,19 +104,21 @@ export default function AdminUserPermissions() {
   const allArchivableVisibleUsersSelected = archivableVisibleUsers.length > 0 && archivableVisibleUsers.every((targetUser) => selectedArchiveIds.includes(targetUser.id));
 
   const selectAccountCategory = (category) => {
+    if (!isSuperAdmin && category !== "guest") return;
     setAccountCategory(category);
     setPage(1);
     setSelectedArchiveIds([]);
   };
 
   const openCreateAccount = (role) => {
+    if (!isSuperAdmin || !["admin", "super_admin"].includes(role)) return;
     setCreateAccountForm({ full_name: "", email: "", phone: "", password: "", confirmPassword: "" });
     setCreateAccountRole(role);
   };
 
   const createManagedAccount = async (event) => {
     event.preventDefault();
-    if (!createAccountRole || isCreatingAccount) return;
+    if (!isSuperAdmin || !["admin", "super_admin"].includes(createAccountRole) || isCreatingAccount) return;
     if (createAccountForm.password !== createAccountForm.confirmPassword) {
       toast.error("The passwords do not match.");
       return;
@@ -256,7 +258,7 @@ export default function AdminUserPermissions() {
         </div>
         <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Account type">
           <Button type="button" role="tab" aria-selected={accountCategory === "guest"} variant={accountCategory === "guest" ? "default" : "outline"} onClick={() => selectAccountCategory("guest")}>User Accounts</Button>
-          <Button type="button" role="tab" aria-selected={accountCategory === "admin"} variant={accountCategory === "admin" ? "default" : "outline"} onClick={() => selectAccountCategory("admin")}>Admin Accounts</Button>
+          {isSuperAdmin ? <Button type="button" role="tab" aria-selected={accountCategory === "admin"} variant={accountCategory === "admin" ? "default" : "outline"} onClick={() => selectAccountCategory("admin")}>Admin Accounts</Button> : null}
           {isSuperAdmin ? <Button type="button" role="tab" aria-selected={accountCategory === "super_admin"} variant={accountCategory === "super_admin" ? "default" : "outline"} onClick={() => selectAccountCategory("super_admin")}>Super Admin Accounts</Button> : null}
         </div>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
@@ -265,13 +267,15 @@ export default function AdminUserPermissions() {
               <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
             </Button>
           ) : null}
-          <Button type="button" variant="outline" className="gap-2" onClick={() => openCreateAccount("admin")}>
-            <UserPlus className="h-4 w-4" /> Create Admin Account
-          </Button>
           {isSuperAdmin ? (
-            <Button type="button" className="gap-2" onClick={() => openCreateAccount("super_admin")}>
-              <ShieldCheck className="h-4 w-4" /> Create Super Admin Account
-            </Button>
+            <>
+              <Button type="button" variant="outline" className="gap-2" onClick={() => openCreateAccount("admin")}>
+                <UserPlus className="h-4 w-4" /> Create Admin Account
+              </Button>
+              <Button type="button" className="gap-2" onClick={() => openCreateAccount("super_admin")}>
+                <ShieldCheck className="h-4 w-4" /> Create Super Admin Account
+              </Button>
+            </>
           ) : null}
         </div>
       </div>
