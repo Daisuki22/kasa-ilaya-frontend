@@ -1249,7 +1249,7 @@ export default function BookingForm() {
                               min="0"
                               step="1"
                               inputMode="numeric"
-                              className="mt-1 bg-card"
+                              className="mt-1 border-border/60 bg-background/60 text-foreground shadow-none transition-colors focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary/35 focus-visible:ring-offset-0 dark:[color-scheme:dark]"
                               value={additionalGuestCount}
                               onKeyDown={(event) => {
                                 if (["-", "+", ".", "e", "E"].includes(event.key)) event.preventDefault();
