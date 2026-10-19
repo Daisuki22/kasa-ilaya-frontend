@@ -7,7 +7,6 @@ const ADMIN_ALLOWED_PAGES = new Set([
   "AdminProfileSettings",
   "AdminPackageArchive",
   "AdminUserPermissions",
-  "AdminActivityLogs",
 ]);
 
 export const isAdminUser = (user) => user?.role === "admin" || user?.role === "super_admin";

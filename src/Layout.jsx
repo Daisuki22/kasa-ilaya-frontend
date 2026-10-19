@@ -131,6 +131,7 @@ const adminNav = [
   { name: "Legal & Privacy Settings", icon: FileText, page: "AdminLegalSettings" },
   { name: "System Settings", icon: SlidersHorizontal, page: "AdminSystemSettings" },
   { name: "Archive", icon: Archive, page: "AdminPackageArchive" },
+  { name: "Activity Logs", icon: Activity, page: "AdminActivityLogs" },
   { name: "My Activity", icon: Activity, page: "MyActivity" },
 ];
 
@@ -169,6 +170,7 @@ export default function Layout({ children, currentPageName }) {
   });
   const allowedAdminNav = adminNav.filter((item) => {
     if (item.page === "MyActivity") return !isSuperAdminUser;
+    if (item.page === "AdminActivityLogs") return isSuperAdminUser;
     return canAccessAdminPage(user, item.page);
   });
   const guestNav = userNav.filter((item) => {
