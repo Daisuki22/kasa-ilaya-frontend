@@ -1,6 +1,37 @@
 import React from 'react';
 import { DayPicker, Day as DayPickerDay, useActiveModifiers, useDayPicker } from 'react-day-picker';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+function CalendarDropdown({ name, caption, children, className, style, value, onChange, ...props }) {
+  const options = React.Children.toArray(children).filter((option) => React.isValidElement(option));
+
+  return (
+    <div className={className} style={style}>
+      <Select
+        value={String(value ?? '')}
+        onValueChange={(nextValue) => onChange?.({ target: { name, value: nextValue } })}
+      >
+        <SelectTrigger
+          aria-label={props['aria-label']}
+          className={cn(
+            'h-9 rounded-lg border-border bg-background px-3 py-1 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/50 focus:ring-2 focus:ring-ring focus:ring-offset-1',
+            name === 'months' ? 'min-w-32' : 'min-w-24'
+          )}
+        >
+          <SelectValue>{caption}</SelectValue>
+        </SelectTrigger>
+        <SelectContent className="max-h-64">
+          {options.map((option) => (
+            <SelectItem key={option.key ?? option.props.value} value={String(option.props.value)}>
+              {option.props.children}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 function CalendarDay(props) {
   const { classNames, formatters, locale, showOutsideDays } = useDayPicker();
@@ -28,10 +59,10 @@ export const resortCalendarClassNames = {
   month: 'w-full max-w-[32rem] space-y-4 sm:space-y-5',
   caption: 'relative flex h-10 items-center justify-center px-10',
   caption_label: 'inline-flex items-center gap-1 whitespace-nowrap font-display text-base font-semibold sm:text-lg',
-  caption_dropdowns: 'flex items-center justify-center gap-3',
-  dropdown: 'absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none opacity-0',
-  dropdown_month: 'relative inline-flex cursor-pointer items-center rounded-sm focus-within:ring-2 focus-within:ring-ring',
-  dropdown_year: 'relative inline-flex cursor-pointer items-center rounded-sm focus-within:ring-2 focus-within:ring-ring',
+  caption_dropdowns: 'flex items-center justify-center gap-2 sm:gap-3',
+  dropdown: 'cursor-pointer',
+  dropdown_month: 'relative inline-flex items-center',
+  dropdown_year: 'relative inline-flex items-center',
   nav: 'absolute inset-x-0 top-0 flex items-center justify-between',
   nav_button: 'flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground',
   table: 'w-full table-fixed border-collapse',
@@ -74,7 +105,7 @@ export function Calendar({ className, classNames, components, showOutsideDays = 
         day_hidden: 'invisible',
         ...classNames,
       }}
-      components={{ ...components, Day: CalendarDay }}
+      components={{ ...components, Day: CalendarDay, Dropdown: CalendarDropdown }}
       {...props}
     />
   );
