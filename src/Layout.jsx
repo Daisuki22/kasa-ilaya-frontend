@@ -872,25 +872,25 @@ export default function Layout({ children, currentPageName }) {
             </Link>
 
             {!isAdminMode ? (
-              <nav className={`hidden items-center justify-center gap-1 rounded-full border p-1.5 backdrop-blur lg:flex lg:justify-self-center xl:gap-1.5 xl:p-2 ${isTransparentHomeNav ? "border-white/20 bg-black/10 shadow-none" : "border-border/70 bg-background/75 shadow-[0_8px_28px_-20px_rgba(15,61,47,0.45)]"}`}>
+              <nav className={`hidden items-center justify-center gap-1 rounded-full border p-1.5 backdrop-blur lg:flex lg:justify-self-center xl:gap-1.5 xl:p-2 ${isTransparentHomeNav ? "border-white/35 bg-black/40 shadow-[0_8px_28px_-16px_rgba(0,0,0,0.75)]" : "border-border/70 bg-background/75 shadow-[0_8px_28px_-20px_rgba(15,61,47,0.45)]"}`}>
                 {navItems.map((item) => (
                   <Link
                     key={item.page || item.href}
                     to={item.href || createPageUrl(item.page)}
                     className={`relative isolate flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
                       currentPageName === item.page
-                      ? "text-secondary"
+                      ? isTransparentHomeNav ? "bg-white/15 text-white shadow-sm" : "text-secondary"
                         : isTransparentHomeNav ? "text-white/90 hover:bg-white/10 hover:text-white" : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
                     {currentPageName === item.page ? (
                       <motion.span
                         layoutId="user-navbar-active"
-                        className="absolute inset-x-3 bottom-1 z-0 h-0.5 rounded-full bg-secondary"
+                        className={`absolute inset-x-3 bottom-1 z-0 h-0.5 rounded-full ${isTransparentHomeNav ? "bg-white" : "bg-secondary"}`}
                         transition={{ type: "spring", stiffness: 380, damping: 34 }}
                       />
                     ) : null}
-                    <item.icon className={`relative z-10 h-4 w-4 ${currentPageName === item.page ? "text-secondary" : ""}`} />
+                    <item.icon className={`relative z-10 h-4 w-4 ${currentPageName === item.page ? isTransparentHomeNav ? "text-white" : "text-secondary" : ""}`} />
                     <span className="relative z-10">{item.name}</span>
                   </Link>
                 ))}
