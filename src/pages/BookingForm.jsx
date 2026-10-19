@@ -907,7 +907,6 @@ export default function BookingForm() {
                 </div>
                 {bookingComplete.payment_reference_number ? <div className="flex justify-between gap-3"><span className="text-muted-foreground">Payment Reference</span><span className="font-mono text-right">{bookingComplete.payment_reference_number}</span></div> : null}
                 </div>
-                <p className="mt-4 border-t border-dashed border-border pt-3 text-center text-xs text-muted-foreground">This is a booking receipt. An official receipt number is issued separately by the resort.</p>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
                 {bookingComplete.email_sent

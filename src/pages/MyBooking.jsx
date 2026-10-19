@@ -865,7 +865,6 @@ export default function MyBookings() {
                 <Detail label="Mode of Payment">{selectedBooking.payment_mode || selectedBooking.payment_qr_code_label || "Not selected"}</Detail>
                 <Detail label="Payment Number">{selectedBooking.payment_number || "Not provided"}</Detail>
                 <Detail label="Payment Reference Number">{selectedBooking.payment_reference_number || "Not provided"}</Detail>
-                {selectedBooking.official_receipt_number ? <Detail label="Official Receipt Number">{selectedBooking.official_receipt_number}</Detail> : null}
                 {(selectedBooking.rebooking_status || "none") !== "none" ? (
                   <>
                     <Detail label="Reschedule Status">{formatStatusLabel(selectedBooking.rebooking_status)}</Detail>

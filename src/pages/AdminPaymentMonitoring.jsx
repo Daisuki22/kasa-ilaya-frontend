@@ -156,8 +156,6 @@ export default function AdminPaymentMonitoring() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [officialReceiptNumber, setOfficialReceiptNumber] = useState("");
-  const [savingOfficialReceipt, setSavingOfficialReceipt] = useState(false);
   const [feeDialogBooking, setFeeDialogBooking] = useState(null);
   const [feePaymentConfirmation, setFeePaymentConfirmation] = useState(null);
   const [feeForm, setFeeForm] = useState({ items: [createDamageItem()], notes: "", status: "unpaid" });
@@ -168,36 +166,6 @@ export default function AdminPaymentMonitoring() {
   useEffect(() => {
     setReceiptUnavailable(false);
   }, [selectedBooking?.id, selectedBooking?.receipt_url]);
-
-  useEffect(() => {
-    setOfficialReceiptNumber(selectedBooking?.official_receipt_number || "");
-  }, [selectedBooking?.id, selectedBooking?.official_receipt_number]);
-
-  const saveOfficialReceiptNumber = async () => {
-    if (!selectedBooking) return;
-    setSavingOfficialReceipt(true);
-    try {
-      const value = officialReceiptNumber.trim();
-      const updated = await baseClient.entities.Booking.update(selectedBooking.id, { official_receipt_number: value || null });
-      setSelectedBooking((current) => current?.id === updated.id ? { ...current, ...updated } : current);
-      await baseClient.entities.ActivityLog.create({
-        user_email: user?.email,
-        user_name: user?.full_name,
-        action: value ? "Recorded Official Receipt Number" : "Cleared Official Receipt Number",
-        entity_type: "Booking",
-        entity_id: selectedBooking.id,
-        details: `${selectedBooking.booking_reference || selectedBooking.id} · Official receipt number ${value ? `set to ${value}` : "cleared"}.`,
-      });
-      await queryClient.invalidateQueries({ queryKey: ["admin-payment-monitoring"] });
-      await queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
-      await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
-      toast.success("Official receipt number saved.");
-    } catch (error) {
-      toast.error(error?.message || "Unable to save the official receipt number.");
-    } finally {
-      setSavingOfficialReceipt(false);
-    }
-  };
 
   const confirmAdditionalFeePayment = async () => {
     if (!feePaymentConfirmation) return;
@@ -813,14 +781,6 @@ export default function AdminPaymentMonitoring() {
                 <div className="min-w-0">
                   <span className="text-muted-foreground">Payment Reference Number</span>
                   <p className="break-all font-mono">{selectedBooking.payment_reference_number || "Not provided"}</p>
-                </div>
-                <div className="min-w-0 space-y-2 rounded-lg border border-border p-3 sm:col-span-2">
-                  <Label htmlFor="official-receipt-number">Official Receipt Number</Label>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input id="official-receipt-number" value={officialReceiptNumber} onChange={(event) => setOfficialReceiptNumber(event.target.value)} maxLength={64} placeholder="Enter the resort-issued OR number" />
-                    <Button type="button" variant="outline" onClick={saveOfficialReceiptNumber} disabled={savingOfficialReceipt}>{savingOfficialReceipt ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save OR No.</Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">This resort-issued number is separate from the booking reference and payment reference.</p>
                 </div>
                 <div className="min-w-0">
                   <span className="text-muted-foreground">Submitted At</span>
