@@ -1013,6 +1013,9 @@ export default function MyBookings() {
                   <Calendar
                     id="rebooking-date"
                     mode="single"
+                    captionLayout="dropdown"
+                    fromYear={new Date().getFullYear()}
+                    toYear={new Date().getFullYear() + 3}
                     selected={selectedRebookingDate}
                     onSelect={(date) => {
                       setRebookingForm((current) => ({
