@@ -677,7 +677,7 @@ export default function Layout({ children, currentPageName }) {
   const renderUserMenu = () => {
     if (user) {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full p-0" aria-label="Open user menu">
               <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/10">
