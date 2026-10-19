@@ -103,6 +103,7 @@ html {
   max-width: 100%;
   overflow-x: clip;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 body,
