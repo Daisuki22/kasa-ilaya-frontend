@@ -49,6 +49,7 @@ import { createPageUrl } from "@/utils";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const statusColors = {
   pending: "border-warning/30 bg-warning/10 text-warning",
@@ -104,6 +105,15 @@ const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 const formatMoneyWithCents = (value) => `PHP ${Number(value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const CANCELLATION_NOTICE_DAYS = 7;
 const RESCHEDULE_CUTOFF_DAYS = 7;
+const ADDITIONAL_GUEST_RATE = 150;
+const getPackageTotal = (packageRecord, tourType, guestCount) => {
+  if (!packageRecord) return 0;
+  const priceField = tourType === "night_tour" ? "night_tour_price" : tourType === "22_hours" ? "twenty_two_hour_price" : "day_tour_price";
+  const basePrice = Number(packageRecord[priceField] ?? packageRecord.price ?? 0);
+  if (!Number.isFinite(basePrice) || basePrice <= 0) return 0;
+  const includedGuests = Math.max(1, Math.trunc(Number(packageRecord.max_guests) || 1));
+  return Number((basePrice + Math.max(0, Number(guestCount || 0) - includedGuests) * ADDITIONAL_GUEST_RATE).toFixed(2));
+};
 
 const formatDate = (value) => {
   if (!value) {
@@ -218,7 +228,7 @@ export default function MyBookings() {
   const [unavailableReceiptUrl, setUnavailableReceiptUrl] = useState("");
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [bookingToRebook, setBookingToRebook] = useState(null);
-  const [rebookingForm, setRebookingForm] = useState({ requested_date: "", note: "" });
+  const [rebookingForm, setRebookingForm] = useState({ requested_date: "", package_id: "", note: "" });
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [isRequestingRebooking, setIsRequestingRebooking] = useState(false);
   const [rescheduleSuccess, setRescheduleSuccess] = useState(null);
@@ -281,6 +291,12 @@ export default function MyBookings() {
     queryFn: () => baseClient.entities.Booking.availability(bookingToRebook.id),
     enabled: !!bookingToRebook,
     refetchInterval: 15000,
+  });
+
+  const { data: activePackages = [], isLoading: isLoadingReschedulePackages } = useQuery({
+    queryKey: ["active-packages-for-reschedule"],
+    queryFn: () => baseClient.entities.Package.filter({ is_active: true }, "name"),
+    enabled: !!bookingToRebook,
   });
 
   const rebookingAvailabilityBookings = rebookingAvailability.booking_dates || [];
@@ -365,6 +381,18 @@ export default function MyBookings() {
 
   const selectedRebookingDate = createDateFromKey(rebookingForm.requested_date);
   const isCheckingRebookingDate = isLoadingRebookingAvailability;
+  const currentRebookingPackageId = bookingToRebook?.package_id || "__current_package__";
+  const rebookingPackages = useMemo(() => {
+    if (!bookingToRebook) return activePackages;
+    if (activePackages.some((packageRecord) => String(packageRecord.id) === String(bookingToRebook.package_id))) return activePackages;
+    return [{ id: currentRebookingPackageId, name: bookingToRebook.package_name || "Current package", max_guests: bookingToRebook.included_guest_count || 1 }, ...activePackages];
+  }, [activePackages, bookingToRebook, currentRebookingPackageId]);
+  const selectedRebookingPackage = rebookingPackages.find((packageRecord) => String(packageRecord.id) === String(rebookingForm.package_id)) || null;
+  const isKeepingCurrentPackage = !bookingToRebook || String(rebookingForm.package_id) === String(currentRebookingPackageId);
+  const selectedRebookingTotal = isKeepingCurrentPackage
+    ? Number(bookingToRebook?.total_amount || 0)
+    : getPackageTotal(selectedRebookingPackage, bookingToRebook?.tour_type, bookingToRebook?.guest_count);
+  const rebookingAdditionalPayment = Math.max(0, Number((selectedRebookingTotal - Number(bookingToRebook?.total_amount || 0)).toFixed(2)));
 
   const getRebookingDateIssue = (date, booking = bookingToRebook) => {
     if (!date || !booking) {
@@ -550,7 +578,7 @@ export default function MyBookings() {
     }
 
     setBookingToRebook(booking);
-    setRebookingForm({ requested_date: "", note: "" });
+    setRebookingForm({ requested_date: "", package_id: booking.package_id || "__current_package__", note: "" });
   };
 
   const handleRebookingRequest = async () => {
@@ -568,6 +596,11 @@ export default function MyBookings() {
     const requestedDate = rebookingForm.requested_date;
     if (!requestedDate) {
       toast.error("Please choose your new reservation date.");
+      return;
+    }
+
+    if (!rebookingForm.package_id || !selectedRebookingPackage) {
+      toast.error("Please choose an available package.");
       return;
     }
 
@@ -593,6 +626,7 @@ export default function MyBookings() {
       const updatedBooking = await baseClient.entities.Booking.requestReschedule(
         bookingToRebook.id,
         requestedDate,
+        rebookingForm.package_id === "__current_package__" ? "" : rebookingForm.package_id,
         rebookingForm.note
       );
 
@@ -774,6 +808,11 @@ export default function MyBookings() {
                           Reschedule {formatStatusLabel(booking.rebooking_status)}
                         </Badge>
                       ) : null}
+                      {booking.rebooking_status === "approved" && Number(booking.rebooking_additional_payment_amount || 0) > 0 ? (
+                        <p className="rounded-md border border-warning/30 bg-warning/10 p-2 text-xs text-warning">
+                          Package change balance: {formatMoneyWithCents(booking.rebooking_additional_payment_amount)}
+                        </p>
+                      ) : null}
                       <Button variant="outline" className="gap-2" onClick={() => setSelectedBooking(booking)}>
                         <Eye className="h-4 w-4" />
                         View Details
@@ -870,6 +909,8 @@ export default function MyBookings() {
                     <Detail label="Reschedule Status">{formatStatusLabel(selectedBooking.rebooking_status)}</Detail>
                     <Detail label="Previous Date">{formatDate(selectedBooking.rebooking_original_date || selectedBooking.booking_date)}</Detail>
                     <Detail label="New Date">{formatDate(selectedBooking.rebooking_requested_date)}</Detail>
+                    {selectedBooking.rebooking_requested_package_name ? <Detail label="Requested Package">{selectedBooking.rebooking_requested_package_name}</Detail> : null}
+                    {Number(selectedBooking.rebooking_additional_payment_amount || 0) > 0 && selectedBooking.rebooking_status !== "declined" ? <Detail label="Additional Package Payment"><span className="font-semibold text-warning">{formatMoneyWithCents(selectedBooking.rebooking_additional_payment_amount)}{selectedBooking.rebooking_status === "approved" ? " due" : " if approved"}</span></Detail> : null}
                     <Detail label="Reschedule Count">{selectedBooking.rebooking_count || 0}</Detail>
                   </>
                 ) : null}
@@ -1002,9 +1043,34 @@ export default function MyBookings() {
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   <li>One reschedule request is allowed per active reservation, subject to resort approval and schedule availability.</li>
                   <li>Submit reschedule requests more than 7 days before the tour begins. Requests are closed during the final 7 days.</li>
-                  <li>The package and tour time stay the same. Only the date can be changed.</li>
-                  <li>Existing payment details are preserved; rescheduling does not create a refund.</li>
+                  <li>You may request a different active package for the same tour type. Package changes still require resort approval.</li>
+                  <li>If the new package costs more, the price difference is shown below and is due after approval. A lower package does not create a refund.</li>
+                  <li>The original booking remains active until the resort approves the request.</li>
                 </ul>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="reschedule-package">New package</Label>
+                <Select
+                  value={rebookingForm.package_id}
+                  onValueChange={(packageId) => setRebookingForm((current) => ({ ...current, package_id: packageId }))}
+                  disabled={isLoadingReschedulePackages || isRequestingRebooking}
+                >
+                  <SelectTrigger id="reschedule-package">
+                    <SelectValue placeholder={isLoadingReschedulePackages ? "Loading packages..." : "Choose a package"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rebookingPackages.map((packageRecord) => {
+                      const isCurrent = String(packageRecord.id) === String(currentRebookingPackageId);
+                      const total = isCurrent ? Number(bookingToRebook.total_amount || 0) : getPackageTotal(packageRecord, bookingToRebook.tour_type, bookingToRebook.guest_count);
+                      return (
+                        <SelectItem key={packageRecord.id} value={String(packageRecord.id)} disabled={!isCurrent && total <= 0}>
+                          {packageRecord.name} · {total > 0 ? formatMoney(total) : "Not available for this tour"}{isCurrent ? " (current)" : ""}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-3">
@@ -1077,7 +1143,7 @@ export default function MyBookings() {
                 </div>
               </div>
 
-              {selectedRebookingDate ? (
+              {bookingToRebook ? (
                 <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm sm:grid-cols-2">
                   <div>
                     <p className="font-semibold text-foreground">Current schedule</p>
@@ -1085,9 +1151,16 @@ export default function MyBookings() {
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">New schedule</p>
-                    <p className="mt-1 text-muted-foreground">{format(selectedRebookingDate, "MMM d, yyyy")} · {tourTimeLabels[bookingToRebook.tour_type]?.start} - {tourTimeLabels[bookingToRebook.tour_type]?.end}</p>
+                    <p className="mt-1 text-muted-foreground">{selectedRebookingDate ? `${format(selectedRebookingDate, "MMM d, yyyy")} · ${tourTimeLabels[bookingToRebook.tour_type]?.start} - ${tourTimeLabels[bookingToRebook.tour_type]?.end}` : "Choose a date above"}</p>
                   </div>
-                  <p className="text-muted-foreground sm:col-span-2">Payment status stays {formatStatusLabel(getDisplayPaymentStatus(bookingToRebook))}.</p>
+                  <div className="sm:col-span-2">
+                    <p className="text-foreground"><span className="text-muted-foreground">New package:</span> {selectedRebookingPackage?.name || bookingToRebook.package_name}</p>
+                    <p className="mt-1 text-foreground"><span className="text-muted-foreground">New package total:</span> {formatMoneyWithCents(selectedRebookingTotal)}</p>
+                    <p className={`mt-1 font-semibold ${rebookingAdditionalPayment > 0 ? "text-warning" : "text-primary"}`}>
+                      {rebookingAdditionalPayment > 0 ? `Additional payment if approved: ${formatMoneyWithCents(rebookingAdditionalPayment)}` : "No additional payment due"}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">Current payment status: {formatStatusLabel(getDisplayPaymentStatus(bookingToRebook))}.</p>
+                  </div>
                 </div>
               ) : null}
 
@@ -1097,7 +1170,7 @@ export default function MyBookings() {
                 </Button>
                 <Button
                   onClick={handleRebookingRequest}
-                  disabled={isRequestingRebooking || rebookingDateStatus.tone !== "available"}
+                  disabled={isRequestingRebooking || isLoadingReschedulePackages || !selectedRebookingPackage || rebookingDateStatus.tone !== "available"}
                   className="gap-2"
                 >
                   {isRequestingRebooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
@@ -1121,6 +1194,8 @@ export default function MyBookings() {
               <Detail label="Current date">{formatDate(rescheduleSuccess.booking_date)}</Detail>
               <Detail label="Requested date">{formatDate(rescheduleSuccess.rebooking_requested_date)}</Detail>
               <Detail label="Request status">Awaiting resort review</Detail>
+              {rescheduleSuccess.rebooking_requested_package_name ? <Detail label="Requested package">{rescheduleSuccess.rebooking_requested_package_name}</Detail> : null}
+              {Number(rescheduleSuccess.rebooking_additional_payment_amount || 0) > 0 ? <Detail label="Additional payment if approved">{formatMoneyWithCents(rescheduleSuccess.rebooking_additional_payment_amount)}</Detail> : null}
               <Detail label="Payment status">{formatStatusLabel(getDisplayPaymentStatus(rescheduleSuccess))}</Detail>
             </div>
           ) : null}

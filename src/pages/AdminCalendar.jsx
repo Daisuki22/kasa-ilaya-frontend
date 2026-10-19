@@ -554,7 +554,7 @@ export default function AdminCalendar() {
                 <div key={booking.id} className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5">
                   <div className="min-w-0">
                     <p className="font-mono text-sm font-semibold text-foreground">{booking.booking_reference || booking.id}</p>
-                    <p className="mt-1 truncate text-sm font-medium text-foreground">{booking.customer_name || "Guest"} · {booking.package_name || "Package"}</p>
+                    <p className="mt-1 truncate text-sm font-medium text-foreground">{booking.customer_name || "Guest"} · {booking.package_name || "Package"}{booking.rebooking_requested_package_name && booking.rebooking_requested_package_name !== booking.package_name ? ` → ${booking.rebooking_requested_package_name}` : ""}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{tourLabels[booking.tour_type] || booking.tour_type || "Tour"}: {formatDate(booking.booking_date)} → {formatDate(booking.rebooking_requested_date)}</p>
                     {booking.rebooking_reason ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Note: {booking.rebooking_reason}</p> : null}
                   </div>
@@ -885,7 +885,8 @@ export default function AdminCalendar() {
                   <DetailItem label="Current date">{formatDate(selectedRescheduleRequest.booking_date)}</DetailItem>
                   <DetailItem label="Requested date">{formatDate(selectedRescheduleRequest.rebooking_requested_date)}</DetailItem>
                   <DetailItem label="Current package / tour">{selectedRescheduleRequest.package_name} · {tourLabels[selectedRescheduleRequest.tour_type] || selectedRescheduleRequest.tour_type}</DetailItem>
-                  <DetailItem label="Requested package / tour">Same package and tour</DetailItem>
+                  <DetailItem label="Requested package / tour">{selectedRescheduleRequest.rebooking_requested_package_name || selectedRescheduleRequest.package_name} · {tourLabels[selectedRescheduleRequest.tour_type] || selectedRescheduleRequest.tour_type}</DetailItem>
+                  <DetailItem label="Additional package payment">{Number(selectedRescheduleRequest.rebooking_additional_payment_amount || 0) > 0 ? formatMoney(selectedRescheduleRequest.rebooking_additional_payment_amount) : "None"}</DetailItem>
                   <DetailItem label="Request received">{formatDate(selectedRescheduleRequest.rebooking_requested_at, "MMM d, yyyy h:mm a")}</DetailItem>
                 </div>
                 {selectedRescheduleRequest.rebooking_reason ? (

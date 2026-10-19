@@ -496,7 +496,7 @@ const createEntityHandler = (entityName) => ({
     return normalizeEntityDates("Booking", result?.data || result);
   },
 
-  async requestReschedule(id, bookingDate, note = "") {
+  async requestReschedule(id, bookingDate, packageId, note = "") {
     if (entityName !== "Booking") {
       throw new Error("Rescheduling is only available for bookings.");
     }
@@ -504,7 +504,7 @@ const createEntityHandler = (entityName) => ({
       `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=request-reschedule`,
       {
         method: "PATCH",
-        body: { booking_date: bookingDate, note },
+        body: { booking_date: bookingDate, package_id: packageId, note },
       }
     );
     return normalizeEntityDates("Booking", result?.data || result);

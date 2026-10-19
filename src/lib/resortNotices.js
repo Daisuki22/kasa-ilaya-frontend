@@ -5,7 +5,7 @@ export const PAYMENT_POLICY_NOTICE =
   "All payments are non-refundable. Online cancellation is available only when the reservation date is more than 7 calendar days away; a cancelled paid booking is not refunded.";
 
 export const RESCHEDULE_POLICY_NOTICE =
-  "Reschedule requests are subject to resort approval and are accepted only more than 7 days before the tour begins. Rescheduling is unavailable during the final 7 days. If approved, the prior payment carries over to the new reservation date.";
+  "Reschedule requests and requested package changes are subject to resort approval and are accepted only more than 7 days before the tour begins. Rescheduling is unavailable during the final 7 days. If approved, prior payments carry over to the new reservation. A higher-priced package requires payment of the difference after approval; a lower-priced package does not create a refund.";
 
 export const CANCELLATION_REBOOKING_NOTICE =
   `${PAYMENT_POLICY_NOTICE} ${RESCHEDULE_POLICY_NOTICE}`;

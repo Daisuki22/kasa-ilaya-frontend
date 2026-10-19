@@ -281,10 +281,10 @@ const buildLocalResponse = (
         "The reservation must be pending or confirmed.",
         "Only one rebooking can be approved per reservation.",
         "Submit the request more than 7 days before the tour begins. Rescheduling is closed during the final 7 days.",
-        "The new date must be available for the same package and tour type.",
+        "You can request a different active package for the same tour type, subject to resort approval and availability.",
       ],
       important:
-        "The original reservation date remains active until approval. If approved, the prior payment carries over to the new date.",
+        "The original reservation remains active until approval. Any price difference for a higher-priced package is due after approval; lower-priced package changes do not create a refund.",
       nextStep:
         "Open My Booking and check the available actions for your reservation.",
     }),
@@ -834,10 +834,10 @@ const buildLocalResponse = (
         "The booking must be pending or confirmed.",
         "Only one rebooking can be approved per reservation.",
         "Submit the request more than 7 days before the tour begins. Rescheduling is closed during the final 7 days.",
-        "Choose an available date for the same package and tour type.",
+        "Choose an available date and an active package for the same tour type.",
       ],
       important:
-        "The original date remains active until the resort approves the request.",
+        "The original date remains active until the resort approves the request. Any upgrade price difference is due after approval; package downgrades do not create a refund.",
       nextStep:
         "Open My Booking to check the available actions for your reservation.",
     });
