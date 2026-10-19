@@ -148,7 +148,7 @@ export default function Layout({ children, currentPageName }) {
   const deliveredChatNotifications = useRef(new Set());
   const chatNotificationUserKey = useRef("");
   const { settings: siteSettings } = useSiteSettings();
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdminUser = Boolean(
     user && (user?.role === "super_admin" || user?.app_role === "super_admin" || user?._app_role === "super_admin")
@@ -622,25 +622,9 @@ export default function Layout({ children, currentPageName }) {
     { id: "system", Icon: Monitor, label: "System" },
     { id: "dark", Icon: Moon, label: "Dark" },
   ];
-  const activeTheme = themeOptions.find((option) => option.id === theme) || themeOptions[1];
-  const ActiveThemeIcon = activeTheme.Icon;
-  const resolvedThemeLabel = resolvedTheme === "dark" ? "Dark" : "Light";
-  const themeModeLabel = theme === "system"
-    ? `System (${resolvedThemeLabel})`
-    : `${activeTheme.label} mode`;
-
-  const ThemeModeIndicator = ({ compact = false, onHero = false } = {}) => (
-    <div className={`flex flex-nowrap items-center gap-1 rounded-lg border ${onHero ? "border-white/25 bg-black/20 text-white/80 backdrop-blur-sm" : "border-border bg-background/70 text-muted-foreground"} ${compact ? "px-2 py-1.5 text-xs" : "px-2 py-2 text-xs"}`}>
-      <ActiveThemeIcon className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} shrink-0`} />
-      <span className={`shrink-0 whitespace-nowrap font-semibold ${onHero ? "text-white" : "text-foreground"}`}>{compact ? activeTheme.label : "Appearance"}</span>
-      <span className={`shrink-0 whitespace-nowrap ${onHero ? "text-white/75" : "text-muted-foreground"}`}>{compact ? (theme === "system" ? resolvedThemeLabel : "mode") : themeModeLabel}</span>
-    </div>
-  );
-
   const ThemeToggle = () => (
     <div className="px-2 py-1.5">
-      <ThemeModeIndicator />
-      <div className="mt-2 flex items-center overflow-hidden rounded-lg border border-border">
+      <div className="flex items-center overflow-hidden rounded-lg border border-border">
         {themeOptions.map(({ id, Icon, label }) => (
           <button
             key={id}
