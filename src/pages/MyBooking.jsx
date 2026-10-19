@@ -224,6 +224,7 @@ const createDateFromKey = (value) => (value ? new Date(`${value}T00:00:00`) : un
 export default function MyBookings() {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [unavailableReceiptUrl, setUnavailableReceiptUrl] = useState("");
   const [bookingToCancel, setBookingToCancel] = useState(null);
@@ -242,7 +243,7 @@ export default function MyBookings() {
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => {
       baseClient.auth.redirectToLogin(window.location.href);
-    });
+    }).finally(() => setIsLoadingUser(false));
   }, []);
 
   useEffect(() => {
@@ -274,7 +275,7 @@ export default function MyBookings() {
     );
   }, [dismissedReviewBookingIds, user?.email]);
 
-  const { data: bookings = [], isLoading } = useQuery({
+  const { data: bookings = [], isLoading, isError, error: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ["my-bookings", user?.email],
     queryFn: () => baseClient.entities.Booking.filter({ customer_email: user.email }, "-created_date"),
     enabled: !!user?.email,
@@ -735,10 +736,18 @@ export default function MyBookings() {
           </div>
         </div>
 
-        {isLoading ? (
+        {isLoadingUser || isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
+        ) : isError ? (
+          <Card className="border-destructive/20 py-16 text-center">
+            <CardContent>
+              <h3 className="font-display text-xl font-bold text-foreground">Could not load your bookings</h3>
+              <p className="mt-2 text-muted-foreground">{bookingsError?.message || "The booking service could not be reached. Please try again."}</p>
+              <Button type="button" className="mt-6" onClick={() => refetchBookings()}>Try again</Button>
+            </CardContent>
+          </Card>
         ) : bookings.length === 0 ? (
           <Card className="border-dashed py-16 text-center">
             <CardContent>
