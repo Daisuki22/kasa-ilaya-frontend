@@ -828,11 +828,9 @@ export default function BookingForm() {
 
   const acceptViewedDocument = () => {
     if (!viewedPolicyReadToEnd) {
-      toast.error("Please scroll to the end of the document before agreeing.");
+      toast.error("Please scroll to the end of the document first.");
       return;
     }
-    if (policyDialogType === "terms") setTermsAccepted(true);
-    if (policyDialogType === "privacy") setPrivacyAcknowledged(true);
     setPolicyDialogType(null);
   };
 
@@ -1721,7 +1719,7 @@ export default function BookingForm() {
           <div className="flex flex-col gap-3 border-t border-border bg-background px-6 py-4 sm:flex-row sm:justify-end">
             <p className="mr-auto self-center text-sm text-muted-foreground">{viewedPolicyReadToEnd ? "You reached the end of this document." : "Scroll to the end before agreeing."}</p>
             <Button variant="outline" onClick={() => setPolicyDialogType(null)}>Close</Button>
-            <Button onClick={acceptViewedDocument} disabled={!viewedPolicyReadToEnd}>{policyDialogType === "terms" ? "I Agree to Terms" : "I Acknowledge Notice"}</Button>
+            <Button onClick={acceptViewedDocument} disabled={!viewedPolicyReadToEnd}>Done reading</Button>
           </div>
         </DialogContent>
       </Dialog>

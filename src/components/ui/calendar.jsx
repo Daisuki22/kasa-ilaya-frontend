@@ -23,6 +23,7 @@ function CalendarDay(props) {
 }
 
 export const resortCalendarClassNames = {
+  vhidden: 'sr-only',
   months: 'flex w-full justify-center',
   month: 'w-full max-w-[32rem] space-y-4 sm:space-y-5',
   caption: 'relative flex h-10 items-center justify-center px-10',
