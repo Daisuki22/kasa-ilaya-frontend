@@ -859,8 +859,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         ) : null}
 
-        <motion.header
-          layoutRoot
+        <header
           className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${isAdminMode ? "border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 md:hidden" : isTransparentHomeNav ? "border-transparent bg-transparent shadow-none backdrop-blur-0 supports-[backdrop-filter]:bg-transparent" : "border-border bg-card/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80"}`}
           style={isTransparentHomeNav ? { backgroundColor: "transparent", backgroundImage: "none", backdropFilter: "none", WebkitBackdropFilter: "none" } : undefined}
         >
@@ -870,7 +869,7 @@ export default function Layout({ children, currentPageName }) {
             </Link>
 
             {!isAdminMode ? (
-              <motion.nav className="hidden items-center justify-center gap-1 border-0 bg-transparent p-0 shadow-none backdrop-blur-none lg:flex lg:justify-self-center xl:gap-1.5" style={{ backgroundColor: "transparent", border: "none", boxShadow: "none", backdropFilter: "none" }}>
+              <nav className="hidden items-center justify-center gap-1 border-0 bg-transparent p-0 shadow-none backdrop-blur-none lg:flex lg:justify-self-center xl:gap-1.5" style={{ backgroundColor: "transparent", border: "none", boxShadow: "none", backdropFilter: "none" }}>
                 {navItems.map((item) => (
                   <Link
                     key={item.page || item.href}
@@ -881,18 +880,15 @@ export default function Layout({ children, currentPageName }) {
                         : isTransparentHomeNav ? "text-white/90 hover:text-white" : "text-muted-foreground hover:text-primary"
                     }`}
                   >
-                    {currentPageName === item.page ? (
-                      <motion.span
-                        layoutId="user-navbar-active"
-                        className={`absolute inset-x-2 bottom-0 z-0 h-0.5 rounded-full ${isTransparentHomeNav ? "bg-white" : "bg-secondary"}`}
-                        transition={{ type: "spring", stiffness: 380, damping: 34 }}
-                      />
-                    ) : null}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute inset-x-2 bottom-0 z-0 h-0.5 origin-center rounded-full transition-transform duration-300 ease-out motion-reduce:transition-none ${currentPageName === item.page ? `scale-x-100 ${isTransparentHomeNav ? "bg-white" : "bg-secondary"}` : "scale-x-0"}`}
+                    />
                     <item.icon className={`relative z-10 h-4 w-4 ${currentPageName === item.page ? isTransparentHomeNav ? "text-white" : "text-secondary" : ""}`} />
                     <span className="relative z-10">{item.name}</span>
                   </Link>
                 ))}
-              </motion.nav>
+              </nav>
             ) : null}
 
             <div className={`flex items-center gap-2 sm:gap-3 ${isAdminMode ? "" : "lg:justify-self-end"}`}>
@@ -915,7 +911,7 @@ export default function Layout({ children, currentPageName }) {
               </Button>
             </div>
           </div>
-        </motion.header>
+        </header>
 
         <div
           className={`fixed inset-0 z-[55] bg-black/45 transition-opacity duration-300 ${
