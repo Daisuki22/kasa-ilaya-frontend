@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   CalendarCheck, User, Mail, Phone, Loader2,
-  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp
+  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp, Sun
 } from "lucide-react";
 import { format, addDays, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -152,6 +152,9 @@ export default function BookingForm() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
   const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [termsReadToEnd, setTermsReadToEnd] = useState(false);
+  const [privacyReadToEnd, setPrivacyReadToEnd] = useState(false);
+  const policyDocumentScrollRef = useRef(null);
   const bookingSubmissionLock = useRef(false);
   const bookingSubmissionReference = useRef("");
   const [selectedPackageImage, setSelectedPackageImage] = useState("");
@@ -218,12 +221,29 @@ export default function BookingForm() {
   const termsDocument = legalDocuments.find((document) => document.document_type === "terms" && document.status === "published");
   const privacyDocument = legalDocuments.find((document) => document.document_type === "privacy" && document.status === "published");
   const hasPublishedLegalDocuments = Boolean(termsDocument && privacyDocument);
+  const viewedDocument = policyDialogType === "terms" ? termsDocument : privacyDocument;
 
   useEffect(() => {
     setTermsAccepted(false);
     setPrivacyAcknowledged(false);
     setPrivacyConsent(false);
+    setTermsReadToEnd(false);
+    setPrivacyReadToEnd(false);
   }, [termsDocument?.id, termsDocument?.version, privacyDocument?.id, privacyDocument?.version]);
+
+  useEffect(() => {
+    const content = policyDocumentScrollRef.current;
+    if (!policyDialogType || !content) return;
+
+    content.scrollTop = 0;
+    const frame = window.requestAnimationFrame(() => {
+      if (content.scrollHeight <= content.clientHeight + 2) {
+        if (policyDialogType === "terms") setTermsReadToEnd(true);
+        if (policyDialogType === "privacy") setPrivacyReadToEnd(true);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [policyDialogType, viewedDocument?.id, viewedDocument?.version, viewedDocument?.content]);
 
   const activeQrCodes = qrCodeRecords
     .filter((entry) => entry.is_active !== false && entry.is_active !== 0 && entry.is_active !== "0")
@@ -804,8 +824,19 @@ export default function BookingForm() {
     setIsBookingModalOpen(true);
   };
 
-  const viewedDocument = policyDialogType === "terms" ? termsDocument : privacyDocument;
+  const viewedPolicyReadToEnd = policyDialogType === "terms" ? termsReadToEnd : privacyReadToEnd;
+  const handlePolicyDocumentScroll = (event) => {
+    const content = event.currentTarget;
+    if (content.scrollTop + content.clientHeight < content.scrollHeight - 4) return;
+    if (policyDialogType === "terms") setTermsReadToEnd(true);
+    if (policyDialogType === "privacy") setPrivacyReadToEnd(true);
+  };
+
   const acceptViewedDocument = () => {
+    if (!viewedPolicyReadToEnd) {
+      toast.error("Please scroll to the end of the document before agreeing.");
+      return;
+    }
     if (policyDialogType === "terms") setTermsAccepted(true);
     if (policyDialogType === "privacy") setPrivacyAcknowledged(true);
     setPolicyDialogType(null);
@@ -1614,7 +1645,7 @@ export default function BookingForm() {
                             <Button type="button" variant="outline" size="sm" onClick={() => setPolicyDialogType("terms")}>Read terms</Button>
                           </div>
                           <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
-                            <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary" />
+                            <input type="checkbox" checked={termsAccepted} disabled={!termsReadToEnd} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50" />
                             <span>I have read and agree to the Terms and Conditions, version {termsDocument.version}.</span>
                           </label>
                         </section>
@@ -1624,11 +1655,11 @@ export default function BookingForm() {
                             <Button type="button" variant="outline" size="sm" onClick={() => setPolicyDialogType("privacy")}>Read privacy notice</Button>
                           </div>
                           <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
-                            <input type="checkbox" checked={privacyAcknowledged} onChange={(event) => setPrivacyAcknowledged(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary" />
+                            <input type="checkbox" checked={privacyAcknowledged} disabled={!privacyReadToEnd} onChange={(event) => setPrivacyAcknowledged(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50" />
                             <span>I acknowledge that I have read the Privacy Notice, version {privacyDocument.version}.</span>
                           </label>
                           <label className="mt-4 flex items-start gap-3 border-t border-border pt-4 text-sm text-foreground">
-                            <input type="checkbox" checked={privacyConsent} onChange={(event) => setPrivacyConsent(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary" />
+                            <input type="checkbox" checked={privacyConsent} disabled={!privacyReadToEnd} onChange={(event) => setPrivacyConsent(event.target.checked)} className="mt-0.5 h-5 w-5 min-h-5 min-w-5 shrink-0 cursor-pointer rounded border-border accent-primary focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50" />
                             <span>I consent to the processing of my information as described in the Privacy Notice for handling this reservation.</span>
                           </label>
                         </section>
@@ -1689,10 +1720,11 @@ export default function BookingForm() {
             <DialogTitle className="font-display text-2xl text-foreground">{viewedDocument?.title || "Legal document"}</DialogTitle>
             <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">Version {viewedDocument?.version || ""}. This is the document version associated with your booking submission.</DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{viewedDocument?.content || "Document unavailable."}</div></div>
+          <div ref={policyDocumentScrollRef} onScroll={handlePolicyDocumentScroll} className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{viewedDocument?.content || "Document unavailable."}</div></div>
           <div className="flex flex-col gap-3 border-t border-border bg-background px-6 py-4 sm:flex-row sm:justify-end">
+            <p className="mr-auto self-center text-sm text-muted-foreground">{viewedPolicyReadToEnd ? "You reached the end of this document." : "Scroll to the end before agreeing."}</p>
             <Button variant="outline" onClick={() => setPolicyDialogType(null)}>Close</Button>
-            <Button onClick={acceptViewedDocument}>{policyDialogType === "terms" ? "I Agree to Terms" : "I Acknowledge Notice"}</Button>
+            <Button onClick={acceptViewedDocument} disabled={!viewedPolicyReadToEnd}>{policyDialogType === "terms" ? "I Agree to Terms" : "I Acknowledge Notice"}</Button>
           </div>
         </DialogContent>
       </Dialog>
