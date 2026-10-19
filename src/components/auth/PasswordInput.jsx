@@ -34,7 +34,7 @@ export default function PasswordInput({
   const hasConfirmation = typeof confirmValue === "string";
   const passwordsMatch = hasConfirmation && value === confirmValue && value.length > 0;
   const shouldShowRequirements = showRequirements && (
-    !showRequirementsOnFocus || focused || Boolean(value)
+    !showRequirementsOnFocus || (focused && !passwordMeetsRequirements(value))
   );
   const requirementsPanel = (
     <div
