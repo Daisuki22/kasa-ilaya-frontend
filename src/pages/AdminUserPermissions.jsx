@@ -262,20 +262,19 @@ export default function AdminUserPermissions() {
         </div>
       </div>
 
-      {selectedArchiveIds.length > 0 ? (
-        <div className="flex justify-end">
-          <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}>
-            <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
-          </Button>
-        </div>
-      ) : null}
-
       {isLoading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
         <Card>
+          {selectedArchiveIds.length > 0 ? (
+            <div className="flex justify-end border-b border-border px-4 py-3">
+              <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}>
+                <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
+              </Button>
+            </div>
+          ) : null}
           <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
