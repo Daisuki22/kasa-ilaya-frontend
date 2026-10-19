@@ -1072,19 +1072,19 @@ export default function Layout({ children, currentPageName }) {
                     <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-accent">Contact</h2>
                     <ul className="mt-4 space-y-3 text-sm">
                       <li>
-                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                        <a href={`tel:${RESORT_CONTACT.phoneLink}`} className="group flex min-h-8 items-center gap-2.5 text-white no-underline transition-colors hover:text-brand-accent hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                           <Phone className="h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
                           <span>Mobile: {RESORT_CONTACT.phoneDisplay}</span>
                         </a>
                       </li>
                       <li>
-                        <a href={`tel:${RESORT_CONTACT.landlineLink}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                        <a href={`tel:${RESORT_CONTACT.landlineLink}`} className="group flex min-h-8 items-center gap-2.5 text-white no-underline transition-colors hover:text-brand-accent hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                           <Phone className="h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
                           <span>Landline: {RESORT_CONTACT.landlineDisplay}</span>
                         </a>
                       </li>
                       <li>
-                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white transition-colors hover:text-brand-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                        <a href={`mailto:${RESORT_CONTACT.email}`} className="group flex min-h-8 items-center gap-2.5 text-white no-underline transition-colors hover:text-brand-accent hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                           <Mail className="h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
                           <span>{RESORT_CONTACT.email}</span>
                         </a>
