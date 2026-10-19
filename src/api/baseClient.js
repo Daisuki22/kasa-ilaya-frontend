@@ -692,6 +692,20 @@ export const baseClient = {
       });
     },
 
+    async createManagedAccount(data) {
+      return request("/auth.php?action=admin-create-account", {
+        method: "POST",
+        body: data,
+      });
+    },
+
+    async createManagedAccount(data) {
+      return request("/auth.php?action=admin-create-account", {
+        method: "POST",
+        body: data,
+      });
+    },
+
     async resendResetOtp(data) {
       return request(
         "/auth.php?action=resend-reset-otp",

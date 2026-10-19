@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Archive, Loader2, Mail, Search } from "lucide-react";
+import { Archive, Loader2, Mail, Search, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PaginationControls from "@/components/admin/PaginationControls";
+import PasswordInput from "@/components/auth/PasswordInput";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,7 +48,10 @@ export default function AdminUserPermissions() {
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [accountCategory, setAccountCategory] = useState("guest");
+  const [createAccountRole, setCreateAccountRole] = useState("");
+  const [createAccountForm, setCreateAccountForm] = useState({ full_name: "", email: "", phone: "", password: "", confirmPassword: "" });
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [savingKey, setSavingKey] = useState("");
@@ -73,7 +78,7 @@ export default function AdminUserPermissions() {
         return false;
       }
 
-      if (roleFilter !== "all" && user.role !== roleFilter) {
+      if (user.role !== accountCategory) {
         return false;
       }
 
@@ -86,7 +91,7 @@ export default function AdminUserPermissions() {
         .some((value) => value.includes(query));
     }
     );
-  }, [roleFilter, search, users]);
+  }, [accountCategory, search, users]);
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const visibleUsers = useMemo(() => filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredUsers, currentPage, pageSize]);
@@ -97,6 +102,47 @@ export default function AdminUserPermissions() {
     || currentUser?._app_role === "super_admin";
   const archivableVisibleUsers = visibleUsers.filter((targetUser) => !isSelf(targetUser.id));
   const allArchivableVisibleUsersSelected = archivableVisibleUsers.length > 0 && archivableVisibleUsers.every((targetUser) => selectedArchiveIds.includes(targetUser.id));
+
+  const selectAccountCategory = (category) => {
+    setAccountCategory(category);
+    setPage(1);
+    setSelectedArchiveIds([]);
+  };
+
+  const openCreateAccount = (role) => {
+    setCreateAccountForm({ full_name: "", email: "", phone: "", password: "", confirmPassword: "" });
+    setCreateAccountRole(role);
+  };
+
+  const createManagedAccount = async (event) => {
+    event.preventDefault();
+    if (!createAccountRole || isCreatingAccount) return;
+    if (createAccountForm.password !== createAccountForm.confirmPassword) {
+      toast.error("The passwords do not match.");
+      return;
+    }
+
+    setIsCreatingAccount(true);
+    try {
+      await baseClient.auth.createManagedAccount({
+        full_name: createAccountForm.full_name,
+        email: createAccountForm.email,
+        phone: createAccountForm.phone,
+        password: createAccountForm.password,
+        role: createAccountRole,
+      });
+      toast.success(`${createAccountRole === "super_admin" ? "Super admin" : "Admin"} account created.`);
+      setCreateAccountForm({ full_name: "", email: "", phone: "", password: "", confirmPassword: "" });
+      setCreateAccountRole("");
+      selectAccountCategory(createAccountRole);
+      queryClient.invalidateQueries({ queryKey: ["admin-user-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] });
+    } catch (error) {
+      toast.error(error?.message || "Unable to create the administrator account.");
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
 
   const toggleVisibleUserSelection = () => {
     const ids = archivableVisibleUsers.map((targetUser) => targetUser.id);
@@ -132,44 +178,6 @@ export default function AdminUserPermissions() {
     if (failedCount) toast.error(`${failedCount} account${failedCount === 1 ? "" : "s"} could not be archived.`);
     setIsBulkArchiving(false);
     setBulkArchiveOpen(false);
-  };
-
-  const updateRole = async (targetUser, nextRole) => {
-    if (!targetUser || targetUser.role === nextRole) {
-      return;
-    }
-
-    if (isSelf(targetUser.id) && nextRole !== "super_admin") {
-      toast.error("You cannot downgrade your own account.");
-      return;
-    }
-
-    const saveId = `role-${targetUser.id}`;
-    setSavingKey(saveId);
-
-    try {
-      await baseClient.entities.User.update(targetUser.id, {
-        role: nextRole,
-        app_role: nextRole,
-      });
-
-      await baseClient.entities.ActivityLog.create({
-        user_email: currentUser?.email,
-        user_name: currentUser?.full_name,
-        action: "Updated User Role",
-        entity_type: "User",
-        entity_id: targetUser.id,
-        details: `Changed role of ${targetUser.email} from ${targetUser.role} to ${nextRole}`,
-      });
-
-      toast.success("User role updated.");
-      queryClient.invalidateQueries({ queryKey: ["admin-user-permissions"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] });
-    } catch (error) {
-      toast.error(error?.message || "Unable to update user role.");
-    } finally {
-      setSavingKey("");
-    }
   };
 
   const updateDisabledState = async (targetUser, nextDisabled) => {
@@ -232,7 +240,7 @@ export default function AdminUserPermissions() {
       <div>
         <h1 className="font-display text-3xl font-bold text-foreground">Manage User Permissions</h1>
         <p className="mt-1 text-muted-foreground">
-          Control active user roles and account access. Archived accounts are restored from Archive.
+          User roles are fixed after account creation. Create administrator accounts separately; archived accounts are restored from Archive.
         </p>
       </div>
 
@@ -246,19 +254,20 @@ export default function AdminUserPermissions() {
             className="pl-10"
           />
         </div>
-
-        <div className="w-full max-w-xs sm:w-auto sm:min-w-[180px]">
-          <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); setSelectedArchiveIds([]); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter roles" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="guest">Guests</SelectItem>
-              <SelectItem value="admin">Admins</SelectItem>
-              <SelectItem value="super_admin">Super Admins</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Account type">
+          <Button type="button" role="tab" aria-selected={accountCategory === "guest"} variant={accountCategory === "guest" ? "default" : "outline"} onClick={() => selectAccountCategory("guest")}>User Accounts</Button>
+          <Button type="button" role="tab" aria-selected={accountCategory === "admin"} variant={accountCategory === "admin" ? "default" : "outline"} onClick={() => selectAccountCategory("admin")}>Admin Accounts</Button>
+          {isSuperAdmin ? <Button type="button" role="tab" aria-selected={accountCategory === "super_admin"} variant={accountCategory === "super_admin" ? "default" : "outline"} onClick={() => selectAccountCategory("super_admin")}>Super Admin Accounts</Button> : null}
+        </div>
+        <div className="flex flex-wrap gap-2 sm:ml-auto">
+          <Button type="button" variant="outline" className="gap-2" onClick={() => openCreateAccount("admin")}>
+            <UserPlus className="h-4 w-4" /> Create Admin Account
+          </Button>
+          {isSuperAdmin ? (
+            <Button type="button" className="gap-2" onClick={() => openCreateAccount("super_admin")}>
+              <ShieldCheck className="h-4 w-4" /> Create Super Admin Account
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -300,7 +309,6 @@ export default function AdminUserPermissions() {
                   </TableRow>
                 ) : (
                   visibleUsers.map((targetUser) => {
-                    const roleSaving = savingKey === `role-${targetUser.id}`;
                     const statusSaving = savingKey === `status-${targetUser.id}`;
                     const resetSaving = savingKey === `reset-${targetUser.id}`;
 
@@ -323,26 +331,9 @@ export default function AdminUserPermissions() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={roleBadgeClass[targetUser.role] || roleBadgeClass.guest}>
-                              {roleLabel[targetUser.role] || targetUser.role}
-                            </Badge>
-                            <Select
-                              value={targetUser.role || "guest"}
-                              onValueChange={(value) => updateRole(targetUser, value)}
-                              disabled={roleSaving}
-                            >
-                              <SelectTrigger className="w-[150px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="guest">Guest</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                {isSuperAdmin ? <SelectItem value="super_admin">Super Admin</SelectItem> : null}
-                              </SelectContent>
-                            </Select>
-                            {roleSaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
-                          </div>
+                          <Badge variant="outline" className={roleBadgeClass[targetUser.role] || roleBadgeClass.guest}>
+                            {roleLabel[targetUser.role] || targetUser.role}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -395,6 +386,40 @@ export default function AdminUserPermissions() {
         {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredUsers.length} onPageChange={(value) => { setPage(value); setSelectedArchiveIds([]); }} onPageSizeChange={(size) => { setPageSize(size); setPage(1); setSelectedArchiveIds([]); }} /> : null}
       </Card>
       )}
+
+      <Dialog open={Boolean(createAccountRole)} onOpenChange={(open) => { if (!open && !isCreatingAccount) setCreateAccountRole(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{createAccountRole === "super_admin" ? "Create Super Admin Account" : "Create Admin Account"}</DialogTitle>
+            <DialogDescription>
+              Set up the account details and an initial password. Share the password with the new account holder securely.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={createManagedAccount}>
+            <div className="space-y-2">
+              <Label htmlFor="managed-account-name">Full name</Label>
+              <Input id="managed-account-name" value={createAccountForm.full_name} onChange={(event) => setCreateAccountForm((current) => ({ ...current, full_name: event.target.value }))} autoComplete="name" maxLength={191} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="managed-account-email">Email address</Label>
+              <Input id="managed-account-email" type="email" value={createAccountForm.email} onChange={(event) => setCreateAccountForm((current) => ({ ...current, email: event.target.value }))} autoComplete="email" maxLength={191} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="managed-account-phone">Mobile number</Label>
+              <Input id="managed-account-phone" type="tel" value={createAccountForm.phone} onChange={(event) => setCreateAccountForm((current) => ({ ...current, phone: event.target.value }))} placeholder="09XXXXXXXXX" autoComplete="tel" maxLength={32} required />
+            </div>
+            <PasswordInput id="managed-account-password" label="Initial password" value={createAccountForm.password} onChange={(event) => setCreateAccountForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" placeholder="Create a strong password" showRequirements showRequirementsOnFocus required />
+            <PasswordInput id="managed-account-confirm-password" label="Confirm password" value={createAccountForm.confirmPassword} onChange={(event) => setCreateAccountForm((current) => ({ ...current, confirmPassword: event.target.value }))} autoComplete="new-password" placeholder="Re-enter the password" showMatch confirmValue={createAccountForm.password} required />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateAccountRole("")} disabled={isCreatingAccount}>Cancel</Button>
+              <Button type="submit" disabled={isCreatingAccount || !createAccountRole}>
+                {isCreatingAccount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                {isCreatingAccount ? "Creating account..." : "Create account"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={Boolean(resetTarget)} onOpenChange={(open) => { if (!open && !savingKey) setResetTarget(null); }}>
         <AlertDialogContent>
