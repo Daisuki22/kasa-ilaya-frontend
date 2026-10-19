@@ -21,12 +21,6 @@ export default function ActivityLogSummaryCards({ logs = [], className = "" }) {
       </Card>
       <Card>
         <CardContent className="p-5 sm:p-6 sm:pt-6">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">High Severity</p>
-          <p className="mt-1 text-2xl font-semibold text-destructive">{stats.highSeverityCount}</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-5 sm:p-6 sm:pt-6">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Unique Actors</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">{stats.uniqueUsers}</p>
         </CardContent>

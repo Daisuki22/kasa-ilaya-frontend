@@ -521,6 +521,8 @@ const downloadExcelReport = ({
   timelineData,
   packageChartData,
   statusChartData,
+  preparedBy,
+  preparedByRole,
 }) => {
   const dashboardRows = new Map();
   const bookingsRows = new Map();
@@ -531,6 +533,8 @@ const downloadExcelReport = ({
   addCell(dashboardRows, 2, 2, `Date Covered: ${selectedRange?.label || "All dates"}`);
   addCell(dashboardRows, 2, 3, `Package: ${packageFilter === "All" ? "All Packages" : packageFilter}`);
   addCell(dashboardRows, 2, 4, `Generated: ${generatedAt}`);
+  addCell(dashboardRows, 3, 1, `Prepared by: ${preparedBy}`);
+  addCell(dashboardRows, 3, 2, preparedByRole);
 
   [
     ["Total Revenue", totalRevenue, 6],
@@ -576,18 +580,23 @@ const downloadExcelReport = ({
     addCell(dashboardRows, row, 2, item.value, 7);
   });
 
-  ["Reference", "Customer", "Package", "Type", "Date", "Amount", "Status"].forEach((label, index) => {
+  ["Booking Reference", "Customer", "Package", "Type", "Date", "Total Amount", "Payment Type", "Payment Status", "Amount Paid", "Balance"].forEach((label, index) => {
     addCell(bookingsRows, 1, index + 1, label, 2);
   });
   rows.forEach((booking, index) => {
     const row = index + 2;
+    const totalAmount = toAmount(booking.total_amount);
+    const paidAmount = getRecognizedBookingRevenue(booking);
     addCell(bookingsRows, row, 1, booking.booking_reference || booking.id || "");
     addCell(bookingsRows, row, 2, booking.customer_name || "");
     addCell(bookingsRows, row, 3, booking.package_name || "");
     addCell(bookingsRows, row, 4, getTourTypeLabel(booking.tour_type));
     addCell(bookingsRows, row, 5, toDateKey(booking.booking_date));
-    addCell(bookingsRows, row, 6, toAmount(booking.total_amount), 6);
-    addCell(bookingsRows, row, 7, booking.status || "");
+    addCell(bookingsRows, row, 6, totalAmount, 6);
+    addCell(bookingsRows, row, 7, booking.payment_type || "");
+    addCell(bookingsRows, row, 8, booking.payment_status || "");
+    addCell(bookingsRows, row, 9, paidAmount, 6);
+    addCell(bookingsRows, row, 10, Math.max(0, totalAmount - paidAmount), 6);
   });
 
   const files = [
@@ -609,7 +618,7 @@ const downloadExcelReport = ({
       name: "xl/worksheets/sheet2.xml",
       content: buildSheetXml({
         rows: bookingsRows,
-        columns: [24, 26, 26, 16, 14, 14, 16],
+        columns: [24, 26, 26, 16, 14, 14, 18, 20, 14, 14],
       }),
     },
   ];
@@ -705,6 +714,8 @@ export default function AdminReport() {
   const reportPeriodLabel = getReportPeriodLabel(period);
   const generatedAt = format(new Date(), "MMM d, yyyy h:mm a");
   const preparedDate = format(new Date(), "MMM d, yyyy");
+  const preparedBy = user?.full_name || user?.email || "Authorized staff";
+  const preparedByRole = user?.role === "super_admin" ? "Super Admin" : user?.role === "admin" ? "Admin / Staff" : "Staff";
   const {
     revenueRows,
     totalSales,
@@ -758,6 +769,7 @@ export default function AdminReport() {
           <span>Package: {packageFilter === "All" ? "All Packages" : packageFilter}</span>
           <span>Generated: {generatedAt}</span>
         </div>
+        <p className="report-print-signatory">Prepared by: {preparedBy} · {preparedByRole}</p>
       </div>
 
       <div className="report-screen-header flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -787,6 +799,8 @@ export default function AdminReport() {
               timelineData,
               packageChartData,
               statusChartData,
+              preparedBy,
+              preparedByRole,
             })}
             disabled={!filteredBookings.length}
           >

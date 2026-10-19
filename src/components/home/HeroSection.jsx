@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 export default function HeroSection() {
   const { settings } = useSiteSettings();
   const { isAuthenticated } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
 
   const heroImages = useMemo(() => {
     const images = Array.isArray(settings?.hero_images) ? settings.hero_images.filter(Boolean) : [];
@@ -55,7 +57,7 @@ export default function HeroSection() {
 
     const intervalId = window.setInterval(() => {
       setActiveHeroIndex((current) => (current + 1) % heroImages.length);
-    }, 12000);
+    }, 3000);
 
     return () => window.clearInterval(intervalId);
   }, [heroImages.length]);
@@ -64,16 +66,22 @@ export default function HeroSection() {
     <section id="top" className="relative flex min-h-[82vh] items-center overflow-hidden sm:min-h-[88vh] lg:min-h-[92vh]">
       {/* Background image */}
       <div className="absolute inset-0">
-        <img
-          key={`${activeHeroImage}-${activeHeroIndex}`}
-          src={activeHeroImage}
-          alt={`Kasa Ilaya Resort and Event Place view ${activeHeroIndex + 1}`}
-          loading={activeHeroIndex === 0 ? "eager" : "lazy"}
-          decoding="async"
-          fetchPriority={activeHeroIndex === 0 ? "high" : "auto"}
-          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
-          className="h-full w-full object-cover"
-        />
+        <AnimatePresence initial={false} mode="sync">
+          <motion.img
+            key={`${activeHeroImage}-${activeHeroIndex}`}
+            src={activeHeroImage}
+            alt={`Kasa Ilaya Resort and Event Place view ${activeHeroIndex + 1}`}
+            loading={activeHeroIndex === 0 ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={activeHeroIndex === 0 ? "high" : "auto"}
+            onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: "easeInOut" }}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </AnimatePresence>
         <div className="absolute inset-0 hero-image-overlay" />
 
         {showSliderControls ? (
@@ -94,13 +102,13 @@ export default function HeroSection() {
             >
               <ChevronRight className="h-5 w-5" />
             </button>
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-full border border-white/15 brand-overlay-panel px-2.5 py-1.5 backdrop-blur-sm sm:bottom-6 sm:gap-2 sm:px-3 sm:py-2">
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 sm:bottom-6">
               {heroImages.map((_, index) => (
                 <button
                   key={`hero-dot-${index}`}
                   type="button"
                   onClick={() => goToHeroSlide(index)}
-                  className={`h-2.5 rounded-full transition-all ${index === activeHeroIndex ? "w-8 bg-secondary" : "w-2.5 bg-white/55 hover:bg-white/80"}`}
+                  className={`h-2.5 rounded-full transition-all ${index === activeHeroIndex ? "w-8 bg-secondary" : "w-2.5 bg-white/75 hover:bg-white"}`}
                   aria-label={`Show homepage image ${index + 1}`}
                 />
               ))}

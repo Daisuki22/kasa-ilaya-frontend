@@ -857,6 +857,7 @@ export default function MyBookings() {
                 <Detail label="Date">{formatDate(selectedBooking.booking_date)}</Detail>
                 <Detail label="Tour">{tourLabels[selectedBooking.tour_type] || selectedBooking.tour_type}</Detail>
                 <Detail label="Guests">{selectedBooking.guest_count}</Detail>
+                <Detail label="Fixed pax included">{selectedBooking.included_guest_count || 1}</Detail>
                 <Detail label="Total Amount"><span className="font-bold text-secondary">{formatMoney(selectedBooking.total_amount)}</span></Detail>
                 <Detail label="Reservation Fee"><span className="font-bold text-primary">{formatMoney(selectedBooking.reservation_fee_amount)}</span></Detail>
                 <Detail label="Payment Type">{paymentTypeLabels[selectedBooking.payment_type] || "Downpayment"}</Detail>
@@ -864,6 +865,7 @@ export default function MyBookings() {
                 <Detail label="Mode of Payment">{selectedBooking.payment_mode || selectedBooking.payment_qr_code_label || "Not selected"}</Detail>
                 <Detail label="Payment Number">{selectedBooking.payment_number || "Not provided"}</Detail>
                 <Detail label="Payment Reference Number">{selectedBooking.payment_reference_number || "Not provided"}</Detail>
+                {selectedBooking.official_receipt_number ? <Detail label="Official Receipt Number">{selectedBooking.official_receipt_number}</Detail> : null}
                 {(selectedBooking.rebooking_status || "none") !== "none" ? (
                   <>
                     <Detail label="Reschedule Status">{formatStatusLabel(selectedBooking.rebooking_status)}</Detail>

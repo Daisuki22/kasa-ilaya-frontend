@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, DollarSign, CalendarCheck, Users } from "lucide-react";
 import { calculateDashboardRevenue, formatPHPAmount } from "@/lib/dashboardRevenue";
 
-export default function RevenueCards({ bookings }) {
-  const revenue = calculateDashboardRevenue(bookings);
+export default function RevenueCards({ bookings, year }) {
+  const revenue = calculateDashboardRevenue(bookings, year ? new Date(Number(year), new Date().getMonth(), 1) : new Date());
   const visibleBookings = bookings.filter((booking) => booking.status !== "archived");
   const pendingBookings = visibleBookings.filter((booking) => booking.status === "pending");
 
@@ -17,11 +17,11 @@ export default function RevenueCards({ bookings }) {
       desc: `${revenue.paidBookingCount} paid bookings`,
     },
     {
-      title: "Monthly Revenue",
-      value: formatPHPAmount(revenue.monthlyRevenue),
+      title: year ? `Revenue in ${year}` : "Monthly Revenue",
+      value: formatPHPAmount(year ? revenue.totalRevenue : revenue.monthlyRevenue),
       icon: TrendingUp,
       color: "bg-secondary",
-      desc: `${revenue.monthlyPaidBookingCount} paid bookings this month`,
+      desc: year ? `${revenue.paidBookingCount} paid bookings in this year` : `${revenue.monthlyPaidBookingCount} paid bookings this month`,
     },
     {
       title: "Total Bookings",

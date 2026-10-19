@@ -205,7 +205,7 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
           <section className="rounded-xl border border-border bg-card p-4">
             <div className="mb-4">
               <h3 className="font-semibold text-foreground">Pricing & Capacity</h3>
-              <p className="text-sm text-muted-foreground">Set rates for each tour type and the maximum guest capacity.</p>
+              <p className="text-sm text-muted-foreground">Set rates, the number of guests included in the base price, and the extra guest rate.</p>
             </div>
             <Label>Tour Prices (PHP) *</Label>
             <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -223,7 +223,7 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
               </div>
             </div>
             <div className="mt-4 max-w-xs">
-              <Label>Max Guests</Label>
+              <Label>Fixed Pax Included</Label>
               <Input type="number" value={form.max_guests} onChange={(event) => setForm((prev) => ({ ...prev, max_guests: parseInt(event.target.value) || 10 }))} className="mt-1" />
             </div>
           </section>

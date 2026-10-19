@@ -19,6 +19,7 @@ import {
 import PackageCard from "@/components/packages/PackageCard";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPageBannerImages } from "@/lib/pageBannerImages";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 const MAX_BOOKINGS_PER_SLOT = 1;
 const tourTypeOrder = {
@@ -59,6 +60,7 @@ const filterOptions = [
 ];
 
 export default function Packages() {
+  const prefersReducedMotion = useReducedMotion();
   const [tourFilter, setTourFilter] = useState("all");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { settings: siteSettings } = useSiteSettings();
@@ -130,7 +132,7 @@ export default function Packages() {
 
     const intervalId = window.setInterval(() => {
       setActiveBannerIndex((current) => (current + 1) % packagesBannerImages.length);
-    }, 9000);
+    }, 3000);
 
     return () => window.clearInterval(intervalId);
   }, [packagesBannerImages.length]);
@@ -147,16 +149,22 @@ export default function Packages() {
     <div className="bg-background">
       <section className="relative min-h-[34rem] overflow-hidden bg-[var(--brand-charcoal)] text-white lg:min-h-[38rem]">
         <div className="absolute inset-0">
-          <img
-            key={`${activeBannerImage}-${activeBannerIndex}`}
-            src={activeBannerImage}
-            alt={`Kasa Ilaya resort package banner ${activeBannerIndex + 1}`}
-            loading={activeBannerIndex === 0 ? "eager" : "lazy"}
-            decoding="async"
-            fetchPriority={activeBannerIndex === 0 ? "high" : "auto"}
-            onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
-            className="h-full w-full object-cover"
-          />
+          <AnimatePresence initial={false} mode="sync">
+            <motion.img
+              key={`${activeBannerImage}-${activeBannerIndex}`}
+              src={activeBannerImage}
+              alt={`Kasa Ilaya resort package banner ${activeBannerIndex + 1}`}
+              loading={activeBannerIndex === 0 ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={activeBannerIndex === 0 ? "high" : "auto"}
+              onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: "easeInOut" }}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </AnimatePresence>
           <div className="absolute inset-0 brand-image-overlay-scrim" />
           <div className="absolute inset-0 brand-image-overlay-horizontal" />
         </div>

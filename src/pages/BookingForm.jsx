@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { handleImageFallback } from "@/lib/imageFallback";
 import { optimizeStaticImageUrl } from "@/hooks/useSiteSettings";
 import { PAYMENT_POLICY_NOTICE, RESCHEDULE_POLICY_NOTICE } from "@/lib/resortNotices";
+import { RESORT_CONTACT } from "@/lib/resortContact";
+import SiteLogo from "@/components/common/SiteLogo";
 import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
 
 const tourTypeLabels = {
@@ -179,6 +181,13 @@ export default function BookingForm() {
     enabled: !!packageId,
   });
 
+  const includedGuestCount = Math.max(1, Number(pkg?.max_guests) || 1);
+  useEffect(() => {
+    if (pkg) setForm((previous) => previous.guest_count === 1
+      ? { ...previous, guest_count: includedGuestCount }
+      : previous);
+  }, [pkg, includedGuestCount]);
+
   const {
     data: bookingAvailability = { booking_dates: [] },
     isLoading: isLoadingAvailability,
@@ -261,12 +270,6 @@ export default function BookingForm() {
     }
   }, [packageGalleryImages, selectedPackageImage]);
 
-  // All booking start dates across resort packages (all tour types)
-  const allBookingDatesSet = useMemo(
-    () => new Set(existingBookings.map(b => b.booking_date).filter(Boolean)),
-    [existingBookings]
-  );
-
   // 22-hour bookings block their start date AND the following calendar day
   const twentyTwoHourBlockedDates = useMemo(() => {
     const blocked = new Set();
@@ -285,16 +288,27 @@ export default function BookingForm() {
     [manualSchedules]
   );
 
-  // Calendar visual markers: all occupied dates plus manual schedules managed by admins.
+  // Mark dates that are fully blocked; partial day/night availability is shown per tour below.
   const reservedDates = useMemo(() => {
-    const combined = new Set([...allBookingDatesSet, ...twentyTwoHourBlockedDates, ...manualScheduleDatesSet]);
+    const combined = new Set([...twentyTwoHourBlockedDates, ...manualScheduleDatesSet]);
     return Array.from(combined).map(d => new Date(`${d}T00:00:00`));
-  }, [allBookingDatesSet, twentyTwoHourBlockedDates, manualScheduleDatesSet]);
+  }, [twentyTwoHourBlockedDates, manualScheduleDatesSet]);
 
   // Checkout date for 22-hour stays (automatically the next calendar day)
   const checkoutDate = selectedTour === '22_hours' && selectedDate
     ? addDays(selectedDate, 1)
     : null;
+
+  const isTourAvailable = (date, tourType) => {
+    if (!date || isAvailabilityError || isLoadingAvailability) return false;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const nextDateStr = format(addDays(date, 1), 'yyyy-MM-dd');
+    if (manualScheduleDatesSet.has(dateStr)) return false;
+    if (tourCrossesMidnight(tourType) && manualScheduleDatesSet.has(nextDateStr)) return false;
+    return !existingBookings.some((booking) =>
+      bookingSchedulesOverlap(dateStr, tourType, booking.booking_date, booking.tour_type)
+    );
+  };
 
   const isDateDisabled = (date) => {
     if (isAvailabilityError) return true;
@@ -427,7 +441,7 @@ export default function BookingForm() {
       bookingSubmissionReference.current = ref;
       const tourType = selectedTour;
       const basePrice = getPackagePriceByTourType(pkg, tourType);
-      const additionalGuestCount = Math.max(Number(form.guest_count || 1) - 1, 0);
+      const additionalGuestCount = Math.max(Number(form.guest_count || includedGuestCount) - includedGuestCount, 0);
       const additionalGuestAmount = additionalGuestCount * ADDITIONAL_GUEST_RATE;
       const selectedPrice = basePrice + additionalGuestAmount;
       const reservationFee = Number((selectedPrice * 0.15).toFixed(2));
@@ -441,6 +455,7 @@ export default function BookingForm() {
         tour_type: tourType,
         booking_date: format(selectedDate, "yyyy-MM-dd"),
         guest_count: form.guest_count,
+        included_guest_count: includedGuestCount,
         customer_name: form.customer_name,
         customer_email: form.customer_email,
         customer_phone: form.customer_phone,
@@ -549,6 +564,10 @@ export default function BookingForm() {
         <tr style="background:#F5EFE6;">
           <td style="padding:12px 16px;color:#52615D;">Additional Guests</td>
           <td style="padding:12px 16px;font-weight:600;color:#24302D;">${additionalGuestCount} guest(s) x ₱${ADDITIONAL_GUEST_RATE.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;color:#52615D;">Fixed Pax Included</td>
+          <td style="padding:12px 16px;font-weight:600;color:#24302D;">${includedGuestCount} guest(s)</td>
         </tr>
         <tr>
           <td style="padding:12px 16px;color:#52615D;">Guest Name</td>
@@ -686,7 +705,7 @@ export default function BookingForm() {
   const baseDisplayedPrice = selectedTour
     ? getPackagePriceByTourType(pkg, selectedTour)
     : Number(pkg?.price ?? pkg?.day_tour_price ?? 0);
-  const additionalGuestCount = Math.max(Number(form.guest_count || 1) - 1, 0);
+  const additionalGuestCount = Math.max(Number(form.guest_count || includedGuestCount) - includedGuestCount, 0);
   const additionalGuestAmount = additionalGuestCount * ADDITIONAL_GUEST_RATE;
   const displayedPrice = baseDisplayedPrice + additionalGuestAmount;
   const reservationFee = Number((displayedPrice * 0.15).toFixed(2));
@@ -803,7 +822,14 @@ export default function BookingForm() {
               </div>
               <h2 className="font-display text-2xl font-bold text-foreground mb-2">Booking Submitted</h2>
               <p className="text-muted-foreground mb-6">Your reservation has been submitted successfully</p>
-              <div className="mb-6 space-y-2 rounded-lg bg-muted p-4 text-left">
+              <div className="mb-6 rounded-lg border border-border bg-card p-5 text-left shadow-sm">
+                <div className="mb-4 flex flex-col items-center border-b border-dashed border-border pb-4 text-center">
+                  <SiteLogo alt="Kasa Ilaya Resort logo" className="mb-2 h-14 w-auto object-contain" />
+                  <p className="font-display text-lg font-semibold text-foreground">Kasa Ilaya Resort &amp; Event Place</p>
+                  <p className="whitespace-pre-line text-xs text-muted-foreground">{RESORT_CONTACT.address}</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Booking Receipt</p>
+                </div>
+                <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Reference</span>
                   <span className="font-mono font-bold text-primary">{bookingComplete.booking_reference}</span>
@@ -811,6 +837,10 @@ export default function BookingForm() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Package</span>
                   <span className="font-medium">{pkg.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fixed pax included</span>
+                  <span className="font-medium">{Number(bookingComplete.included_guest_count || includedGuestCount)} guests</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Check-in</span>
@@ -822,6 +852,14 @@ export default function BookingForm() {
                     <span className="font-medium">{format(checkoutDate, "MMM d, yyyy")}</span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Base Package Price</span>
+                  <span className="font-medium">₱{getPackagePriceByTourType(pkg, bookingComplete.tour_type || selectedTour).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Additional Guest Fee</span>
+                  <span className="font-medium">₱{(Math.max(Number(form.guest_count || 0) - Number(bookingComplete.included_guest_count || includedGuestCount), 0) * ADDITIONAL_GUEST_RATE).toLocaleString()}</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total</span>
                   <span className="font-bold text-secondary">₱{displayedPrice.toLocaleString()}</span>
@@ -842,6 +880,9 @@ export default function BookingForm() {
                   <span className="text-muted-foreground">Mode of Payment</span>
                   <span className="font-medium">{bookingComplete.payment_mode || bookingComplete.payment_qr_code_label || "QR Payment"}</span>
                 </div>
+                {bookingComplete.payment_reference_number ? <div className="flex justify-between gap-3"><span className="text-muted-foreground">Payment Reference</span><span className="font-mono text-right">{bookingComplete.payment_reference_number}</span></div> : null}
+                </div>
+                <p className="mt-4 border-t border-dashed border-border pt-3 text-center text-xs text-muted-foreground">This is a booking receipt. An official receipt number is issued separately by the resort.</p>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
                 {bookingComplete.email_sent
@@ -1000,6 +1041,24 @@ export default function BookingForm() {
                         ? "Blocked by a manual resort event or admin schedule — please choose another date"
                         : "Choose a tour type inside the booking modal to confirm availability."}
                   </p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {[["day_tour", "Day Tour"], ["night_tour", "Night Tour"]].map(([tourType, label]) => {
+                      const available = isTourAvailable(selectedDate, tourType);
+                      const selected = selectedTour === tourType;
+                      return (
+                        <button
+                          key={tourType}
+                          type="button"
+                          disabled={!available}
+                          onClick={() => setSelectedTour(tourType)}
+                          className={`rounded-lg border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-55 ${selected ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"}`}
+                        >
+                          <span className="block font-medium text-foreground">{label}</span>
+                          <span className={`mt-1 block text-xs ${available ? "text-primary" : "text-destructive"}`}>{available ? "Available" : isLoadingAvailability ? "Checking…" : "Unavailable"}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
@@ -1095,9 +1154,9 @@ export default function BookingForm() {
                                 <SelectValue placeholder="Select tour type" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="day_tour">☀️ Day Tour (8 AM - 6 PM)</SelectItem>
-                                <SelectItem value="night_tour">🌙 Night Tour (6 PM - 6 AM)</SelectItem>
-                                <SelectItem value="22_hours">⏰ 22 Hours (6 PM – 4 PM Next Day)</SelectItem>
+                                <SelectItem value="day_tour"><span className="flex items-center gap-2"><Sun className="h-4 w-4 text-secondary" />Day Tour (8 AM - 6 PM)</span></SelectItem>
+                                <SelectItem value="night_tour"><span className="flex items-center gap-2"><Moon className="h-4 w-4 text-primary" />Night Tour (6 PM - 6 AM)</span></SelectItem>
+                                <SelectItem value="22_hours"><span className="flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground" />22 Hours (6 PM - 4 PM Next Day)</span></SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1162,7 +1221,7 @@ export default function BookingForm() {
                               min="0"
                               step="1"
                               inputMode="numeric"
-                              className="mt-1"
+                              className="mt-1 bg-card"
                               value={additionalGuestCount}
                               onKeyDown={(event) => {
                                 if (["-", "+", ".", "e", "E"].includes(event.key)) event.preventDefault();
@@ -1172,12 +1231,12 @@ export default function BookingForm() {
                                 if (!/^\d*$/.test(value)) return;
                                 const count = value === "" ? 0 : Number(value);
                                 if (Number.isSafeInteger(count) && count < Number.MAX_SAFE_INTEGER) {
-                                  setForm((previous) => ({ ...previous, guest_count: count + 1 }));
+                                  setForm((previous) => ({ ...previous, guest_count: count + includedGuestCount }));
                                 }
                               }}
                             />
                             <p className="mt-1 text-xs text-muted-foreground">
-                              ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per additional guest. {additionalGuestCount} × ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} = ₱{additionalGuestAmount.toLocaleString()}. One guest is included; additional guests have no package limit.
+                              ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per additional guest. {additionalGuestCount} × ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} = ₱{additionalGuestAmount.toLocaleString()}. {includedGuestCount} guests are included in this package. Additional guests are ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} each.
                             </p>
                           </div>
                         </div>
@@ -1216,6 +1275,10 @@ export default function BookingForm() {
                             </div>
                           ) : null}
                           <div className="border-t border-border pt-3 space-y-2">
+                            <div className="flex justify-between gap-4">
+                              <span className="text-muted-foreground">Fixed Pax Included</span>
+                              <span className="text-right font-medium text-foreground">{includedGuestCount} guests</span>
+                            </div>
                             <div className="flex justify-between gap-4">
                               <span className="text-muted-foreground">Base Package Price</span>
                               <span className="text-right font-medium text-foreground">₱{baseDisplayedPrice.toLocaleString()}</span>
@@ -1283,6 +1346,7 @@ export default function BookingForm() {
                       <div className="flex justify-between"><span className="text-muted-foreground">Additional Guests</span><span>{additionalGuestCount}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Customer</span><span>{form.customer_name}</span></div>
                       <div className="border-t border-border my-2" />
+                      <div className="flex justify-between"><span>Fixed Pax Included</span><span>{includedGuestCount} guests</span></div>
                       <div className="flex justify-between"><span>Base Package Price</span><span>₱{baseDisplayedPrice.toLocaleString()}</span></div>
                       <div className="flex justify-between"><span>Additional Guest Fee</span><span>₱{additionalGuestAmount.toLocaleString()}</span></div>
                       <div className="flex justify-between"><span>Reservation Fee</span><span className="text-primary font-semibold">₱{reservationFee.toLocaleString()}</span></div>
@@ -1393,7 +1457,7 @@ export default function BookingForm() {
                                   <PaymentMethodImage
                                     src={selectedPaymentQrCode.image_url}
                                     alt={selectedPaymentQrCode.label}
-                                    className="mx-auto h-40 w-full max-w-[180px] object-contain"
+                                    className="mx-auto h-56 w-full max-w-[240px] object-contain"
                                   />
                                 </div>
                                 <div className="space-y-1 border-t border-border bg-muted/30 p-4 text-sm sm:border-l sm:border-t-0">
@@ -1420,7 +1484,7 @@ export default function BookingForm() {
                           <Label htmlFor="payment-number">Payment Number *</Label>
                           <Input
                             id="payment-number"
-                            className="mt-1"
+                              className="mt-1 bg-card"
                             value={form.payment_number}
                             onChange={(event) => setForm((previous) => ({ ...previous, payment_number: event.target.value }))}
                             placeholder="Number used for this payment"

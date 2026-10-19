@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function RotatingBannerBackground({
   images,
   alt = "Page banner",
-  intervalMs = 9000,
+  intervalMs = 3000,
   overlayClassName = "brand-image-overlay-horizontal",
 }) {
   const bannerImages = Array.isArray(images) && images.length > 0 ? images : ["/img/room_Resort%20View.webp"];
   const [activeIndex, setActiveIndex] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
   const showControls = bannerImages.length > 1;
   const activeImage = bannerImages[activeIndex] || bannerImages[0];
 
@@ -41,16 +43,22 @@ export default function RotatingBannerBackground({
       <div
         className="h-full w-full"
       >
-        <img
-          key={`${activeImage}-${activeIndex}`}
-          src={activeImage}
-          alt={`${alt} ${activeIndex + 1}`}
-          loading={activeIndex === 0 ? "eager" : "lazy"}
-          decoding="async"
-          fetchPriority={activeIndex === 0 ? "high" : "auto"}
-          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
-          className="h-full w-full object-cover"
-        />
+        <AnimatePresence initial={false} mode="sync">
+          <motion.img
+            key={`${activeImage}-${activeIndex}`}
+            src={activeImage}
+            alt={`${alt} ${activeIndex + 1}`}
+            loading={activeIndex === 0 ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={activeIndex === 0 ? "high" : "auto"}
+            onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/img/room_Resort%20View.webp"; }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: "easeInOut" }}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </AnimatePresence>
       </div>
       <div className="absolute inset-0 brand-image-overlay-scrim" />
       <div className={`absolute inset-0 ${overlayClassName}`} />

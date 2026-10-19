@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowDownRight, ChevronLeft, ChevronRight, Images } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 
@@ -45,7 +45,7 @@ export default function ResortGallerySlider() {
     const intervalId = window.setInterval(() => {
       setSlideDirection(1);
       setActiveIndex((current) => wrapIndex(current + 1, slides.length));
-    }, 6000);
+    }, 3000);
     return () => window.clearInterval(intervalId);
   }, [slides.length]);
 
@@ -53,7 +53,6 @@ export default function ResortGallerySlider() {
 
   const activeSlide = slides[activeIndex];
   const nextIndex = wrapIndex(activeIndex + 1, slides.length);
-  const nextSlide = slides[nextIndex];
   const moveToSlide = (index, direction = 1) => {
     setSlideDirection(direction);
     setActiveIndex(index);
@@ -69,9 +68,9 @@ export default function ResortGallerySlider() {
       <div className="pointer-events-none absolute -bottom-48 right-0 h-[32rem] w-[32rem] rounded-full bg-[#659EA7]/15 blur-3xl" />
 
       <div className="relative mx-auto w-full max-w-[1240px] px-5 sm:px-8 lg:px-10">
-        <div id="resort-gallery-slides" className="grid gap-4 md:grid-cols-[minmax(0,1.65fr)_minmax(250px,0.8fr)] lg:gap-5">
+        <div id="resort-gallery-slides" className="mx-auto max-w-5xl">
           <article className="group relative min-h-[23rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] sm:min-h-[28rem] lg:min-h-[31rem]">
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="sync" initial={false}>
               <motion.img
                 key={activeSlide.src}
                 src={imageFor(activeSlide, activeIndex)}
@@ -126,34 +125,6 @@ export default function ResortGallerySlider() {
             </div>
           </article>
 
-          {slides.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => moveToSlide(nextIndex, 1)}
-              aria-label={`Show ${nextSlide.title}`}
-              className="group relative hidden min-h-[28rem] overflow-hidden rounded-2xl border border-white/10 bg-[#26383A] text-left md:block lg:min-h-[31rem]"
-            >
-              <img
-                src={imageFor(nextSlide, nextIndex)}
-                alt={nextSlide.title}
-                loading="lazy"
-                decoding="async"
-                onError={() => markImageFailed(nextIndex)}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#071315]/90 via-[#071315]/20 to-[#071315]/10" />
-              <div className="absolute left-5 top-5 rounded-full border border-white/15 bg-[#0E2024]/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85 backdrop-blur">
-                Up next
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-                <h3 className="font-display text-xl font-semibold sm:text-2xl">{nextSlide.title}</h3>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/70">{nextSlide.subtitle}</p>
-                <span className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 transition group-hover:bg-white group-hover:text-[#0E2024]">
-                  <ArrowDownRight className="h-4 w-4" />
-                </span>
-              </div>
-            </button>
-          ) : null}
         </div>
 
         {slides.length > 1 ? (

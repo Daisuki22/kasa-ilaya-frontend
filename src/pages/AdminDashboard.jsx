@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, subMonths } from "date-fns";
 import { Loader2, TrendingUp, CalendarCheck2, Wallet, Clock3 } from "lucide-react";
@@ -20,6 +20,7 @@ import RevenueCards from "@/components/admin/RevenueCards";
 import RevenueChart from "@/components/admin/RevenueChart";
 import { calculateDashboardRevenue, formatPHPAmount, getBookingTotalWithPaidFees } from "@/lib/dashboardRevenue";
 import { parseSafeDate } from "@/lib/safeDate";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const currency = new Intl.NumberFormat("en-PH", {
   style: "currency",
@@ -38,6 +39,7 @@ const statusColors = {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const canViewLogAnalytics = isSuperAdmin(user);
+  const [selectedYear, setSelectedYear] = useState("all");
 
   const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
     queryKey: ["admin-bookings"],
@@ -55,9 +57,16 @@ export default function AdminDashboard() {
   });
 
   const isLoading = isLoadingBookings || isLoadingPackages || isLoadingLogs;
+  const availableYears = useMemo(() => [...new Set(bookings
+    .map((booking) => parseSafeDate(booking.booking_date)?.getFullYear())
+    .filter(Boolean))].sort((left, right) => right - left), [bookings]);
 
   const report = useMemo(() => {
-    const visibleBookings = bookings.filter((booking) => booking.status !== "archived");
+    const visibleBookings = bookings.filter((booking) => {
+      if (booking.status === "archived") return false;
+      if (selectedYear === "all") return true;
+      return parseSafeDate(booking.booking_date)?.getFullYear() === Number(selectedYear);
+    });
     const activeBookings = visibleBookings.filter((booking) => booking.status !== "cancelled");
     const revenue = calculateDashboardRevenue(visibleBookings);
     const confirmedOrCompleted = visibleBookings.filter((booking) => ["confirmed", "completed"].includes(booking.status));
@@ -83,8 +92,10 @@ export default function AdminDashboard() {
       .sort((a, b) => b.bookingCount - a.bookingCount)
       .slice(0, 5);
 
-    const monthlySeries = Array.from({ length: 6 }, (_, i) => {
-      const monthDate = subMonths(new Date(), 5 - i);
+    const seriesStart = selectedYear === "all" ? subMonths(new Date(), 5) : new Date(Number(selectedYear), 0, 1);
+    const seriesLength = selectedYear === "all" ? 6 : 12;
+    const monthlySeries = Array.from({ length: seriesLength }, (_, i) => {
+      const monthDate = selectedYear === "all" ? subMonths(new Date(), 5 - i) : new Date(seriesStart.getFullYear(), i, 1);
       const key = format(monthDate, "yyyy-MM");
       const label = format(monthDate, "MMM yyyy");
       const monthBookings = visibleBookings.filter((booking) => {
@@ -123,7 +134,12 @@ export default function AdminDashboard() {
       maxBookingsPerMonth,
       revenueCircle,
     };
-  }, [bookings, packages]);
+  }, [bookings, packages, selectedYear]);
+
+  const dashboardBookings = useMemo(() => bookings.filter((booking) => {
+    if (selectedYear === "all") return true;
+    return parseSafeDate(booking.booking_date)?.getFullYear() === Number(selectedYear);
+  }), [bookings, selectedYear]);
 
 
   if (isLoading) {
@@ -142,11 +158,23 @@ export default function AdminDashboard() {
           <h1 className="font-display text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Overview of resort bookings, revenue, and activity.</p>
         </div>
+        {canViewLogAnalytics ? (
+          <div className="flex items-center gap-3 sm:w-56">
+            <label htmlFor="dashboard-year" className="shrink-0 text-sm font-medium text-muted-foreground">Year</label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger id="dashboard-year" aria-label="Filter dashboard by year"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All years</SelectItem>
+                {availableYears.map((year) => <SelectItem key={year} value={String(year)}>{year}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
       </div>
 
-      <RevenueCards bookings={bookings} />
+      <RevenueCards bookings={dashboardBookings} year={selectedYear === "all" ? undefined : selectedYear} />
       {canViewLogAnalytics ? <ActivityLogSummaryCards logs={logs} /> : null}
-      <RevenueChart bookings={bookings} />
+      <RevenueChart bookings={dashboardBookings} year={selectedYear === "all" ? undefined : selectedYear} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
@@ -198,7 +226,7 @@ export default function AdminDashboard() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-xl">Bookings By Month (Last 6 Months)</CardTitle>
+            <CardTitle className="font-display text-xl">{selectedYear === "all" ? "Bookings By Month (Last 6 Months)" : `Bookings By Month (${selectedYear})`}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {report.monthlySeries.map((month) => {

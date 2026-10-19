@@ -738,9 +738,9 @@ export default function Layout({ children, currentPageName }) {
 
   const logoUrl = resolveAssetUrl(siteSettings?.logo_url || "");
 
-  const renderBrandMark = (compact = false, onHero = false) => (
+  const renderBrandMark = (compact = false) => (
     <div className="flex min-w-0 items-center gap-3">
-      <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl ${onHero ? "bg-white/15 backdrop-blur-sm" : "bg-primary/10"} sm:h-16 sm:w-16`}>
+      <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden sm:h-16 sm:w-16`}>
         <SiteLogo src={logoUrl} alt={`${siteName} logo`} className="h-full w-full object-contain" />
       </div>
       {!compact ? (
@@ -868,7 +868,7 @@ export default function Layout({ children, currentPageName }) {
         >
           <div className={`min-h-16 px-2 sm:px-3 lg:px-4 ${isAdminMode ? "flex items-center justify-between" : "flex items-center justify-between py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 xl:gap-10"}`}>
             <Link to={createPageUrl("Home")} className="flex min-w-0 items-center gap-3">
-              {renderBrandMark(true, isTransparentHomeNav)}
+              {renderBrandMark(true)}
             </Link>
 
             {!isAdminMode ? (
@@ -879,14 +879,14 @@ export default function Layout({ children, currentPageName }) {
                     to={item.href || createPageUrl(item.page)}
                     className={`relative isolate flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
                       currentPageName === item.page
-                        ? "text-primary-foreground"
+                      ? "text-secondary"
                         : isTransparentHomeNav ? "text-white/90 hover:bg-white/10 hover:text-white" : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
                     {currentPageName === item.page ? (
                       <motion.span
                         layoutId="user-navbar-active"
-                        className="absolute inset-0 z-0 rounded-full bg-primary shadow-md shadow-primary/20"
+                        className="absolute inset-x-3 bottom-1 z-0 h-0.5 rounded-full bg-secondary"
                         transition={{ type: "spring", stiffness: 380, damping: 34 }}
                       />
                     ) : null}
@@ -965,7 +965,7 @@ export default function Layout({ children, currentPageName }) {
                     />
                   ) : null}
                   <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${currentPageName === item.page ? "bg-white/15" : "bg-muted/80"}`}>
-                    <item.icon className="relative z-10 h-4 w-4" />
+                    <item.icon className={`relative z-10 h-4 w-4 ${currentPageName === item.page ? "text-secondary" : ""}`} />
                   </span>
                   <span className="relative z-10">{item.name}</span>
                 </Link>
@@ -1039,7 +1039,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="grid gap-8 border-b border-white/15 py-9 sm:py-11 md:grid-cols-[minmax(0,1.4fr)_auto] md:items-center md:gap-10">
                   <div className="flex items-start gap-4">
-                    <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-2 sm:h-20 sm:w-20">
+                    <Link to={createPageUrl("Home")} aria-label={`${siteName} home`} className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden sm:h-20 sm:w-20">
                       <SiteLogo src={logoUrl} alt={`${siteName} logo`} loading="lazy" className="h-full w-full object-contain" />
                     </Link>
                     <div className="min-w-0 max-w-xl">

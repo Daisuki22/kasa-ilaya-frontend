@@ -17,6 +17,7 @@ import { Eye, History, Loader2, MessageSquareMore, RotateCcw } from "lucide-reac
 import { toast } from "sonner";
 import { isSuperAdmin } from "@/lib/adminAccess";
 import usePaginatedRecords from "@/hooks/usePaginatedRecords";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const sortPackagesForDisplay = (packages) =>
   [...packages].sort((left, right) => left.name.localeCompare(right.name));
@@ -55,6 +56,7 @@ export default function AdminPackageArchive() {
   const [restoreUserId, setRestoreUserId] = useState(null);
   const [restoreAmenityId, setRestoreAmenityId] = useState(null);
   const [selectedArchivedInquiryId, setSelectedArchivedInquiryId] = useState(null);
+  const [archiveType, setArchiveType] = useState("all");
 
   useEffect(() => {
     baseClient.auth.me().then(setUser).catch(() => setUser(null));
@@ -323,6 +325,22 @@ const roleLabel = {
             Restore archived packages, QR codes, user accounts, amenities, and reservations from one page.
           </p>
         </div>
+        <div className="flex items-center gap-3 sm:w-64">
+          <label htmlFor="archive-type" className="shrink-0 text-sm font-medium text-muted-foreground">Show</label>
+          <Select value={archiveType} onValueChange={setArchiveType}>
+            <SelectTrigger id="archive-type" aria-label="Choose which archived records to display"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All archives</SelectItem>
+              <SelectItem value="reservations">Reservations</SelectItem>
+              <SelectItem value="packages">Packages</SelectItem>
+              <SelectItem value="qr">QR codes</SelectItem>
+              <SelectItem value="users">User accounts</SelectItem>
+              <SelectItem value="amenities">Amenities</SelectItem>
+              {canViewArchiveHistory ? <SelectItem value="chats">Inquiry chats</SelectItem> : null}
+              {canViewArchiveHistory ? <SelectItem value="history">Archive history</SelectItem> : null}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (
@@ -331,7 +349,7 @@ const roleLabel = {
         </div>
       ) : (
         <div className="space-y-8">
-          <section>
+          <section hidden={archiveType !== "all" && archiveType !== "reservations"}>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Reservations</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore archived reservations back to Reservation Management.</p>
@@ -387,7 +405,7 @@ const roleLabel = {
             </Card>
           </section>
 
-          <section>
+          <section hidden={archiveType !== "all" && archiveType !== "packages"}>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Packages</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore package offers back into the public package list.</p>
@@ -436,7 +454,7 @@ const roleLabel = {
             </Card>
           </section>
 
-          <section>
+          <section hidden={archiveType !== "all" && archiveType !== "qr"}>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived QR Codes</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore payment QR options when they should appear again in booking.</p>
@@ -488,7 +506,7 @@ const roleLabel = {
             </Card>
           </section>
 
-          <section>
+          <section hidden={archiveType !== "all" && archiveType !== "users"}>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived User Accounts</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore archived accounts so they can sign in and appear in active user management again.</p>
@@ -551,7 +569,7 @@ const roleLabel = {
             </Card>
           </section>
 
-        <section>
+        <section hidden={archiveType !== "all" && archiveType !== "amenities"}>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Amenities</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore archived amenities so they can be seen in the active amenities list again.</p>
@@ -607,7 +625,7 @@ const roleLabel = {
         </section>
 
         {canViewArchiveHistory ? (
-          <section>
+          <section hidden={archiveType !== "all" && archiveType !== "chats"}>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Inquiry Chats</h2>
               <p className="mt-1 text-sm text-muted-foreground">Review archived guest inquiry conversations and their archive details.</p>
@@ -680,7 +698,7 @@ const roleLabel = {
         ) : null}
 
         {canViewArchiveHistory ? (
-          <section>
+          <section hidden={archiveType !== "all" && archiveType !== "history"}>
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="font-display text-2xl font-bold text-foreground">Archive History</h2>

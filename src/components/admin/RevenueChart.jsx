@@ -4,14 +4,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { calculateDashboardRevenue, formatPHPAmount } from "@/lib/dashboardRevenue";
 import { useChartMetrics } from "@/hooks/useChartMetrics";
 
-export default function RevenueChart({ bookings }) {
-  const { monthlyData } = calculateDashboardRevenue(bookings);
+export default function RevenueChart({ bookings, year }) {
+  const chartDate = year ? new Date(Number(year), new Date().getMonth(), 1) : new Date();
+  const { monthlyData } = calculateDashboardRevenue(bookings, chartDate);
   const chartMetrics = useChartMetrics();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display text-lg">Monthly Revenue</CardTitle>
+        <CardTitle className="font-display text-lg">{year ? `Monthly Revenue (${year})` : "Monthly Revenue"}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">

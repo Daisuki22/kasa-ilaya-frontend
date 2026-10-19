@@ -7,7 +7,6 @@ import {
 	Loader2,
 	RefreshCw,
 	Search,
-	ShieldAlert,
 	ShieldCheck,
 	Users,
 } from 'lucide-react';
@@ -18,8 +17,6 @@ import {
 	Cell,
 	Line,
 	LineChart,
-	Pie,
-	PieChart,
 	ResponsiveContainer,
 	Tooltip,
 	XAxis,
@@ -33,20 +30,12 @@ import { useAuth } from '@/lib/AuthContext';
 import { isSuperAdmin } from '@/lib/adminAccess';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-	activityLogSeverityStyles,
-	getActivityLogSeverity,
-	matchesActivityLogSearch,
-} from '@/lib/activityLogAnalytics';
+import { matchesActivityLogSearch } from '@/lib/activityLogAnalytics';
 
 const chartColors = {
-	low: 'hsl(var(--primary))',
-	medium: 'hsl(var(--secondary))',
-	high: 'hsl(var(--destructive))',
 	entity: [
 		'hsl(var(--primary))',
 		'hsl(var(--secondary))',
@@ -86,7 +75,7 @@ export default function AdminActivityLogs() {
 	const { user } = useAuth();
 	const [search, setSearch] = useState('');
 	const [entityFilter, setEntityFilter] = useState('all');
-	const [severityFilter, setSeverityFilter] = useState('all');
+	const [actorFilter, setActorFilter] = useState('all');
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
 	const canViewSummaryCards = isSuperAdmin(user);
@@ -105,15 +94,17 @@ export default function AdminActivityLogs() {
 
 	const filteredLogs = useMemo(() => {
 		return logs.filter((log) => {
-			const severity = getActivityLogSeverity(log);
 			const matchesQuery = matchesActivityLogSearch(log, search);
 
 			const matchesEntity = entityFilter === 'all' || (log.entity_type || '') === entityFilter;
-			const matchesSeverity = severityFilter === 'all' || severity === severityFilter;
+			const actorRole = log.actor_role || 'guest';
+			const matchesActor = actorFilter === 'all'
+				|| (actorFilter === 'admin' && ['admin', 'staff'].includes(actorRole))
+				|| actorRole === actorFilter;
 
-			return matchesQuery && matchesEntity && matchesSeverity;
+			return matchesQuery && matchesEntity && matchesActor;
 		});
-	}, [logs, search, entityFilter, severityFilter]);
+	}, [logs, search, entityFilter, actorFilter]);
 	const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
 	const currentPage = Math.min(page, totalPages);
 	const visibleLogs = useMemo(
@@ -123,13 +114,11 @@ export default function AdminActivityLogs() {
 
 	const auditStats = useMemo(() => {
 		const uniqueActors = new Set(filteredLogs.map((log) => log.user_email || log.user_name).filter(Boolean));
-		const highSeverity = filteredLogs.filter((log) => getActivityLogSeverity(log) === 'high').length;
 		const changedEntities = new Set(filteredLogs.map((log) => log.entity_type).filter(Boolean));
 		const latestLog = filteredLogs[0]?.created_date ? new Date(filteredLogs[0].created_date) : null;
 
 		return {
 			total: filteredLogs.length,
-			highSeverity,
 			uniqueActors: uniqueActors.size,
 			changedEntities: changedEntities.size,
 			latestLabel: latestLog && !Number.isNaN(latestLog.getTime())
@@ -149,19 +138,10 @@ export default function AdminActivityLogs() {
 			return {
 				label: format(date, 'MMM d'),
 				total: dayLogs.length,
-				high: dayLogs.filter((log) => getActivityLogSeverity(log) === 'high').length,
-				medium: dayLogs.filter((log) => getActivityLogSeverity(log) === 'medium').length,
-				low: dayLogs.filter((log) => getActivityLogSeverity(log) === 'low').length,
 			};
 		});
 	}, [filteredLogs]);
 
-	const severityChartData = useMemo(() => (
-		['high', 'medium', 'low'].map((severity) => ({
-			name: severity,
-			value: filteredLogs.filter((log) => getActivityLogSeverity(log) === severity).length,
-		})).filter((item) => item.value > 0)
-	), [filteredLogs]);
 
 	const entityChartData = useMemo(() => {
 		const counts = filteredLogs.reduce((acc, log) => {
@@ -187,7 +167,7 @@ export default function AdminActivityLogs() {
 						</div>
 						<h1 className="font-display text-3xl font-bold text-foreground">Audit Logs Monitoring</h1>
 						<p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-							Monitor user actions, booking updates, system changes, and severity patterns in near real time.
+							Monitor user actions, booking updates, and system changes in near real time.
 						</p>
 					</div>
 					<Button type="button" variant="outline" className="gap-2 bg-background/80" onClick={() => refetch()} disabled={isFetching}>
@@ -196,10 +176,9 @@ export default function AdminActivityLogs() {
 					</Button>
 				</div>
 
-				<div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+				<div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
 					{[
 						{ label: 'Filtered logs', value: auditStats.total, helper: `${logs.length} loaded`, icon: Activity, tone: 'text-foreground' },
-						{ label: 'High severity', value: auditStats.highSeverity, helper: 'Needs attention', icon: ShieldAlert, tone: 'text-destructive' },
 						{ label: 'Unique actors', value: auditStats.uniqueActors, helper: 'Users or staff', icon: Users, tone: 'text-primary' },
 						{ label: 'Entities changed', value: auditStats.changedEntities, helper: auditStats.latestLabel, icon: BarChart3, tone: 'text-secondary' },
 					].map(({ label, value, helper, icon: Icon, tone }) => (
@@ -240,15 +219,13 @@ export default function AdminActivityLogs() {
 						))}
 					</SelectContent>
 				</Select>
-				<Select value={severityFilter} onValueChange={(value) => { setSeverityFilter(value); setPage(1); }}>
-					<SelectTrigger>
-						<SelectValue placeholder="All Severity" />
-					</SelectTrigger>
+				<Select value={actorFilter} onValueChange={(value) => { setActorFilter(value); setPage(1); }}>
+					<SelectTrigger aria-label="Filter audit trail by actor role"><SelectValue placeholder="All Actors" /></SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">All Severity</SelectItem>
-						<SelectItem value="high">High</SelectItem>
-						<SelectItem value="medium">Medium</SelectItem>
-						<SelectItem value="low">Low</SelectItem>
+						<SelectItem value="all">All Actors</SelectItem>
+						<SelectItem value="guest">Guests / Users</SelectItem>
+						<SelectItem value="admin">Admins / Staff</SelectItem>
+						<SelectItem value="super_admin">Super Admins</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
@@ -269,45 +246,8 @@ export default function AdminActivityLogs() {
 										<YAxis width={chartMetrics.tickFontSize * 3} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
 										<Tooltip content={<AuditTooltip />} />
 										<Line type="monotone" dataKey="total" name="Total logs" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 3 }} />
-										<Line type="monotone" dataKey="high" name="High severity" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} />
 									</LineChart>
 								</ResponsiveContainer>
-							</div>
-						</CardContent>
-					</Card>
-
-					<Card className="border-border/80 shadow-sm">
-						<CardHeader className="pb-3">
-							<CardTitle className="font-display text-xl">Severity Mix</CardTitle>
-							<p className="text-sm text-muted-foreground">Risk level of the filtered log set.</p>
-						</CardHeader>
-						<CardContent>
-							<div className="h-72">
-								{severityChartData.length ? (
-									<ResponsiveContainer width="100%" height="100%">
-										<PieChart>
-											<Pie data={severityChartData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={96} paddingAngle={3}>
-												{severityChartData.map((item) => (
-													<Cell key={item.name} fill={chartColors[item.name]} />
-												))}
-											</Pie>
-											<Tooltip content={<AuditTooltip />} />
-										</PieChart>
-									</ResponsiveContainer>
-								) : (
-									<div className="flex h-full items-center justify-center text-sm text-muted-foreground">No severity data to chart.</div>
-								)}
-							</div>
-							<div className="grid gap-2">
-								{severityChartData.map((item) => (
-									<div key={item.name} className="flex items-center justify-between text-sm">
-										<span className="flex items-center gap-2 capitalize text-muted-foreground">
-											<span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: chartColors[item.name] }} />
-											{item.name}
-										</span>
-										<span className="font-semibold text-foreground">{item.value}</span>
-									</div>
-								))}
 							</div>
 						</CardContent>
 					</Card>
@@ -358,7 +298,7 @@ export default function AdminActivityLogs() {
 								<TableRow>
 									<TableHead>Date</TableHead>
 									<TableHead>When</TableHead>
-									<TableHead>Severity</TableHead>
+									<TableHead>Actor Role</TableHead>
 									<TableHead>User</TableHead>
 									<TableHead>Action</TableHead>
 									<TableHead>Entity</TableHead>
@@ -381,11 +321,7 @@ export default function AdminActivityLogs() {
 											<TableCell className="whitespace-nowrap text-xs text-muted-foreground">
 												{log.created_date ? `${formatDistanceToNow(new Date(log.created_date), { addSuffix: true })}` : 'Unknown'}
 											</TableCell>
-											<TableCell className="max-w-md text-sm">
-												<Badge variant="outline" className={activityLogSeverityStyles[getActivityLogSeverity(log)]}>
-													{getActivityLogSeverity(log)}
-												</Badge>
-											</TableCell>
+											<TableCell className="whitespace-nowrap text-sm capitalize">{String(log.actor_role || 'guest').replaceAll('_', ' ')}</TableCell>
 											<TableCell>
 												<div>
 													<p className="font-medium text-sm">{log.user_name || 'Unknown User'}</p>
