@@ -477,6 +477,17 @@ const createEntityHandler = (entityName) => ({
     return normalizeEntityDates("Booking", result?.data || result);
   },
 
+  async complete(id, confirmRemainingBalancePaid = false) {
+    if (entityName !== "Booking") {
+      throw new Error("Only bookings can be completed.");
+    }
+    const result = await request(
+      `/entities.php?entity=Booking&id=${encodeURIComponent(id)}&action=complete`,
+      { method: "PATCH", body: { confirm_remaining_balance_paid: confirmRemainingBalancePaid } }
+    );
+    return normalizeEntityDates("Booking", result?.data || result);
+  },
+
   async reschedule(id, bookingDate, note = "") {
     if (entityName !== "Booking") {
       throw new Error("Rescheduling is only available for bookings.");
@@ -496,7 +507,7 @@ const createEntityHandler = (entityName) => ({
     return normalizeEntityDates("Booking", result?.data || result);
   },
 
-  async requestReschedule(id, bookingDate, packageId, note = "") {
+  async requestReschedule(id, bookingDate, packageId = "", note = "") {
     if (entityName !== "Booking") {
       throw new Error("Rescheduling is only available for bookings.");
     }

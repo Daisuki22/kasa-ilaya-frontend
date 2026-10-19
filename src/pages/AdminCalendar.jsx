@@ -157,6 +157,8 @@ export default function AdminCalendar() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [acceptBookingTarget, setAcceptBookingTarget] = useState(null);
   const [isAcceptingBooking, setIsAcceptingBooking] = useState(false);
+  const [completeBookingTarget, setCompleteBookingTarget] = useState(null);
+  const [isCompletingBooking, setIsCompletingBooking] = useState(false);
   const [archiveBookingTarget, setArchiveBookingTarget] = useState(null);
   const [isArchivingBooking, setIsArchivingBooking] = useState(false);
   const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
@@ -358,9 +360,11 @@ export default function AdminCalendar() {
     try {
       const updatedBooking = newStatus === "confirmed"
         ? await baseClient.entities.Booking.accept(bookingId)
-        : await baseClient.entities.Booking.update(bookingId, { status: newStatus });
+        : newStatus === "completed"
+          ? await baseClient.entities.Booking.complete(bookingId, true)
+          : await baseClient.entities.Booking.update(bookingId, { status: newStatus });
 
-      if (newStatus !== "confirmed") {
+      if (newStatus !== "confirmed" && newStatus !== "completed") {
         try {
           await baseClient.entities.ActivityLog.create({
             user_email: user?.email,
@@ -411,6 +415,17 @@ export default function AdminCalendar() {
     } finally {
       setIsAcceptingBooking(false);
       setAcceptBookingTarget(null);
+    }
+  };
+
+  const confirmCompleteBooking = async () => {
+    if (!completeBookingTarget) return;
+    setIsCompletingBooking(true);
+    try {
+      await updateStatus(completeBookingTarget.id, "completed");
+    } finally {
+      setIsCompletingBooking(false);
+      setCompleteBookingTarget(null);
     }
   };
 
@@ -861,7 +876,7 @@ export default function AdminCalendar() {
                 )}
                 {selectedBooking.status === "confirmed" && !isBookingExpired(selectedBooking) && (
                   <div className="border-t border-border pt-4">
-                    <Button className="w-full gap-2" onClick={() => updateStatus(selectedBooking.id, "completed")}>
+                    <Button className="w-full gap-2" onClick={() => setCompleteBookingTarget(selectedBooking)}>
                       <CheckCheck className="h-4 w-4" />
                       Mark as Completed
                     </Button>
@@ -886,7 +901,7 @@ export default function AdminCalendar() {
                   <DetailItem label="Requested date">{formatDate(selectedRescheduleRequest.rebooking_requested_date)}</DetailItem>
                   <DetailItem label="Current package / tour">{selectedRescheduleRequest.package_name} · {tourLabels[selectedRescheduleRequest.tour_type] || selectedRescheduleRequest.tour_type}</DetailItem>
                   <DetailItem label="Requested package / tour">{selectedRescheduleRequest.rebooking_requested_package_name || selectedRescheduleRequest.package_name} · {tourLabels[selectedRescheduleRequest.tour_type] || selectedRescheduleRequest.tour_type}</DetailItem>
-                  <DetailItem label="Additional package payment">{Number(selectedRescheduleRequest.rebooking_additional_payment_amount || 0) > 0 ? formatMoney(selectedRescheduleRequest.rebooking_additional_payment_amount) : "None"}</DetailItem>
+                  <DetailItem label="Remaining balance payable at resort">{Number(selectedRescheduleRequest.rebooking_additional_payment_amount || 0) > 0 ? `PHP ${Number(selectedRescheduleRequest.rebooking_additional_payment_amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "None"}</DetailItem>
                   <DetailItem label="Request received">{formatDate(selectedRescheduleRequest.rebooking_requested_at, "MMM d, yyyy h:mm a")}</DetailItem>
                 </div>
                 {selectedRescheduleRequest.rebooking_reason ? (
@@ -926,6 +941,26 @@ export default function AdminCalendar() {
               <AlertDialogAction disabled={isAcceptingBooking} onClick={(event) => { event.preventDefault(); void confirmAcceptBooking(); }}>
                 {isAcceptingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                 {isAcceptingBooking ? "Accepting…" : "Accept booking"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={Boolean(completeBookingTarget)} onOpenChange={(open) => { if (!open && !isCompletingBooking) setCompleteBookingTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Complete this reservation?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {Number(completeBookingTarget?.rebooking_additional_payment_amount || 0) > 0
+                  ? <>This reservation has a remaining package balance of <strong className="text-foreground">PHP {Number(completeBookingTarget.rebooking_additional_payment_amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>. Confirm that the guest paid this amount at the resort before marking the reservation complete.</>
+                  : <>Mark {completeBookingTarget?.booking_reference || "this reservation"} as completed?</>}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isCompletingBooking}>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={isCompletingBooking} onClick={(event) => { event.preventDefault(); void confirmCompleteBooking(); }}>
+                {isCompletingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                {isCompletingBooking ? "Completing…" : "Confirm and complete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
