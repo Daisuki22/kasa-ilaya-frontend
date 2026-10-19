@@ -131,7 +131,6 @@ const adminNav = [
   { name: "Legal & Privacy Settings", icon: FileText, page: "AdminLegalSettings" },
   { name: "System Settings", icon: SlidersHorizontal, page: "AdminSystemSettings" },
   { name: "Archive", icon: Archive, page: "AdminPackageArchive" },
-  { name: "Activity Logs", icon: User, page: "AdminActivityLogs" },
   { name: "My Activity", icon: Activity, page: "MyActivity" },
 ];
 
