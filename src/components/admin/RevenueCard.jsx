@@ -13,28 +13,32 @@ export default function RevenueCards({ bookings, year }) {
       title: "Total Revenue",
       value: formatPHPAmount(revenue.totalRevenue),
       icon: DollarSign,
-      color: "bg-primary",
+      iconColor: "text-primary",
+      iconBackground: "bg-primary/10",
       desc: `${revenue.paidBookingCount} paid bookings`,
     },
     {
       title: year ? `Revenue in ${year}` : "Monthly Revenue",
       value: formatPHPAmount(year ? revenue.totalRevenue : revenue.monthlyRevenue),
       icon: TrendingUp,
-      color: "bg-secondary",
+      iconColor: "text-secondary",
+      iconBackground: "bg-secondary/10",
       desc: year ? `${revenue.paidBookingCount} paid bookings in this year` : `${revenue.monthlyPaidBookingCount} paid bookings this month`,
     },
     {
       title: "Total Bookings",
       value: visibleBookings.length,
       icon: CalendarCheck,
-      color: "bg-chart-3",
+      iconColor: "text-chart-3",
+      iconBackground: "bg-chart-3/10",
       desc: `${pendingBookings.length} pending`,
     },
     {
       title: "Pending Bookings",
       value: pendingBookings.length,
       icon: Users,
-      color: "bg-chart-4",
+      iconColor: "text-chart-4",
+      iconBackground: "bg-chart-4/10",
       desc: "Awaiting confirmation",
     },
   ];
@@ -50,8 +54,8 @@ export default function RevenueCards({ bookings, year }) {
                 <p className="mt-1 text-2xl font-bold text-foreground">{card.value}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{card.desc}</p>
               </div>
-              <div className={`${card.color} rounded-xl bg-opacity-10 p-2.5`}>
-                <card.icon className="h-5 w-5 text-foreground" />
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconBackground}`}>
+                <card.icon aria-hidden="true" className={`h-5 w-5 stroke-[2.25] ${card.iconColor}`} />
               </div>
             </div>
           </CardContent>
