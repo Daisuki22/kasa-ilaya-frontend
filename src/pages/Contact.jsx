@@ -83,6 +83,7 @@ export default function Contact() {
   });
   const [guestInquiryAccess, setGuestInquiryAccess] = useState(() => loadStoredInquiryAccess());
   const [selectedInquiryId, setSelectedInquiryId] = useState(null);
+  const [selectedHistoryInquiryId, setSelectedHistoryInquiryId] = useState(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
@@ -102,13 +103,29 @@ export default function Contact() {
     enabled: Boolean(user),
     refetchInterval: 15000,
   });
-  const shouldShowInquiryMessages = Boolean(user && inquiries.length > 0);
+  const activeInquiries = useMemo(
+    () => inquiries.filter((inquiry) => ["open", "in_progress"].includes(inquiry.status || "open")),
+    [inquiries]
+  );
+  const inquiryHistory = useMemo(
+    () => inquiries.filter((inquiry) => !["open", "in_progress"].includes(inquiry.status || "open")),
+    [inquiries]
+  );
+  const shouldShowInquiryMessages = Boolean(
+    user && selectedInquiryId && activeInquiries.some((inquiry) => inquiry.id === selectedInquiryId)
+  );
 
   const { data: inquiryThread, isLoading: isLoadingThread } = useQuery({
     queryKey: ["contact-inquiry-thread", selectedInquiryId, selectedInquiryToken, user?.id],
     queryFn: () => baseClient.inquiries.thread(selectedInquiryId, selectedInquiryToken),
     enabled: Boolean(user && selectedInquiryId),
     refetchInterval: 15000,
+  });
+
+  const { data: historyThread, isLoading: isLoadingHistoryThread } = useQuery({
+    queryKey: ["contact-inquiry-history-thread", selectedHistoryInquiryId, user?.id],
+    queryFn: () => baseClient.inquiries.thread(selectedHistoryInquiryId),
+    enabled: Boolean(user && selectedHistoryInquiryId),
   });
 
   useEffect(() => {
@@ -128,16 +145,16 @@ export default function Contact() {
   }, [user?.email, user?.full_name, user?.phone]);
 
   useEffect(() => {
-    if (!inquiries.length) {
+    if (!activeInquiries.length) {
       setSelectedInquiryId(null);
       return;
     }
 
-    const exists = inquiries.some((entry) => entry.id === selectedInquiryId);
+    const exists = activeInquiries.some((entry) => entry.id === selectedInquiryId);
     if (!exists) {
-      setSelectedInquiryId(inquiries[0].id);
+      setSelectedInquiryId(activeInquiries[0].id);
     }
-  }, [inquiries, selectedInquiryId]);
+  }, [activeInquiries, selectedInquiryId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -354,11 +371,11 @@ export default function Contact() {
             <Card className="border-border/80 shadow-sm">
               <CardHeader className="space-y-2">
                 <CardTitle className="flex items-center gap-2 font-display text-2xl">
-                  <History className="h-5 w-5 text-primary" />
-                  Inquiry History
+                  <MessageSquareMore className="h-5 w-5 text-primary" />
+                  Active Conversations
                 </CardTitle>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Select a past inquiry to view its conversation below.
+                  Continue conversations that are still open with the resort team.
                 </p>
               </CardHeader>
               <CardContent>
@@ -366,9 +383,9 @@ export default function Contact() {
                   <div className="flex items-center justify-center py-8 text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
-                ) : inquiries.length ? (
+                ) : activeInquiries.length ? (
                   <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
-                    {inquiries.map((inquiry) => {
+                    {activeInquiries.map((inquiry) => {
                       const isSelected = inquiry.id === selectedInquiryId;
                       return (
                         <button
@@ -397,9 +414,73 @@ export default function Contact() {
                   </div>
                 ) : (
                   <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                    You have not sent any inquiries yet.
+                    You have no active conversations.
                   </p>
                 )}
+
+                <div className="mt-6 border-t border-border pt-5">
+                  <h3 className="flex items-center gap-2 font-semibold text-foreground">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    Inquiry History
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Resolved and closed conversations are kept here.</p>
+                  {inquiryHistory.length ? (
+                    <div className="mt-3 max-h-[20rem] space-y-3 overflow-y-auto pr-1">
+                      {inquiryHistory.map((inquiry) => (
+                        <button
+                          key={inquiry.id}
+                          type="button"
+                          onClick={() => setSelectedHistoryInquiryId(inquiry.id)}
+                          className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${selectedHistoryInquiryId === inquiry.id ? "border-primary bg-primary/5" : "border-border bg-muted/20 hover:border-primary/40"}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-foreground">{inquiry.subject}</p>
+                              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{inquiry.last_message_preview || "No message yet."}</p>
+                            </div>
+                            <Badge className={inquiryStatusClasses[inquiry.status] || inquiryStatusClasses.closed}>
+                              {(inquiry.status || "closed").replace(/_/g, " ")}
+                            </Badge>
+                          </div>
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            {inquiry.last_message_at
+                              ? formatDistanceToNow(new Date(inquiry.last_message_at), { addSuffix: true })
+                              : "just now"}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 rounded-lg border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
+                      Resolved inquiries will appear here.
+                    </p>
+                  )}
+                  {selectedHistoryInquiryId ? (
+                    <div className="mt-4 rounded-xl border border-border bg-background p-4">
+                      <h4 className="font-semibold text-foreground">{historyThread?.inquiry?.subject || "Past conversation"}</h4>
+                      {isLoadingHistoryThread ? (
+                        <div className="flex justify-center py-5 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : (
+                        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto">
+                          {(historyThread?.messages || []).map((message) => {
+                            const isOwnMessage =
+                              (message.sender_user_id && user?.id && message.sender_user_id === user.id) ||
+                              (message.sender_email && user?.email && message.sender_email.toLowerCase() === user.email.toLowerCase()) ||
+                              message.sender_type === "guest";
+                            return (
+                              <div key={message.id} className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+                                <div className={`max-w-[90%] rounded-xl px-3 py-2 text-sm ${isOwnMessage ? "bg-primary text-primary-foreground" : "border border-border bg-muted/30 text-foreground"}`}>
+                                  <p className="text-xs opacity-80">{message.sender_name}</p>
+                                  <p className="mt-1 whitespace-pre-wrap">{message.message}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
           ) : null}
