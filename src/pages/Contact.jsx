@@ -461,7 +461,10 @@ export default function Contact() {
                       {isLoadingHistoryThread ? (
                         <div className="flex justify-center py-5 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : (
-                        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto">
+                        <div
+                          className="mt-3 space-y-3 overflow-y-auto overscroll-contain pr-2"
+                          style={{ maxHeight: "min(60vh, 28rem)" }}
+                        >
                           {(historyThread?.messages || []).map((message) => {
                             const isOwnMessage =
                               (message.sender_user_id && user?.id && message.sender_user_id === user.id) ||
