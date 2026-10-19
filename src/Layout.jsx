@@ -116,7 +116,6 @@ const userNav = [
   { name: "Contact", icon: Bell, page: "Contact" },
   { name: "Packages", icon: Package, page: "Packages" },
   { name: "My Bookings", icon: CalendarCheck, page: "MyBookings" },
-  { name: "My Activity", icon: Activity, page: "MyActivity" },
 ];
 
 const adminNav = [
@@ -171,8 +170,6 @@ export default function Layout({ children, currentPageName }) {
   });
   const allowedAdminNav = adminNav.filter((item) => item.page === "MyActivity" || canAccessAdminPage(user, item.page));
   const guestNav = userNav.filter((item) => {
-    if (item.page === "MyActivity") return Boolean(user);
-
     if (item.page === "MyBookings") {
       return Boolean(user) && !isAdmin;
     }
