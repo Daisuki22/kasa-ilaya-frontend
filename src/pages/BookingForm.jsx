@@ -1480,12 +1480,12 @@ export default function BookingForm() {
 
                           {selectedPaymentQrCode ? (
                             <div className="overflow-hidden rounded-lg border border-primary/30 bg-card">
-                              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr]">
-                                <div className="bg-white p-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-[280px_1fr]">
+                                <div className="flex items-center justify-center bg-white p-3 sm:p-4">
                                   <PaymentMethodImage
                                     src={selectedPaymentQrCode.image_url}
                                     alt={selectedPaymentQrCode.label}
-                                    className="mx-auto h-56 w-full max-w-[240px] object-contain"
+                                    className="mx-auto h-64 w-full max-w-[280px] object-contain"
                                   />
                                 </div>
                                 <div className="space-y-1 border-t border-border bg-muted/30 p-4 text-sm sm:border-l sm:border-t-0">
