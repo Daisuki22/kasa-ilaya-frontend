@@ -1161,7 +1161,7 @@ export default function Chatbot() {
           }`}
           aria-hidden={!showHint}
         >
-          Kasa Ilaya Assistant
+          Kasa Ilaya Chatbot
         </div>
 
         <button
@@ -1182,7 +1182,7 @@ export default function Chatbot() {
         <div className="fixed inset-x-3 bottom-20 z-50 flex h-[min(70dvh,560px)] max-h-[calc(100dvh-7rem)] animate-in fade-in-0 slide-in-from-bottom-2 duration-200 ease-out flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl motion-reduce:animate-none sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[min(560px,calc(100dvh-8rem))] sm:w-[360px] sm:max-w-[calc(100vw-48px)]">
           {/* Header */}
           <div className="relative flex min-h-16 items-center justify-center bg-primary px-4 py-3 text-primary-foreground">
-            <p className="text-center text-lg font-semibold">Kasa Ilaya Assistant</p>
+            <p className="text-center text-lg font-semibold">Kasa Ilaya Chatbot</p>
             <button
               type="button"
               className="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-primary-foreground transition-colors hover:bg-primary-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
@@ -1202,7 +1202,7 @@ export default function Chatbot() {
             aria-relevant="additions"
           >
             {messages.map((msg, i) => (
-              <div key={i} role="group" aria-label={msg.role === "user" ? "Your message" : "Kasa Ilaya Assistant message"} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} role="group" aria-label={msg.role === "user" ? "Your message" : "Kasa Ilaya Chatbot message"} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
                   <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-secondary" aria-hidden="true">
                     <TreePalm className="h-4 w-4" />
@@ -1395,10 +1395,10 @@ export default function Chatbot() {
             <form
               onSubmit={handleMessageSubmit}
               className="flex items-end gap-2"
-              aria-label="Ask Kasa Ilaya Assistant"
+              aria-label="Ask Kasa Ilaya Chatbot"
             >
             <label className="sr-only" htmlFor="chatbot-message-input">
-              Type a question for Kasa Ilaya Assistant
+              Type a question for Kasa Ilaya Chatbot
             </label>
             <textarea
               id="chatbot-message-input"
