@@ -339,7 +339,7 @@ export default function AdminUserPermissions() {
                               <SelectContent>
                                 <SelectItem value="guest">Guest</SelectItem>
                                 <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="super_admin">Super Admin</SelectItem>
+                                {isSuperAdmin ? <SelectItem value="super_admin">Super Admin</SelectItem> : null}
                               </SelectContent>
                             </Select>
                             {roleSaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
