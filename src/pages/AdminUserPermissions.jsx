@@ -52,6 +52,9 @@ export default function AdminUserPermissions() {
   const [savingKey, setSavingKey] = useState("");
   const [resetTarget, setResetTarget] = useState(null);
   const [archiveTarget, setArchiveTarget] = useState(null);
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
 
   useEffect(() => {
     baseClient.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -92,6 +95,44 @@ export default function AdminUserPermissions() {
   const isSuperAdmin = currentUser?.role === "super_admin"
     || currentUser?.app_role === "super_admin"
     || currentUser?._app_role === "super_admin";
+  const archivableVisibleUsers = visibleUsers.filter((targetUser) => !isSelf(targetUser.id));
+  const allArchivableVisibleUsersSelected = archivableVisibleUsers.length > 0 && archivableVisibleUsers.every((targetUser) => selectedArchiveIds.includes(targetUser.id));
+
+  const toggleVisibleUserSelection = () => {
+    const ids = archivableVisibleUsers.map((targetUser) => targetUser.id);
+    setSelectedArchiveIds((current) => allArchivableVisibleUsersSelected
+      ? current.filter((id) => !ids.includes(id))
+      : [...new Set([...current, ...ids])]);
+  };
+
+  const archiveSelectedUsers = async () => {
+    const selectedUsers = filteredUsers.filter((targetUser) => selectedArchiveIds.includes(targetUser.id) && !isSelf(targetUser.id));
+    if (!selectedUsers.length) return;
+    setIsBulkArchiving(true);
+    const results = await Promise.allSettled(selectedUsers.map(async (targetUser) => {
+      await baseClient.entities.User.update(targetUser.id, { disabled: true });
+      await baseClient.entities.ActivityLog.create({
+        user_email: currentUser?.email,
+        user_name: currentUser?.full_name,
+        action: "Disabled User Account",
+        entity_type: "User",
+        entity_id: targetUser.id,
+        details: `Archived account for ${targetUser.email}`,
+      });
+      return targetUser.id;
+    }));
+    const archivedIds = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = results.length - archivedIds.length;
+    if (archivedIds.length) {
+      setSelectedArchiveIds((current) => current.filter((id) => !archivedIds.includes(id)));
+      queryClient.invalidateQueries({ queryKey: ["admin-user-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] });
+      toast.success(`${archivedIds.length} account${archivedIds.length === 1 ? "" : "s"} archived.`);
+    }
+    if (failedCount) toast.error(`${failedCount} account${failedCount === 1 ? "" : "s"} could not be archived.`);
+    setIsBulkArchiving(false);
+    setBulkArchiveOpen(false);
+  };
 
   const updateRole = async (targetUser, nextRole) => {
     if (!targetUser || targetUser.role === nextRole) {
@@ -148,6 +189,7 @@ export default function AdminUserPermissions() {
       await baseClient.entities.User.update(targetUser.id, {
         disabled: nextDisabled,
       });
+      if (nextDisabled) setSelectedArchiveIds((current) => current.filter((id) => id !== targetUser.id));
 
       await baseClient.entities.ActivityLog.create({
         user_email: currentUser?.email,
@@ -199,14 +241,14 @@ export default function AdminUserPermissions() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
-            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+            onChange={(event) => { setSearch(event.target.value); setPage(1); setSelectedArchiveIds([]); }}
             placeholder="Search by name, email, role, or phone..."
             className="pl-10"
           />
         </div>
 
         <div className="w-full max-w-xs sm:w-auto sm:min-w-[180px]">
-          <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); }}>
+          <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); setSelectedArchiveIds([]); }}>
             <SelectTrigger>
               <SelectValue placeholder="Filter roles" />
             </SelectTrigger>
@@ -220,6 +262,14 @@ export default function AdminUserPermissions() {
         </div>
       </div>
 
+      {selectedArchiveIds.length > 0 ? (
+        <div className="flex justify-end">
+          <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}>
+            <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
+          </Button>
+        </div>
+      ) : null}
+
       {isLoading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -230,6 +280,9 @@ export default function AdminUserPermissions() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10 text-center">
+                    <input type="checkbox" aria-label="Select all visible users for archive" checked={allArchivableVisibleUsersSelected} disabled={archivableVisibleUsers.length === 0} onChange={toggleVisibleUserSelection} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                  </TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
@@ -242,7 +295,7 @@ export default function AdminUserPermissions() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isSuperAdmin ? 7 : 6} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
                       No users found.
                     </TableCell>
                   </TableRow>
@@ -254,6 +307,9 @@ export default function AdminUserPermissions() {
 
                     return (
                       <TableRow key={targetUser.id}>
+                        <TableCell className="text-center">
+                          <input type="checkbox" aria-label={`Select user ${targetUser.email} for archive`} checked={selectedArchiveIds.includes(targetUser.id)} disabled={isSelf(targetUser.id)} onChange={() => setSelectedArchiveIds((current) => current.includes(targetUser.id) ? current.filter((id) => id !== targetUser.id) : [...current, targetUser.id])} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                        </TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium text-sm text-foreground">{targetUser.full_name || "Unnamed"}</p>
@@ -337,7 +393,7 @@ export default function AdminUserPermissions() {
               </TableBody>
           </Table>
         </CardContent>
-        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredUsers.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
+        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredUsers.length} onPageChange={(value) => { setPage(value); setSelectedArchiveIds([]); }} onPageSizeChange={(size) => { setPageSize(size); setPage(1); setSelectedArchiveIds([]); }} /> : null}
       </Card>
       )}
 
@@ -378,6 +434,21 @@ export default function AdminUserPermissions() {
             >
               {savingKey === `status-${archiveTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />}
               Archive user
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkArchiveOpen} onOpenChange={(open) => { if (!open && !isBulkArchiving) setBulkArchiveOpen(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive selected user accounts?</AlertDialogTitle>
+            <AlertDialogDescription>Disable {selectedArchiveIds.length} selected account{selectedArchiveIds.length === 1 ? "" : "s"}? The users will lose access, and you can restore them from Archive.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkArchiving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(event) => { event.preventDefault(); void archiveSelectedUsers(); }} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isBulkArchiving || selectedArchiveIds.length === 0}>
+              {isBulkArchiving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />} Archive selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

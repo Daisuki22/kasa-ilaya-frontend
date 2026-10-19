@@ -84,6 +84,9 @@ export default function AdminInquiries() {
   const [replyMessage, setReplyMessage] = useState("");
   const [statusValue, setStatusValue] = useState("open");
   const [archiveId, setArchiveId] = useState(null);
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
@@ -109,6 +112,15 @@ export default function AdminInquiries() {
   const totalPages = Math.max(1, Math.ceil(filteredInquiries.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const visibleInquiries = useMemo(() => filteredInquiries.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredInquiries, currentPage, pageSize]);
+  const archivableVisibleInquiries = visibleInquiries.filter((inquiry) => inquiry.status !== "archived");
+  const allArchivableVisibleSelected = archivableVisibleInquiries.length > 0 && archivableVisibleInquiries.every((inquiry) => selectedArchiveIds.includes(inquiry.id));
+
+  const toggleVisibleInquirySelection = () => {
+    const visibleIds = archivableVisibleInquiries.map((inquiry) => inquiry.id);
+    setSelectedArchiveIds((current) => allArchivableVisibleSelected
+      ? current.filter((id) => !visibleIds.includes(id))
+      : [...new Set([...current, ...visibleIds])]);
+  };
 
   const { data: selectedThread, isLoading: isLoadingThread } = useQuery({
     queryKey: ["admin-inquiry-thread", selectedInquiryId],
@@ -237,6 +249,7 @@ export default function AdminInquiries() {
     try {
       setIsArchiving(true);
       await baseClient.inquiries.archive(archiveId);
+      setSelectedArchiveIds((current) => current.filter((id) => id !== archiveId));
       if (selectedInquiryId === archiveId) {
         setSelectedInquiryId(null);
       }
@@ -248,6 +261,27 @@ export default function AdminInquiries() {
       setIsArchiving(false);
       setArchiveId(null);
     }
+  };
+
+  const archiveSelectedInquiries = async () => {
+    const selectedInquiries = inquiries.filter((inquiry) => selectedArchiveIds.includes(inquiry.id) && inquiry.status !== "archived");
+    if (!selectedInquiries.length) return;
+    setIsBulkArchiving(true);
+    const results = await Promise.allSettled(selectedInquiries.map(async (inquiry) => {
+      await baseClient.inquiries.archive(inquiry.id);
+      return inquiry.id;
+    }));
+    const archivedIds = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = results.length - archivedIds.length;
+    if (archivedIds.includes(selectedInquiryId)) setSelectedInquiryId(null);
+    if (archivedIds.length) {
+      setSelectedArchiveIds((current) => current.filter((id) => !archivedIds.includes(id)));
+      await refreshQueries();
+      toast.success(`${archivedIds.length} ${archivedIds.length === 1 ? "inquiry" : "inquiries"} archived.`);
+    }
+    if (failedCount) toast.error(`${failedCount} ${failedCount === 1 ? "inquiry" : "inquiries"} could not be archived.`);
+    setIsBulkArchiving(false);
+    setBulkArchiveOpen(false);
   };
 
   const archiveInquiry = inquiries.find((inquiry) => inquiry.id === archiveId);
@@ -262,7 +296,7 @@ export default function AdminInquiries() {
           <p className="mt-1 text-muted-foreground">Review guest questions, reply from staff, and track resolution progress.</p>
         </div>
         <div className="w-full md:w-56">
-          <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
+          <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); setSelectedArchiveIds([]); }}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -344,13 +378,16 @@ export default function AdminInquiries() {
       </Card>
 
       <div className="relative mb-4 max-w-md">
-        <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search guest, email, subject..." aria-label="Search inquiries" />
+        <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); setSelectedArchiveIds([]); }} placeholder="Search guest, email, subject..." aria-label="Search inquiries" />
       </div>
 
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.05fr)_minmax(26rem,0.95fr)]">
         <Card className="border-border/80 shadow-sm">
           <CardHeader>
-            <CardTitle className="font-display text-2xl">Inquiry List</CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="font-display text-2xl">Inquiry List</CardTitle>
+              {selectedArchiveIds.length > 0 ? <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}><Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})</Button> : null}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -363,6 +400,9 @@ export default function AdminInquiries() {
               <Table className="min-w-0 table-fixed" containerClassName="overflow-x-hidden">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10 text-center">
+                      <input type="checkbox" aria-label="Select all visible inquiries for archive" checked={allArchivableVisibleSelected} disabled={archivableVisibleInquiries.length === 0} onChange={toggleVisibleInquirySelection} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                    </TableHead>
                     <TableHead className="w-[24%]">Guest</TableHead>
                     <TableHead>Subject</TableHead>
                     <TableHead className="w-28">Status</TableHead>
@@ -377,6 +417,9 @@ export default function AdminInquiries() {
                       className={`cursor-pointer ${selectedInquiryId === inquiry.id ? "bg-muted/50" : ""}`}
                       onClick={() => setSelectedInquiryId(inquiry.id)}
                     >
+                      <TableCell className="text-center" onClick={(event) => event.stopPropagation()}>
+                        <input type="checkbox" aria-label={`Select inquiry ${inquiry.subject} for archive`} checked={selectedArchiveIds.includes(inquiry.id)} disabled={inquiry.status === "archived"} onChange={() => setSelectedArchiveIds((current) => current.includes(inquiry.id) ? current.filter((id) => id !== inquiry.id) : [...current, inquiry.id])} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                      </TableCell>
                       <TableCell className="overflow-hidden">
                         <div className="min-w-0">
                           <p className="truncate font-medium text-sm text-foreground">{inquiry.guest_name}</p>
@@ -420,7 +463,7 @@ export default function AdminInquiries() {
               </Table>
             )}
           </CardContent>
-          {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredInquiries.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
+          {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredInquiries.length} onPageChange={(value) => { setPage(value); setSelectedArchiveIds([]); }} onPageSizeChange={(size) => { setPageSize(size); setPage(1); setSelectedArchiveIds([]); }} /> : null}
         </Card>
 
         <Card className="border-border/80 shadow-sm">
@@ -549,6 +592,20 @@ export default function AdminInquiries() {
             <AlertDialogCancel disabled={isArchiving}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isArchiving}>
               {isArchiving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={bulkArchiveOpen} onOpenChange={(open) => { if (!open && !isBulkArchiving) setBulkArchiveOpen(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive selected inquiries?</AlertDialogTitle>
+            <AlertDialogDescription>Archive {selectedArchiveIds.length} selected {selectedArchiveIds.length === 1 ? "inquiry" : "inquiries"}? They can still be viewed from the Archived filter.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkArchiving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(event) => { event.preventDefault(); void archiveSelectedInquiries(); }} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isBulkArchiving || selectedArchiveIds.length === 0}>
+              {isBulkArchiving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />} Archive selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

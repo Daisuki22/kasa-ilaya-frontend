@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle2, ExternalLink, Eye, ImagePlus, Loader2, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { Archive, CheckCircle2, ExternalLink, Eye, ImagePlus, Loader2, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { formatPHPAmount, getSubmittedBookingPayment, isRevenueEligibleBooking, toFiniteAmount } from "@/lib/dashboardRevenue";
 import { resolveAssetUrl } from "@/lib/assetUrls";
 import { optimizeImageFile } from "@/lib/optimizeImageFile";
@@ -153,6 +153,8 @@ export default function AdminPaymentMonitoring() {
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -231,6 +233,52 @@ export default function AdminPaymentMonitoring() {
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const visibleBookings = useMemo(() => filteredBookings.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredBookings, currentPage, pageSize]);
+  const allVisiblePaymentsSelected = visibleBookings.length > 0 && visibleBookings.every((booking) => selectedArchiveIds.includes(booking.id));
+
+  const toggleVisiblePaymentSelection = () => {
+    const ids = visibleBookings.map((booking) => booking.id);
+    setSelectedArchiveIds((current) => allVisiblePaymentsSelected
+      ? current.filter((id) => !ids.includes(id))
+      : [...new Set([...current, ...ids])]);
+  };
+
+  const archiveSelectedPayments = async () => {
+    const selectedBookings = filteredBookings.filter((booking) => selectedArchiveIds.includes(booking.id) && booking.status !== "archived");
+    if (!selectedBookings.length || !await confirm({
+      title: "Archive selected payment records?",
+      description: `Archive ${selectedBookings.length} selected booking${selectedBookings.length === 1 ? "" : "s"} from payment monitoring? They can be restored from Archive.`,
+      confirmLabel: "Archive selected",
+    })) return;
+    setIsBulkArchiving(true);
+    const results = await Promise.allSettled(selectedBookings.map(async (booking) => {
+      await baseClient.entities.Booking.update(booking.id, { status: "archived" });
+      await baseClient.entities.ActivityLog.create({
+        user_email: user?.email,
+        user_name: user?.full_name,
+        action: "Booking archived",
+        entity_type: "Booking",
+        entity_id: booking.id,
+        details: `Archived booking ${booking.booking_reference || booking.id} from payment monitoring`,
+      });
+      return booking.id;
+    }));
+    const archivedIds = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = results.length - archivedIds.length;
+    if (archivedIds.length) {
+      setSelectedArchiveIds((current) => current.filter((id) => !archivedIds.includes(id)));
+      if (archivedIds.includes(selectedBooking?.id)) setSelectedBooking(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-payment-monitoring"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-bookings-archived"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar-bookings"] }),
+      ]);
+      toast.success(`${archivedIds.length} booking${archivedIds.length === 1 ? "" : "s"} archived.`);
+    }
+    if (failedCount) toast.error(`${failedCount} booking${failedCount === 1 ? "" : "s"} could not be archived.`);
+    setIsBulkArchiving(false);
+  };
 
   const summary = useMemo(() => {
     return paymentBookings.reduce(
@@ -497,16 +545,17 @@ export default function AdminPaymentMonitoring() {
           <p className="mt-1 text-muted-foreground">Track submitted payments, broken-property charges, and payment verification.</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+          {selectedArchiveIds.length > 0 ? <Button variant="outline" className="gap-2 text-warning" onClick={() => void archiveSelectedPayments()} disabled={isBulkArchiving}><Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})</Button> : null}
           <div className="relative sm:w-80">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchTerm}
-              onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }}
+              onChange={(event) => { setSearchTerm(event.target.value); setPage(1); setSelectedArchiveIds([]); }}
               placeholder="Search reference, guest, or channel"
               className="pl-9"
             />
           </div>
-          <Select value={paymentFilter} onValueChange={(value) => { setPaymentFilter(value); setPage(1); }}>
+          <Select value={paymentFilter} onValueChange={(value) => { setPaymentFilter(value); setPage(1); setSelectedArchiveIds([]); }}>
             <SelectTrigger className="sm:w-56">
               <SelectValue />
             </SelectTrigger>
@@ -662,6 +711,9 @@ export default function AdminPaymentMonitoring() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10 text-center">
+                    <input type="checkbox" aria-label="Select all visible payments for archive" checked={allVisiblePaymentsSelected} disabled={visibleBookings.length === 0} onChange={toggleVisiblePaymentSelection} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                  </TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead>Guest</TableHead>
                   <TableHead>Booking Date</TableHead>
@@ -679,7 +731,7 @@ export default function AdminPaymentMonitoring() {
               <TableBody>
                 {filteredBookings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="py-12 text-center text-muted-foreground">
+                    <TableCell colSpan={13} className="py-12 text-center text-muted-foreground">
                       No payment records match your filters.
                     </TableCell>
                   </TableRow>
@@ -692,6 +744,9 @@ export default function AdminPaymentMonitoring() {
 
                     return (
                       <TableRow key={booking.id}>
+                        <TableCell className="text-center">
+                          <input type="checkbox" aria-label={`Select payment record ${booking.booking_reference || booking.id} for archive`} checked={selectedArchiveIds.includes(booking.id)} onChange={() => setSelectedArchiveIds((current) => current.includes(booking.id) ? current.filter((id) => id !== booking.id) : [...current, booking.id])} className="h-4 w-4 cursor-pointer accent-primary" />
+                        </TableCell>
                         <TableCell className="font-mono text-sm">{booking.booking_reference || booking.id}</TableCell>
                         <TableCell>
                           <div>
@@ -746,7 +801,7 @@ export default function AdminPaymentMonitoring() {
               </TableBody>
           </Table>
           </CardContent>
-          {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredBookings.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
+          {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredBookings.length} onPageChange={(value) => { setPage(value); setSelectedArchiveIds([]); }} onPageSizeChange={(size) => { setPageSize(size); setPage(1); setSelectedArchiveIds([]); }} /> : null}
         </Card>
       )}
 

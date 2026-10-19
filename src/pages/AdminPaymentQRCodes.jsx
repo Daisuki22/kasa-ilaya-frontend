@@ -63,6 +63,9 @@ export default function AdminPaymentQRCodes() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingCode, setEditingCode] = useState(null);
   const [archiveId, setArchiveId] = useState(null);
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
   const [form, setForm] = useState(createDefaultForm());
   const [saving, setSaving] = useState(false);
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
@@ -86,6 +89,43 @@ export default function AdminPaymentQRCodes() {
     () => sortedCodes.filter((entry) => entry.is_active !== false && entry.is_active !== 0 && entry.is_active !== "0"),
     [sortedCodes]
   );
+  const allActiveCodesSelected = activeCodes.length > 0 && activeCodes.every((code) => selectedArchiveIds.includes(code.id));
+
+  const toggleAllActiveCodes = () => {
+    const ids = activeCodes.map((code) => code.id);
+    setSelectedArchiveIds((current) => allActiveCodesSelected
+      ? current.filter((id) => !ids.includes(id))
+      : [...new Set([...current, ...ids])]);
+  };
+
+  const archiveSelectedCodes = async () => {
+    const selectedCodes = activeCodes.filter((code) => selectedArchiveIds.includes(code.id));
+    if (!selectedCodes.length) return;
+    setIsBulkArchiving(true);
+    const results = await Promise.allSettled(selectedCodes.map(async (code) => {
+      await baseClient.entities.PaymentQrCode.update(code.id, { is_active: false });
+      await baseClient.entities.ActivityLog.create({
+        user_email: user?.email,
+        user_name: user?.full_name,
+        action: "Archived Payment QR Code",
+        entity_type: "PaymentQrCode",
+        entity_id: code.id,
+        details: `Archived QR code: ${code.label}`,
+      });
+      return code.id;
+    }));
+    const archivedIds = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = results.length - archivedIds.length;
+    if (archivedIds.length) {
+      setSelectedArchiveIds((current) => current.filter((id) => !archivedIds.includes(id)));
+      queryClient.invalidateQueries({ queryKey: ["admin-payment-qr-codes"] });
+      queryClient.invalidateQueries({ queryKey: ["booking-payment-qr-codes"] });
+      toast.success(`${archivedIds.length} QR code${archivedIds.length === 1 ? "" : "s"} archived.`);
+    }
+    if (failedCount) toast.error(`${failedCount} QR code${failedCount === 1 ? "" : "s"} could not be archived.`);
+    setIsBulkArchiving(false);
+    setBulkArchiveOpen(false);
+  };
 
   useEffect(() => {
     if (!formOpen) {
@@ -197,6 +237,7 @@ export default function AdminPaymentQRCodes() {
 
     try {
       await baseClient.entities.PaymentQrCode.update(archiveId, { is_active: false });
+      setSelectedArchiveIds((current) => current.filter((id) => id !== archiveId));
       await baseClient.entities.ActivityLog.create({
         user_email: user?.email,
         user_name: user?.full_name,
@@ -235,10 +276,16 @@ export default function AdminPaymentQRCodes() {
         </div>
       ) : (
         <Card>
+          <div className="flex justify-end p-3">
+            {selectedArchiveIds.length > 0 ? <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}><Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})</Button> : null}
+          </div>
           <CardContent className="overflow-x-auto p-0">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12 text-center">
+                    <input type="checkbox" aria-label="Select all active payment QR codes" checked={allActiveCodesSelected} disabled={activeCodes.length === 0} onChange={toggleAllActiveCodes} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                  </TableHead>
                   <TableHead>QR Code</TableHead>
                   <TableHead>Label</TableHead>
                   <TableHead>Account</TableHead>
@@ -249,10 +296,13 @@ export default function AdminPaymentQRCodes() {
               <TableBody>
                 {activeCodes.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">No active QR codes configured yet.</TableCell>
+                    <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">No active QR codes configured yet.</TableCell>
                   </TableRow>
                 ) : activeCodes.map((code) => (
                   <TableRow key={code.id}>
+                    <TableCell className="text-center">
+                      <input type="checkbox" aria-label={`Select ${code.label} QR code for archive`} checked={selectedArchiveIds.includes(code.id)} onChange={() => setSelectedArchiveIds((current) => current.includes(code.id) ? current.filter((id) => id !== code.id) : [...current, code.id])} className="h-4 w-4 cursor-pointer accent-primary" />
+                    </TableCell>
                     <TableCell>
                       <PaymentMethodImage src={code.image_url} alt={code.label} className="h-24 w-24 rounded-lg border border-border bg-white p-1 object-contain" />
                     </TableCell>
@@ -372,6 +422,21 @@ export default function AdminPaymentQRCodes() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90">Archive</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkArchiveOpen} onOpenChange={(open) => { if (!open && !isBulkArchiving) setBulkArchiveOpen(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive selected QR codes?</AlertDialogTitle>
+            <AlertDialogDescription>Archive {selectedArchiveIds.length} selected payment QR code{selectedArchiveIds.length === 1 ? "" : "s"}? You can restore them later from Archive.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkArchiving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(event) => { event.preventDefault(); void archiveSelectedCodes(); }} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isBulkArchiving || selectedArchiveIds.length === 0}>
+              {isBulkArchiving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />} Archive selected
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

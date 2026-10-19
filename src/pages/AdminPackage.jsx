@@ -59,6 +59,9 @@ export default function AdminPackages() {
   const [formOpen, setFormOpen] = useState(false);
   const [editPkg, setEditPkg] = useState(null);
   const [archiveId, setArchiveId] = useState(null);
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
@@ -95,6 +98,45 @@ export default function AdminPackages() {
   const totalPages = Math.max(1, Math.ceil(filteredPackages.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const visiblePackages = useMemo(() => filteredPackages.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredPackages, currentPage, pageSize]);
+  const archivableVisiblePackages = visiblePackages.filter((pkg) => pkg.is_active !== false && pkg.is_active !== 0 && pkg.is_active !== "0");
+  const allArchivableVisibleSelected = archivableVisiblePackages.length > 0 && archivableVisiblePackages.every((pkg) => selectedArchiveIds.includes(pkg.id));
+
+  const toggleVisibleArchiveSelection = () => {
+    const visibleIds = archivableVisiblePackages.map((pkg) => pkg.id);
+    setSelectedArchiveIds((current) => allArchivableVisibleSelected
+      ? current.filter((id) => !visibleIds.includes(id))
+      : [...new Set([...current, ...visibleIds])]);
+  };
+
+  const archiveSelectedPackages = async () => {
+    const selectedPackages = packages.filter((pkg) => selectedArchiveIds.includes(pkg.id) && pkg.is_active !== false && pkg.is_active !== 0 && pkg.is_active !== "0");
+    if (!selectedPackages.length) return;
+    setIsBulkArchiving(true);
+    const results = await Promise.allSettled(selectedPackages.map(async (pkg) => {
+      await baseClient.entities.Package.update(pkg.id, { is_active: false });
+      await baseClient.entities.ActivityLog.create({
+        user_email: user?.email,
+        user_name: user?.full_name,
+        action: "Archived Package",
+        entity_type: "Package",
+        entity_id: pkg.id,
+        details: `Archived package: ${pkg.name}`,
+      });
+      return pkg.id;
+    }));
+    const archivedIds = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = results.length - archivedIds.length;
+    if (archivedIds.length) {
+      setSelectedArchiveIds((current) => current.filter((id) => !archivedIds.includes(id)));
+      queryClient.invalidateQueries({ queryKey: ["admin-packages"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-packages-archived"] });
+      queryClient.invalidateQueries({ queryKey: ["packages"] });
+      toast.success(`${archivedIds.length} package${archivedIds.length === 1 ? "" : "s"} archived.`);
+    }
+    if (failedCount) toast.error(`${failedCount} package${failedCount === 1 ? "" : "s"} could not be archived.`);
+    setIsBulkArchiving(false);
+    setBulkArchiveOpen(false);
+  };
 
   const uniquePackageCount = useMemo(() => dedupePackagesById(packages).length, [packages]);
 
@@ -155,6 +197,7 @@ export default function AdminPackages() {
 
     try {
       await baseClient.entities.Package.update(archiveId, { is_active: false });
+      setSelectedArchiveIds((current) => current.filter((id) => id !== archiveId));
       await baseClient.entities.ActivityLog.create({
         user_email: user?.email,
         user_name: user?.full_name,
@@ -227,12 +270,18 @@ export default function AdminPackages() {
                 Showing {filteredPackages.length} of {uniquePackageCount} package records.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,20rem)_auto]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {selectedArchiveIds.length > 0 ? (
+                <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}>
+                  <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
+                </Button>
+              ) : null}
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,20rem)_auto]">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchTerm}
-                  onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }}
+                  onChange={(event) => { setSearchTerm(event.target.value); setPage(1); setSelectedArchiveIds([]); }}
                   placeholder="Search package or inclusion"
                   className="pl-9"
                 />
@@ -246,11 +295,12 @@ export default function AdminPackages() {
                     key={item.value}
                     size="sm"
                     variant={statusFilter === item.value ? "default" : "ghost"}
-                    onClick={() => { setStatusFilter(item.value); setPage(1); }}
+                    onClick={() => { setStatusFilter(item.value); setPage(1); setSelectedArchiveIds([]); }}
                   >
                     {item.label}
                   </Button>
                 ))}
+              </div>
               </div>
             </div>
           </div>
@@ -266,6 +316,9 @@ export default function AdminPackages() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12 text-center">
+                      <input type="checkbox" aria-label="Select all visible active packages" checked={allArchivableVisibleSelected} disabled={archivableVisiblePackages.length === 0} onChange={toggleVisibleArchiveSelection} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                    </TableHead>
                     <TableHead>Package</TableHead>
                     <TableHead>Day Tour</TableHead>
                     <TableHead>Night Tour</TableHead>
@@ -284,6 +337,9 @@ export default function AdminPackages() {
 
                       return (
                         <TableRow key={pkg.id}>
+                          <TableCell className="text-center">
+                            <input type="checkbox" aria-label={`Select package ${pkg.name} for archive`} checked={selectedArchiveIds.includes(pkg.id)} disabled={pkg.is_active === false || pkg.is_active === 0 || pkg.is_active === "0"} onChange={() => setSelectedArchiveIds((current) => current.includes(pkg.id) ? current.filter((id) => id !== pkg.id) : [...current, pkg.id])} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+                          </TableCell>
                           <TableCell>
                             <div className="flex min-w-72 items-center gap-3">
                               {coverImage ? (
@@ -330,7 +386,7 @@ export default function AdminPackages() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                      <TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">
                         No packages match your filters.
                       </TableCell>
                     </TableRow>
@@ -340,7 +396,7 @@ export default function AdminPackages() {
             </div>
           )}
         </CardContent>
-        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredPackages.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} /> : null}
+        {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredPackages.length} onPageChange={(value) => { setPage(value); setSelectedArchiveIds([]); }} onPageSizeChange={(size) => { setPageSize(size); setPage(1); setSelectedArchiveIds([]); }} /> : null}
       </Card>
 
       <PackageFormDialog
@@ -362,6 +418,21 @@ export default function AdminPackages() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleArchive} className="bg-accent text-accent-foreground hover:bg-accent/90">
               Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkArchiveOpen} onOpenChange={(open) => { if (!open && !isBulkArchiving) setBulkArchiveOpen(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive selected packages?</AlertDialogTitle>
+            <AlertDialogDescription>Archive {selectedArchiveIds.length} selected package{selectedArchiveIds.length === 1 ? "" : "s"}? You can restore them later from Archive.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkArchiving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(event) => { event.preventDefault(); void archiveSelectedPackages(); }} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isBulkArchiving || selectedArchiveIds.length === 0}>
+              {isBulkArchiving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2 h-4 w-4" />} Archive selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
