@@ -15,7 +15,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Eye, History, Loader2, MessageSquareMore, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { isSuperAdmin } from "@/lib/adminAccess";
+import { isAdminUser, isSuperAdmin } from "@/lib/adminAccess";
 import usePaginatedRecords from "@/hooks/usePaginatedRecords";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -33,6 +33,7 @@ const archiveHistoryActions = [
   "archive",
   "restored",
   "restore",
+  "disabled user account",
 ];
 
 const formatHistoryDate = (value) => {
@@ -49,7 +50,7 @@ export default function AdminPackageArchive() {
 
   const [error] = useState(null);
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
   const [restoreBookingId, setRestoreBookingId] = useState(null);
   const [restorePackageId, setRestorePackageId] = useState(null);
   const [restoreQrId, setRestoreQrId] = useState(null);
@@ -62,12 +63,14 @@ export default function AdminPackageArchive() {
     baseClient.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
 
+  const isAdmin = isAdminUser(user);
   const canViewArchiveHistory = isSuperAdmin(user);
 
   // Fetch archived bookings (show both archived and cancelled as archived)
   const bookingsQuery = useQuery({
     queryKey: ["admin-bookings-archived"],
     queryFn: () => baseClient.entities.Booking.filter({ status: ["archived", "cancelled"] }, "-created_date", 500),
+    enabled: isAdmin,
   });
   const archivedBookings = bookingsQuery.data || [];
   const isLoadingBookings = bookingsQuery.isLoading;
@@ -76,6 +79,7 @@ export default function AdminPackageArchive() {
   const packagesQuery = useQuery({
     queryKey: ["admin-packages-archived"],
     queryFn: () => baseClient.entities.Package.filter({ is_active: false }, "name"),
+    enabled: isAdmin,
   });
   const archivedPackages = packagesQuery.data || [];
   const isLoadingPackages = packagesQuery.isLoading;
@@ -84,6 +88,7 @@ export default function AdminPackageArchive() {
   const qrQuery = useQuery({
     queryKey: ["admin-payment-qr-codes"],
     queryFn: () => baseClient.entities.PaymentQrCode.list("display_order", 50),
+    enabled: isAdmin,
   });
   const qrCodes = qrQuery.data || [];
   const isLoadingQrCodes = qrQuery.isLoading;
@@ -130,7 +135,8 @@ const roleLabel = {
   // Fetch users
   const usersQuery = useQuery({
     queryKey: ["admin-user-permissions"],
-    queryFn: () => baseClient.entities.User.list("full_name", 1000),
+    queryFn: () => baseClient.entities.User.filter({ disabled: true }, "full_name", 1000),
+    enabled: isAdmin,
   });
   const users = usersQuery.data || [];
   const isLoadingUsers = usersQuery.isLoading;
@@ -139,6 +145,7 @@ const roleLabel = {
   const amenitiesQuery = useQuery({
     queryKey: ["admin-amenities-archived"],
     queryFn: () => baseClient.entities.FoundItem.filter({ is_active: false }, "-date_found", 500),
+    enabled: isAdmin,
   });
   const archivedAmenities = amenitiesQuery.data || [];
   const isLoadingAmenities = amenitiesQuery.isLoading;
@@ -146,7 +153,7 @@ const roleLabel = {
   const archiveHistoryQuery = useQuery({
     queryKey: ["admin-archive-history"],
     queryFn: () => baseClient.entities.ActivityLog.list("-created_date", 500),
-    enabled: canViewArchiveHistory,
+    enabled: isAdmin,
   });
 
   const archiveHistory = useMemo(
@@ -160,14 +167,14 @@ const roleLabel = {
   const archivedInquiriesQuery = useQuery({
     queryKey: ["admin-inquiries-archived"],
     queryFn: () => baseClient.inquiries.list("archived"),
-    enabled: canViewArchiveHistory,
+    enabled: isAdmin,
   });
   const archivedInquiries = archivedInquiriesQuery.data || [];
 
   const archivedInquiryThreadQuery = useQuery({
     queryKey: ["admin-archived-inquiry-thread", selectedArchivedInquiryId],
     queryFn: () => baseClient.inquiries.thread(selectedArchivedInquiryId),
-    enabled: Boolean(canViewArchiveHistory && selectedArchivedInquiryId),
+    enabled: Boolean(isAdmin && selectedArchivedInquiryId),
   });
 
   const inquiryArchiveLogById = useMemo(() => {
@@ -207,8 +214,75 @@ const roleLabel = {
 
 
   // Combine all loading and error states
-  const isLoading = isLoadingPackages || isLoadingQrCodes || isLoadingUsers || isLoadingBookings || isLoadingAmenities;
+  const isLoading = isLoadingPackages || isLoadingQrCodes || isLoadingUsers || isLoadingBookings || isLoadingAmenities || archiveHistoryQuery.isLoading || archivedInquiriesQuery.isLoading;
   const queryError = bookingsQuery.error || packagesQuery.error || qrQuery.error || usersQuery.error || amenitiesQuery.error || archiveHistoryQuery.error || archivedInquiriesQuery.error || archivedInquiryThreadQuery.error;
+
+  const archiveOwnerByRecord = useMemo(() => {
+    const owners = new Map();
+    for (const log of archiveHistory) {
+      if (!log.entity_type || !log.entity_id) continue;
+      const key = `${log.entity_type}:${log.entity_id}`;
+      if (!owners.has(key)) owners.set(key, log);
+    }
+    return owners;
+  }, [archiveHistory]);
+
+  const archiveRows = useMemo(() => {
+    const rows = [];
+    for (const booking of archivedBookings) rows.push({
+      key: `Booking:${booking.id}`, type: "reservations", label: booking.booking_reference || booking.id,
+      detail: `${booking.customer_name || "Guest"} · ${booking.package_name || "Package"} · ${booking.booking_date ? format(new Date(booking.booking_date), "MMM d, yyyy") : "No date"} · PHP ${Number(booking.total_amount || 0).toLocaleString()}`,
+      status: booking.status, record: booking, onRestore: () => setRestoreBookingId(booking.id),
+    });
+    for (const pkg of sortedArchivedPackages) rows.push({
+      key: `Package:${pkg.id}`, type: "packages", label: pkg.name || "Package",
+      detail: `Day PHP ${Number(pkg.day_tour_price || 0).toLocaleString()} · Night PHP ${Number(pkg.night_tour_price || 0).toLocaleString()} · 22 hours PHP ${Number(pkg.twenty_two_hour_price || 0).toLocaleString()} · Max ${pkg.max_guests || 0} guests`,
+      status: "Archived", record: pkg, onRestore: () => setRestorePackageId(pkg.id),
+    });
+    for (const code of archivedQrCodes) rows.push({
+      key: `PaymentQrCode:${code.id}`, type: "qr", label: code.label || "Payment QR code",
+      detail: `${code.account_name || "No account name"} · ${code.account_number || "No account number"}`,
+      status: "Archived", record: code, onRestore: () => setRestoreQrId(code.id),
+    });
+    for (const target of archivedUsers) rows.push({
+      key: `User:${target.id}`, type: "users", label: target.full_name || target.email || "User account",
+      detail: `${target.email || "No email"} · ${roleLabel[target.role] || target.role || "User"}`,
+      status: "Archived", record: target, onRestore: () => setRestoreUserId(target.id),
+    });
+    for (const amenity of archivedAmenities) rows.push({
+      key: `FoundItem:${amenity.id}`, type: "amenities", label: amenity.item_name || "Amenity",
+      detail: `${amenity.description || "No description"} · ${amenity.location_found || "No location"}`,
+      status: "Archived", record: amenity, onRestore: () => setRestoreAmenityId(amenity.id),
+    });
+    for (const inquiry of archivedInquiries) rows.push({
+      key: `Inquiry:${inquiry.id}`, type: "chats", label: inquiry.subject || "Inquiry chat",
+      detail: `${inquiry.guest_name || "Guest"} · ${inquiry.guest_email || "No email"} · ${inquiry.message_count || 0} messages`,
+      status: "Archived", record: inquiry, onRestore: () => setSelectedArchivedInquiryId(inquiry.id), isChat: true,
+    });
+    return rows.sort((left, right) => {
+      const leftOwner = archiveOwnerByRecord.get(left.key);
+      const rightOwner = archiveOwnerByRecord.get(right.key);
+      return new Date(rightOwner?.created_date || right.record.updated_date || right.record.created_date || 0)
+        - new Date(leftOwner?.created_date || left.record.updated_date || left.record.created_date || 0);
+    });
+  }, [archivedBookings, sortedArchivedPackages, archivedQrCodes, archivedUsers, archivedAmenities, archivedInquiries, archiveOwnerByRecord]);
+
+  const visibleArchiveRows = archiveRows.filter((row) => archiveType === "all" || row.type === archiveType);
+  const archiveRowsPage = usePaginatedRecords(visibleArchiveRows);
+  const canRestoreArchiveRow = (row) => {
+    if (canViewArchiveHistory) return true;
+    if (row.key.startsWith("User:")) return false;
+    const owner = archiveOwnerByRecord.get(row.key);
+    return Boolean(owner?.user_email && String(owner.user_email).toLowerCase() === String(user?.email || "").toLowerCase());
+  };
+
+  if (user === undefined) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (!isAdmin) {
+    return <div className="p-8 text-center text-muted-foreground">Only resort administrators can access the archive.</div>;
+  }
 
   const handleRestorePackage = async () => {
     const pkg = archivedPackages.find((entry) => entry.id === restorePackageId);
@@ -336,7 +410,7 @@ const roleLabel = {
               <SelectItem value="qr">QR codes</SelectItem>
               <SelectItem value="users">User accounts</SelectItem>
               <SelectItem value="amenities">Amenities</SelectItem>
-              {canViewArchiveHistory ? <SelectItem value="chats">Inquiry chats</SelectItem> : null}
+              <SelectItem value="chats">Inquiry chats</SelectItem>
               {canViewArchiveHistory ? <SelectItem value="history">Archive history</SelectItem> : null}
             </SelectContent>
           </Select>
@@ -349,7 +423,68 @@ const roleLabel = {
         </div>
       ) : (
         <div className="space-y-8">
-          <section hidden={archiveType !== "all" && archiveType !== "reservations"}>
+          <section hidden={archiveType === "history"}>
+            <div className="mb-4">
+              <h2 className="font-display text-2xl font-bold text-foreground">Archived Items</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                All archived items appear together. Admins can restore only items they archived; super admins can restore any item.
+              </p>
+            </div>
+            <Card>
+              <CardContent className="overflow-x-auto p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Details</TableHead>
+                      <TableHead>Archived By</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archiveRowsPage.visibleRecords.length ? archiveRowsPage.visibleRecords.map((row) => {
+                      const archiveLog = archiveOwnerByRecord.get(row.key);
+                      const archivedByName = row.isChat ? row.record.assigned_admin_name : archiveLog?.user_name;
+                      const archivedByEmail = row.isChat ? row.record.assigned_admin_email : archiveLog?.user_email;
+                      const canRestore = canRestoreArchiveRow(row);
+                      return (
+                        <TableRow key={row.key}>
+                          <TableCell><Badge variant="outline" className="capitalize">{{ reservations: "Reservation", packages: "Package", qr: "QR code", users: "User account", amenities: "Amenity", chats: "Inquiry chat" }[row.type]}</Badge></TableCell>
+                          <TableCell className="min-w-44 font-medium">{row.label}</TableCell>
+                          <TableCell className="min-w-64 text-sm text-muted-foreground">{row.detail}</TableCell>
+                          <TableCell className="min-w-40">
+                            <p className="text-sm font-medium">{archivedByName || "Not recorded"}</p>
+                            <p className="text-xs text-muted-foreground">{archivedByEmail || ""}</p>
+                          </TableCell>
+                          <TableCell><Badge variant="outline" className="capitalize">{row.status}</Badge></TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              disabled={!row.isChat && !canRestore}
+                              title={!row.isChat && !canRestore ? "Only the admin who archived this item can restore it." : undefined}
+                              onClick={row.onRestore}
+                            >
+                              {row.isChat ? <Eye className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
+                              {row.isChat ? "View chat" : canRestore ? "Restore" : "Unavailable"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }) : (
+                      <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">No archived items in this category.</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+              {archiveRowsPage.controls}
+            </Card>
+          </section>
+
+          <section hidden>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Reservations</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore archived reservations back to Reservation Management.</p>
@@ -405,7 +540,7 @@ const roleLabel = {
             </Card>
           </section>
 
-          <section hidden={archiveType !== "all" && archiveType !== "packages"}>
+          <section hidden>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Packages</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore package offers back into the public package list.</p>
@@ -454,7 +589,7 @@ const roleLabel = {
             </Card>
           </section>
 
-          <section hidden={archiveType !== "all" && archiveType !== "qr"}>
+          <section hidden>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived QR Codes</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore payment QR options when they should appear again in booking.</p>
@@ -506,7 +641,7 @@ const roleLabel = {
             </Card>
           </section>
 
-          <section hidden={archiveType !== "all" && archiveType !== "users"}>
+          <section hidden>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived User Accounts</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore archived accounts so they can sign in and appear in active user management again.</p>
@@ -569,7 +704,7 @@ const roleLabel = {
             </Card>
           </section>
 
-        <section hidden={archiveType !== "all" && archiveType !== "amenities"}>
+        <section hidden>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Amenities</h2>
               <p className="mt-1 text-sm text-muted-foreground">Restore archived amenities so they can be seen in the active amenities list again.</p>
@@ -625,7 +760,7 @@ const roleLabel = {
         </section>
 
         {canViewArchiveHistory ? (
-          <section hidden={archiveType !== "all" && archiveType !== "chats"}>
+          <section hidden>
             <div className="mb-4">
               <h2 className="font-display text-2xl font-bold text-foreground">Archived Inquiry Chats</h2>
               <p className="mt-1 text-sm text-muted-foreground">Review archived guest inquiry conversations and their archive details.</p>
@@ -698,7 +833,7 @@ const roleLabel = {
         ) : null}
 
         {canViewArchiveHistory ? (
-          <section hidden={archiveType !== "all" && archiveType !== "history"}>
+          <section hidden={archiveType !== "history"}>
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="font-display text-2xl font-bold text-foreground">Archive History</h2>

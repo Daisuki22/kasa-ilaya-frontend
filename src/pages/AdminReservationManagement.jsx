@@ -119,9 +119,18 @@ export default function AdminReservationManagement() {
   }, [isSuperAdmin, isLoadingPendingBookings, pendingBookingPage, pendingBookingCount]);
 
   const handleArchive = async () => {
+    const booking = bookings.find((entry) => entry.id === archiveId);
     setArchiving(true);
     try {
       await baseClient.entities.Booking.update(archiveId, { status: "archived" });
+      await baseClient.entities.ActivityLog.create({
+        user_email: user?.email,
+        user_name: user?.full_name,
+        action: "Archived Booking",
+        entity_type: "Booking",
+        entity_id: archiveId,
+        details: `Archived booking: ${booking?.booking_reference || archiveId}`,
+      });
       toast.success("Booking archived.");
       queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["admin-bookings-archived"] });
