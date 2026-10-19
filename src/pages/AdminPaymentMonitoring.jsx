@@ -545,7 +545,6 @@ export default function AdminPaymentMonitoring() {
           <p className="mt-1 text-muted-foreground">Track submitted payments, broken-property charges, and payment verification.</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-          {selectedArchiveIds.length > 0 ? <Button variant="outline" className="gap-2 text-warning" onClick={() => void archiveSelectedPayments()} disabled={isBulkArchiving}><Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})</Button> : null}
           <div className="relative sm:w-80">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -707,6 +706,13 @@ export default function AdminPaymentMonitoring() {
         </div>
       ) : (
         <Card>
+          {selectedArchiveIds.length > 0 ? (
+            <div className="flex justify-end border-b border-border px-4 py-3">
+              <Button variant="outline" className="gap-2 text-warning" onClick={() => void archiveSelectedPayments()} disabled={isBulkArchiving}>
+                <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
+              </Button>
+            </div>
+          ) : null}
           <CardContent className="overflow-x-auto p-0">
             <Table>
               <TableHeader>
