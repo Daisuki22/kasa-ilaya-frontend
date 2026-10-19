@@ -260,6 +260,11 @@ export default function AdminUserPermissions() {
           {isSuperAdmin ? <Button type="button" role="tab" aria-selected={accountCategory === "super_admin"} variant={accountCategory === "super_admin" ? "default" : "outline"} onClick={() => selectAccountCategory("super_admin")}>Super Admin Accounts</Button> : null}
         </div>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
+          {selectedArchiveIds.length > 0 ? (
+            <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}>
+              <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
+            </Button>
+          ) : null}
           <Button type="button" variant="outline" className="gap-2" onClick={() => openCreateAccount("admin")}>
             <UserPlus className="h-4 w-4" /> Create Admin Account
           </Button>
@@ -277,13 +282,6 @@ export default function AdminUserPermissions() {
         </div>
       ) : (
         <Card>
-          {selectedArchiveIds.length > 0 ? (
-            <div className="flex justify-end border-b border-border px-4 py-3">
-              <Button variant="outline" className="gap-2 text-warning" onClick={() => setBulkArchiveOpen(true)} disabled={isBulkArchiving}>
-                <Archive className="h-4 w-4" /> Archive selected ({selectedArchiveIds.length})
-              </Button>
-            </div>
-          ) : null}
           <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
