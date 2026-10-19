@@ -432,7 +432,7 @@ export default function Contact() {
                   </p>
                 )}
 
-                <div className="mt-6 border-t border-border pt-5">
+                <div ref={historyConversationRef} className="mt-6 border-t border-border pt-5">
                   <h3 className="flex items-center gap-2 font-semibold text-foreground">
                     <History className="h-4 w-4 text-muted-foreground" />
                     Inquiry History
@@ -444,7 +444,7 @@ export default function Contact() {
                         <button
                           key={inquiry.id}
                           type="button"
-                          onClick={() => setSelectedHistoryInquiryId(inquiry.id)}
+                          onClick={() => setSelectedHistoryInquiryId((current) => current === inquiry.id ? null : inquiry.id)}
                           className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${selectedHistoryInquiryId === inquiry.id ? "border-primary bg-primary/5" : "border-border bg-muted/20 hover:border-primary/40"}`}
                         >
                           <div className="flex items-start justify-between gap-3">
@@ -470,7 +470,7 @@ export default function Contact() {
                     </p>
                   )}
                   {selectedHistoryInquiryId ? (
-                    <div ref={historyConversationRef} className="mt-4 rounded-xl border border-border bg-background p-4">
+                    <div className="mt-4 rounded-xl border border-border bg-background p-4">
                       <h4 className="font-semibold text-foreground">{historyThread?.inquiry?.subject || "Past conversation"}</h4>
                       {isLoadingHistoryThread ? (
                         <div className="flex justify-center py-5 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
