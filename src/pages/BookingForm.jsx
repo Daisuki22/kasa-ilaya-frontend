@@ -204,15 +204,9 @@ export default function BookingForm() {
   } = useQuery({
     queryKey: ["booking-availability"],
     queryFn: () => baseClient.entities.Booking.availability(),
-    refetchInterval: 15000,
-  });
-  const existingBookings = bookingAvailability.booking_dates || [];
-
-  const { data: manualSchedules = [] } = useQuery({
-    queryKey: ["upcoming-schedules"],
-    queryFn: () => baseClient.entities.UpcomingSchedule.list("schedule_date", 500),
     refetchInterval: 30000,
   });
+  const existingBookings = bookingAvailability.booking_dates || [];
 
   const { data: qrCodeRecords = [], isLoading: isLoadingQrCodes } = useQuery({
     queryKey: ["booking-payment-qr-codes"],
@@ -244,9 +238,9 @@ export default function BookingForm() {
     content.scrollTop = 0;
   }, [policyDialogType, viewedDocument?.id, viewedDocument?.version, viewedDocument?.content]);
 
-  const activeQrCodes = qrCodeRecords
+  const activeQrCodes = useMemo(() => qrCodeRecords
     .filter((entry) => entry.is_active !== false && entry.is_active !== 0 && entry.is_active !== "0")
-    .sort((left, right) => (left.display_order ?? 99) - (right.display_order ?? 99));
+    .sort((left, right) => (left.display_order ?? 99) - (right.display_order ?? 99)), [qrCodeRecords]);
 
   useEffect(() => {
     if (!activeQrCodes.length) {
@@ -303,9 +297,28 @@ export default function BookingForm() {
   }, [existingBookings]);
 
   const manualScheduleDatesSet = useMemo(
-    () => new Set(manualSchedules.map((schedule) => schedule.schedule_date).filter(Boolean)),
-    [manualSchedules]
+    () => new Set((bookingAvailability.manual_schedule_dates || []).filter(Boolean)),
+    [bookingAvailability.manual_schedule_dates]
   );
+
+  // Availability is queried for every calendar cell. Precompute overlaps once
+  // instead of scanning every booking each time React DayPicker checks a date.
+  const unavailableTourSlots = useMemo(() => {
+    const unavailable = new Set();
+    for (const booking of existingBookings) {
+      if (!booking.booking_date || !booking.tour_type) continue;
+      const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
+      for (const offset of [-1, 0, 1]) {
+        const candidateDate = format(addDays(bookingDate, offset), "yyyy-MM-dd");
+        for (const { value: tourType } of availableTourChoices) {
+          if (bookingSchedulesOverlap(candidateDate, tourType, booking.booking_date, booking.tour_type)) {
+            unavailable.add(`${candidateDate}|${tourType}`);
+          }
+        }
+      }
+    }
+    return unavailable;
+  }, [existingBookings]);
 
   // Mark dates that are fully blocked; partial day/night availability is shown per tour below.
   const reservedDates = useMemo(() => {
@@ -324,9 +337,7 @@ export default function BookingForm() {
     const nextDateStr = format(addDays(date, 1), 'yyyy-MM-dd');
     if (manualScheduleDatesSet.has(dateStr)) return false;
     if (tourCrossesMidnight(tourType) && manualScheduleDatesSet.has(nextDateStr)) return false;
-    return !existingBookings.some((booking) =>
-      bookingSchedulesOverlap(dateStr, tourType, booking.booking_date, booking.tour_type)
-    );
+    return !unavailableTourSlots.has(`${dateStr}|${tourType}`);
   };
 
   const isDateDisabled = (date) => {
