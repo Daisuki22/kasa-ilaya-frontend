@@ -9,7 +9,6 @@ import {
   MapPin,
   ShieldCheck,
   Sparkles,
-  TreePalm,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -124,10 +123,6 @@ export default function AboutSection({ standalone = false }) {
 
         <div className="relative flex min-h-[34rem] w-full app-content-container flex-col justify-end px-2 pb-10 pt-20 sm:px-3 lg:min-h-[38rem] lg:px-4 lg:pb-14">
           <div className="max-w-3xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur">
-              <TreePalm className="h-4 w-4" />
-              About {siteName}
-            </div>
             <h1 className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
               A refined resort setting for rest, gatherings, and meaningful moments
             </h1>
