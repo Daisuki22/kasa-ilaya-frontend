@@ -859,7 +859,8 @@ export default function Layout({ children, currentPageName }) {
           </div>
         ) : null}
 
-        <header
+        <motion.header
+          layoutRoot
           className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${isAdminMode ? "border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 md:hidden" : isTransparentHomeNav ? "border-transparent bg-transparent shadow-none backdrop-blur-0 supports-[backdrop-filter]:bg-transparent" : "border-border bg-card/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80"}`}
           style={isTransparentHomeNav ? { backgroundColor: "transparent", backgroundImage: "none", backdropFilter: "none", WebkitBackdropFilter: "none" } : undefined}
         >
@@ -869,12 +870,12 @@ export default function Layout({ children, currentPageName }) {
             </Link>
 
             {!isAdminMode ? (
-              <motion.nav layoutRoot className="hidden items-center justify-center gap-1 lg:flex lg:justify-self-center xl:gap-1.5">
+              <motion.nav className="hidden items-center justify-center gap-1 border-0 bg-transparent p-0 shadow-none backdrop-blur-none lg:flex lg:justify-self-center xl:gap-1.5" style={{ backgroundColor: "transparent", border: "none", boxShadow: "none", backdropFilter: "none" }}>
                 {navItems.map((item) => (
                   <Link
                     key={item.page || item.href}
                     to={item.href || createPageUrl(item.page)}
-                    className={`relative isolate flex min-h-11 items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
+                    className={`relative isolate flex min-h-11 items-center gap-2 border-0 bg-transparent px-3 py-2 text-sm font-semibold shadow-none transition-colors duration-200 xl:gap-2.5 xl:px-4 xl:py-2.5 ${
                       currentPageName === item.page
                       ? isTransparentHomeNav ? "text-white" : "text-secondary"
                         : isTransparentHomeNav ? "text-white/90 hover:text-white" : "text-muted-foreground hover:text-primary"
@@ -914,7 +915,7 @@ export default function Layout({ children, currentPageName }) {
               </Button>
             </div>
           </div>
-        </header>
+        </motion.header>
 
         <div
           className={`fixed inset-0 z-[55] bg-black/45 transition-opacity duration-300 ${
