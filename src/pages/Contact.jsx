@@ -88,6 +88,7 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const messagesContainerRef = useRef(null);
+  const historyConversationRef = useRef(null);
 
   const packagesUrl = createPageUrl("Packages");
   const aboutUrl = createPageUrl("About");
@@ -127,6 +128,19 @@ export default function Contact() {
     queryFn: () => baseClient.inquiries.thread(selectedHistoryInquiryId),
     enabled: Boolean(user && selectedHistoryInquiryId),
   });
+
+  useEffect(() => {
+    if (!selectedHistoryInquiryId) return undefined;
+
+    const dismissOnOutsideClick = (event) => {
+      if (!historyConversationRef.current?.contains(event.target)) {
+        setSelectedHistoryInquiryId(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", dismissOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", dismissOnOutsideClick);
+  }, [selectedHistoryInquiryId]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -456,7 +470,7 @@ export default function Contact() {
                     </p>
                   )}
                   {selectedHistoryInquiryId ? (
-                    <div className="mt-4 rounded-xl border border-border bg-background p-4">
+                    <div ref={historyConversationRef} className="mt-4 rounded-xl border border-border bg-background p-4">
                       <h4 className="font-semibold text-foreground">{historyThread?.inquiry?.subject || "Past conversation"}</h4>
                       {isLoadingHistoryThread ? (
                         <div className="flex justify-center py-5 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
