@@ -97,9 +97,9 @@ export default function AdminActivityLogs() {
 			const matchesQuery = matchesActivityLogSearch(log, search);
 
 			const matchesEntity = entityFilter === 'all' || (log.entity_type || '') === entityFilter;
-			const actorRole = log.actor_role || 'guest';
+			const actorRole = String(log.actor_role || 'guest').toLowerCase();
 			const matchesActor = actorFilter === 'all'
-				|| (actorFilter === 'admin' && ['admin', 'staff'].includes(actorRole))
+				|| (actorFilter === 'user' && ['guest', 'user'].includes(actorRole))
 				|| actorRole === actorFilter;
 
 			return matchesQuery && matchesEntity && matchesActor;
@@ -223,8 +223,9 @@ export default function AdminActivityLogs() {
 					<SelectTrigger aria-label="Filter audit trail by actor role"><SelectValue placeholder="All Actors" /></SelectTrigger>
 					<SelectContent>
 						<SelectItem value="all">All Actors</SelectItem>
-						<SelectItem value="guest">Guests / Users</SelectItem>
-						<SelectItem value="admin">Admins / Staff</SelectItem>
+						<SelectItem value="user">Users / Guests</SelectItem>
+						<SelectItem value="admin">Admins</SelectItem>
+						<SelectItem value="staff">Staff</SelectItem>
 						<SelectItem value="super_admin">Super Admins</SelectItem>
 					</SelectContent>
 				</Select>

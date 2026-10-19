@@ -22,6 +22,7 @@ export const PAGES = {
     "VerifyRegistrationOtp": lazy(() => import('./pages/VerifyRegistrationOtp.jsx')),
     "Home": lazy(() => import('./pages/Home.jsx')),
     "Login": lazy(() => import('./pages/Login.jsx')),
+    "MyActivity": lazy(() => import('./pages/MyActivity.jsx')),
     "MyBookings": lazy(() => import('./pages/MyBooking.jsx')),
     "Packages": lazy(() => import('./pages/Packages.jsx')),
     "ProfileSettings": lazy(() => import('./pages/ProfileSettings.jsx')),

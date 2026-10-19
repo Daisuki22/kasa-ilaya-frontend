@@ -78,14 +78,14 @@ const AdminDestinationGuard = ({ user, pageName, children }) => {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const authenticationPage = ['Login', 'ForgotPassword', 'ResetPassword', 'VerifyRegistrationOtp'].includes(pageName);
 
-  if (isAdmin && !pageName?.startsWith('Admin') && !authenticationPage) {
+  if (isAdmin && !pageName?.startsWith('Admin') && pageName !== 'MyActivity' && !authenticationPage) {
     return <Navigate to="/AdminDashboard" replace />;
   }
 
   return children;
 };
 
-const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "ProfileSettings"]);
+const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "MyActivity", "ProfileSettings"]);
 const guestOrRegularUserPages = new Set(["About", "Contact"]);
 const GOOGLE_NEXT_PATH_SESSION_KEY = 'ki-google-signin-next-path';
 const authenticationPaths = new Set(['/Login', '/ForgotPassword', '/ResetPassword', '/VerifyRegistrationOtp']);

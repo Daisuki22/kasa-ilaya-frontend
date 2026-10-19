@@ -505,24 +505,6 @@ export default function BookingForm() {
         privacy_consent: privacyConsent,
       });
 
-      try {
-        await baseClient.entities.ActivityLog.create({
-          user_email: user?.email || form.customer_email,
-          user_name: user?.full_name || form.customer_name,
-          action: "Created Booking",
-          entity_type: "Booking",
-          entity_id: booking.id,
-          details: `Booked ${pkg?.name} for ${format(selectedDate, "MMM d, yyyy")}`,
-        });
-      } catch (activityLogError) {
-        if (import.meta.env.DEV) {
-          console.warn("Booking activity log could not be recorded", {
-            bookingId: booking.id,
-            message: activityLogError?.message,
-          });
-        }
-      }
-
       let emailResult = { sent: true, error: "" };
 
       if (typeof window !== "undefined" && window.__KASA_ENABLE_CLIENT_BOOKING_EMAIL__ === true) {

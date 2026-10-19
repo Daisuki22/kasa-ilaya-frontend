@@ -408,6 +408,15 @@ const createEntityHandler = (entityName) => ({
     );
   },
 
+  async listMine(sortField = "-created_date", limit = 300) {
+    if (entityName !== "ActivityLog") {
+      throw new Error("Personal activity is only available for activity logs.");
+    }
+    const params = new URLSearchParams({ entity: "ActivityLog", scope: "mine", sort: sortField });
+    if (typeof limit === "number") params.set("limit", String(limit));
+    return asArray(normalizeEntityDates(entityName, await request(`/entities.php?${params.toString()}`)));
+  },
+
   async create(data) {
     return normalizeEntityDates(entityName, await request(
       `/entities.php?entity=${encodeURIComponent(entityName)}`,

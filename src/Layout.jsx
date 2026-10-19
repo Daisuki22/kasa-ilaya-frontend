@@ -9,7 +9,7 @@ import {
   Home, Package, CalendarCheck, LayoutDashboard, LogOut,
   Menu, X, User, Settings, QrCode, CalendarDays, Archive, SlidersHorizontal, ShieldCheck, Shield,
   Sun, Moon, Monitor, Bell, CheckCheck, MessageSquareMore,
-  ChartBarIcon, CreditCard, FileText, Phone, Mail, MapPin, Facebook, ArrowUpRight
+  ChartBarIcon, CreditCard, FileText, Phone, Mail, MapPin, Facebook, ArrowUpRight, Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -116,6 +116,7 @@ const userNav = [
   { name: "Contact", icon: Bell, page: "Contact" },
   { name: "Packages", icon: Package, page: "Packages" },
   { name: "My Bookings", icon: CalendarCheck, page: "MyBookings" },
+  { name: "My Activity", icon: Activity, page: "MyActivity" },
 ];
 
 const adminNav = [
@@ -132,6 +133,7 @@ const adminNav = [
   { name: "System Settings", icon: SlidersHorizontal, page: "AdminSystemSettings" },
   { name: "Archive", icon: Archive, page: "AdminPackageArchive" },
   { name: "Activity Logs", icon: User, page: "AdminActivityLogs" },
+  { name: "My Activity", icon: Activity, page: "MyActivity" },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -166,8 +168,10 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => baseClient.entities.LegalDocument.list("-published_at", 10),
     enabled: !isAdminMode && Boolean(footerLegalType),
   });
-  const allowedAdminNav = adminNav.filter((item) => canAccessAdminPage(user, item.page));
+  const allowedAdminNav = adminNav.filter((item) => item.page === "MyActivity" || canAccessAdminPage(user, item.page));
   const guestNav = userNav.filter((item) => {
+    if (item.page === "MyActivity") return Boolean(user);
+
     if (item.page === "MyBookings") {
       return Boolean(user) && !isAdmin;
     }
