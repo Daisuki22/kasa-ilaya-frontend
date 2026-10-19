@@ -315,6 +315,9 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
               <div className="flex min-w-0 justify-center">
                 <Calendar
                   mode="single"
+                  captionLayout="dropdown"
+                  fromYear={new Date().getFullYear()}
+                  toYear={new Date().getFullYear() + 3}
                   selected={selectedDate}
                   disabled={{ before: today }}
                   onSelect={(date) => {
