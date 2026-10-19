@@ -14,7 +14,7 @@ import { Calendar, resortCalendarClassNames } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  CalendarCheck, User, Mail, Phone, Loader2,
+  CalendarCheck, User, Mail, Phone, Loader2, Maximize2,
   ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp, Sun, Moon, ChevronUp, ChevronDown
 } from "lucide-react";
 import { format, addDays, startOfDay } from "date-fns";
@@ -129,6 +129,7 @@ export default function BookingForm() {
 
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [receiptHelpOpen, setReceiptHelpOpen] = useState(false);
+  const [qrCodePreviewOpen, setQrCodePreviewOpen] = useState(false);
   const [policyDialogType, setPolicyDialogType] = useState(null);
   const [modalStep, setModalStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -1501,12 +1502,16 @@ export default function BookingForm() {
                           {selectedPaymentQrCode ? (
                             <div className="overflow-hidden rounded-lg border border-primary/30 bg-card">
                               <div className="grid grid-cols-1 sm:grid-cols-[280px_1fr]">
-                                <div className="flex items-center justify-center bg-white p-3 sm:p-4">
+                                <div className="flex flex-col items-center justify-center gap-3 bg-white p-3 sm:p-4">
                                   <PaymentMethodImage
                                     src={selectedPaymentQrCode.image_url}
                                     alt={selectedPaymentQrCode.label}
                                     className="mx-auto h-64 w-full max-w-[280px] object-contain"
                                   />
+                                  <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => setQrCodePreviewOpen(true)}>
+                                    <Maximize2 className="h-4 w-4" />
+                                    Enlarge QR code
+                                  </Button>
                                 </div>
                                 <div className="space-y-1 border-t border-border bg-muted/30 p-4 text-sm sm:border-l sm:border-t-0">
                                   <p className="font-semibold text-foreground">{selectedPaymentQrCode.label}</p>
@@ -1728,6 +1733,24 @@ export default function BookingForm() {
             <p className="text-xs text-muted-foreground">Accepted formats: JPG, PNG, or WebP, up to 8 MB.</p>
           </div>
           <div className="flex justify-end"><Button onClick={() => setReceiptHelpOpen(false)}>Got it</Button></div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={qrCodePreviewOpen} onOpenChange={setQrCodePreviewOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{selectedPaymentQrCode?.label || "Payment"} QR Code</DialogTitle>
+            <DialogDescription>Scan this QR code using your payment app.</DialogDescription>
+          </DialogHeader>
+          {selectedPaymentQrCode ? (
+            <div className="flex max-h-[72vh] items-center justify-center rounded-lg bg-white p-4">
+              <PaymentMethodImage
+                src={selectedPaymentQrCode.image_url}
+                alt={selectedPaymentQrCode.label}
+                className="max-h-[68vh] max-w-full object-contain"
+              />
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
 
