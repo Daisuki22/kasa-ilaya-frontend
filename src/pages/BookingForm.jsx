@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   CalendarCheck, User, Mail, Phone, Loader2,
-  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp, Sun, Moon
+  ArrowLeft, CheckCircle2, Clock, Upload, QrCode, ShieldCheck, Sparkles, CircleHelp, Sun, Moon, ChevronUp, ChevronDown
 } from "lucide-react";
 import { format, addDays, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1243,26 +1243,47 @@ export default function BookingForm() {
                           </div>
                           <div>
                             <Label htmlFor="guests">Additional Guests</Label>
-                            <Input
-                              id="guests"
-                              type="number"
-                              min="0"
-                              step="1"
-                              inputMode="numeric"
-                              className="mt-1 border-border/60 bg-background/60 text-foreground shadow-none transition-colors focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary/35 focus-visible:ring-offset-0 dark:[color-scheme:dark]"
-                              value={additionalGuestCount}
-                              onKeyDown={(event) => {
-                                if (["-", "+", ".", "e", "E"].includes(event.key)) event.preventDefault();
-                              }}
-                              onChange={(event) => {
-                                const value = event.target.value;
-                                if (!/^\d*$/.test(value)) return;
-                                const count = value === "" ? 0 : Number(value);
-                                if (Number.isSafeInteger(count) && count < Number.MAX_SAFE_INTEGER) {
-                                  setForm((previous) => ({ ...previous, guest_count: count + includedGuestCount }));
-                                }
-                              }}
-                            />
+                            <div className="relative mt-1">
+                              <Input
+                                id="guests"
+                                type="number"
+                                min="0"
+                                step="1"
+                                inputMode="numeric"
+                                className="border-border/60 bg-background/60 pr-10 text-foreground shadow-none transition-colors [appearance:textfield] focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary/35 focus-visible:ring-offset-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                value={additionalGuestCount}
+                                onKeyDown={(event) => {
+                                  if (["-", "+", ".", "e", "E"].includes(event.key)) event.preventDefault();
+                                }}
+                                onChange={(event) => {
+                                  const value = event.target.value;
+                                  if (!/^\d*$/.test(value)) return;
+                                  const count = value === "" ? 0 : Number(value);
+                                  if (Number.isSafeInteger(count) && count < Number.MAX_SAFE_INTEGER) {
+                                    setForm((previous) => ({ ...previous, guest_count: count + includedGuestCount }));
+                                  }
+                                }}
+                              />
+                              <div className="absolute inset-y-1 right-1 flex w-7 flex-col overflow-hidden rounded-sm border-l border-border/60">
+                                <button
+                                  type="button"
+                                  aria-label="Add one additional guest"
+                                  className="flex min-h-0 flex-1 items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                                  onClick={() => setForm((previous) => ({ ...previous, guest_count: Math.max(Number(previous.guest_count) || includedGuestCount, includedGuestCount) + 1 }))}
+                                >
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Remove one additional guest"
+                                  disabled={additionalGuestCount <= 0}
+                                  className="flex min-h-0 flex-1 items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
+                                  onClick={() => setForm((previous) => ({ ...previous, guest_count: Math.max(Number(previous.guest_count) || includedGuestCount, includedGuestCount) - 1 }))}
+                                >
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
                             <p className="mt-1 text-xs text-muted-foreground">
                               ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} per additional guest. {additionalGuestCount} × ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} = ₱{additionalGuestAmount.toLocaleString()}. {includedGuestCount} guests are included in this package. Additional guests are ₱{ADDITIONAL_GUEST_RATE.toLocaleString()} each.
                             </p>
