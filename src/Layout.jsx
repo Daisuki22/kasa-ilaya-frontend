@@ -167,7 +167,10 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => baseClient.entities.LegalDocument.list("-published_at", 10),
     enabled: !isAdminMode && Boolean(footerLegalType),
   });
-  const allowedAdminNav = adminNav.filter((item) => item.page === "MyActivity" || canAccessAdminPage(user, item.page));
+  const allowedAdminNav = adminNav.filter((item) => {
+    if (item.page === "MyActivity") return !isSuperAdminUser;
+    return canAccessAdminPage(user, item.page);
+  });
   const guestNav = userNav.filter((item) => {
     if (item.page === "MyBookings") {
       return Boolean(user) && !isAdmin;
