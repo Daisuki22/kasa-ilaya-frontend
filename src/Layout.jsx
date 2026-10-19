@@ -738,7 +738,7 @@ export default function Layout({ children, currentPageName }) {
 
   const logoUrl = resolveAssetUrl(siteSettings?.logo_url || "");
 
-  const renderBrandMark = (compact = false) => (
+  const renderBrandMark = (compact = false, onHero = false) => (
     <div className="flex min-w-0 items-center gap-3">
       <div className={`${compact ? "hidden sm:flex" : "flex"} h-14 w-14 shrink-0 items-center justify-center overflow-hidden sm:h-16 sm:w-16`}>
         <SiteLogo src={logoUrl} alt={`${siteName} logo`} className="h-full w-full object-contain" />
@@ -868,7 +868,7 @@ export default function Layout({ children, currentPageName }) {
         >
           <div className={`min-h-16 px-2 sm:px-3 lg:px-4 ${isAdminMode ? "flex items-center justify-between" : "flex items-center justify-between py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 xl:gap-10"}`}>
             <Link to={createPageUrl("Home")} className="flex min-w-0 items-center gap-3">
-              {renderBrandMark(true)}
+              {renderBrandMark(true, isTransparentHomeNav)}
             </Link>
 
             {!isAdminMode ? (
