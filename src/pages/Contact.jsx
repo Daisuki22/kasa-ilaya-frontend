@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   ArrowRight,
   Clock3,
+  History,
   Loader2,
   Mail,
   MapPin,
@@ -36,8 +37,8 @@ const inquiryStatusClasses = {
   in_progress: "bg-primary/10 text-primary border-primary/20",
   resolved: "bg-success/10 text-success border-success/30",
   closed: "bg-muted text-muted-foreground border-border",
+  archived: "bg-muted text-muted-foreground border-border",
 };
-const ACTIVE_INQUIRY_STATUSES = new Set(["open", "in_progress"]);
 
 const loadStoredInquiryAccess = () => {
   if (typeof window === "undefined") {
@@ -101,11 +102,7 @@ export default function Contact() {
     enabled: Boolean(user),
     refetchInterval: 15000,
   });
-  const activeInquiries = useMemo(
-    () => inquiries.filter((inquiry) => ACTIVE_INQUIRY_STATUSES.has(inquiry.status || "open")),
-    [inquiries]
-  );
-  const shouldShowInquiryMessages = Boolean(user) && activeInquiries.length > 0;
+  const shouldShowInquiryMessages = Boolean(user && inquiries.length > 0);
 
   const { data: inquiryThread, isLoading: isLoadingThread } = useQuery({
     queryKey: ["contact-inquiry-thread", selectedInquiryId, selectedInquiryToken, user?.id],
@@ -131,16 +128,16 @@ export default function Contact() {
   }, [user?.email, user?.full_name, user?.phone]);
 
   useEffect(() => {
-    if (!activeInquiries.length) {
+    if (!inquiries.length) {
       setSelectedInquiryId(null);
       return;
     }
 
-    const exists = activeInquiries.some((entry) => entry.id === selectedInquiryId);
+    const exists = inquiries.some((entry) => entry.id === selectedInquiryId);
     if (!exists) {
-      setSelectedInquiryId(activeInquiries[0].id);
+      setSelectedInquiryId(inquiries[0].id);
     }
-  }, [activeInquiries, selectedInquiryId]);
+  }, [inquiries, selectedInquiryId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -239,15 +236,14 @@ export default function Contact() {
     void handleReply(event);
   };
 
-  const isInquiryClosed = (inquiryThread?.inquiry?.status || "open") === "closed";
-  const isInquirySettled = ["resolved", "closed"].includes(inquiryThread?.inquiry?.status || "");
+  const isInquiryClosed = ["resolved", "closed", "archived"].includes(inquiryThread?.inquiry?.status || "");
+  const isInquirySettled = ["resolved", "closed", "archived"].includes(inquiryThread?.inquiry?.status || "");
 
   useEffect(() => {
     if (!isInquirySettled) {
       return;
     }
 
-    setSelectedInquiryId(null);
     queryClient.invalidateQueries({ queryKey: ["contact-inquiries"] });
   }, [isInquirySettled, queryClient]);
 
@@ -357,6 +353,60 @@ export default function Contact() {
               ))}
             </div>
           </div>
+
+          {user ? (
+            <Card className="border-border/80 shadow-sm">
+              <CardHeader className="space-y-2">
+                <CardTitle className="flex items-center gap-2 font-display text-2xl">
+                  <History className="h-5 w-5 text-primary" />
+                  Inquiry History
+                </CardTitle>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Select a past inquiry to view its conversation below.
+                </p>
+              </CardHeader>
+              <CardContent>
+                {isLoadingInquiries ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                ) : inquiries.length ? (
+                  <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                    {inquiries.map((inquiry) => {
+                      const isSelected = inquiry.id === selectedInquiryId;
+                      return (
+                        <button
+                          key={inquiry.id}
+                          type="button"
+                          onClick={() => setSelectedInquiryId(inquiry.id)}
+                          className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40 hover:bg-muted/30"}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-foreground">{inquiry.subject}</p>
+                              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{inquiry.last_message_preview || "No message yet."}</p>
+                            </div>
+                            <Badge className={inquiryStatusClasses[inquiry.status] || inquiryStatusClasses.open}>
+                              {(inquiry.status || "open").replace(/_/g, " ")}
+                            </Badge>
+                          </div>
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            {inquiry.last_message_at
+                              ? formatDistanceToNow(new Date(inquiry.last_message_at), { addSuffix: true })
+                              : "just now"}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                    You have not sent any inquiries yet.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
 
         <Card className="border-border/80 shadow-sm">
@@ -451,71 +501,18 @@ export default function Contact() {
       </section>
 
       {shouldShowInquiryMessages ? (
-      <section className="grid w-full app-content-container gap-8 px-2 py-8 sm:px-3 lg:grid-cols-[0.92fr_1.08fr] lg:px-4 lg:py-10">
-        <Card className="border-border/80 shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle className="font-display text-2xl">Your Inquiry Messages</CardTitle>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Continue conversations with resort staff here.
-            </p>
-          </CardHeader>
-          <CardContent>
-            {isLoadingInquiries ? (
-              <div className="flex items-center justify-center py-10 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {activeInquiries.map((inquiry) => {
-                  const isSelected = inquiry.id === selectedInquiryId;
-
-                  return (
-                    <button
-                      key={inquiry.id}
-                      type="button"
-                      onClick={() => setSelectedInquiryId(inquiry.id)}
-                      className={`w-full rounded-xl border px-4 py-4 text-left transition ${
-                        isSelected
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border bg-background hover:border-primary/40 hover:bg-muted/30"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-base font-semibold text-foreground">{inquiry.subject}</p>
-                          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{inquiry.last_message_preview || "No message yet."}</p>
-                        </div>
-                        <Badge className={inquiryStatusClasses[inquiry.status] || inquiryStatusClasses.open}>
-                          {(inquiry.status || "open").replace(/_/g, " ")}
-                        </Badge>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{inquiry.message_count || 0} messages</span>
-                        <span>
-                          {inquiry.last_message_at
-                            ? formatDistanceToNow(new Date(inquiry.last_message_at), { addSuffix: true })
-                            : "just now"}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
+      <section className="w-full app-content-container px-2 py-8 sm:px-3 lg:px-4 lg:py-10">
         <Card className="border-border/80 shadow-sm">
           <CardHeader className="space-y-2">
             <CardTitle className="font-display text-2xl">Conversation</CardTitle>
             <p className="text-sm leading-6 text-muted-foreground">
-              Reply to your selected inquiry and wait for resort staff to respond.
+              View the messages for the inquiry selected from your history.
             </p>
           </CardHeader>
           <CardContent>
             {!selectedInquiryId ? (
               <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center text-sm leading-6 text-muted-foreground">
-                Select an inquiry after sending your first message.
+                Select an inquiry from your history to view its messages.
               </div>
             ) : isLoadingThread ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
@@ -568,7 +565,7 @@ export default function Contact() {
                 <form className="space-y-3" onSubmit={handleReply}>
                   {isInquiryClosed ? (
                     <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-                      This inquiry is closed. Messaging is no longer available because the conversation is done.
+                      This inquiry is {inquiryThread?.inquiry?.status || "closed"}. Messaging is no longer available for this conversation.
                     </div>
                   ) : null}
 
@@ -586,7 +583,7 @@ export default function Contact() {
                   </div>
                   <Button type="submit" className="gap-2" disabled={isInquiryClosed || isReplying}>
                     {isReplying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    {isInquiryClosed ? "Inquiry Closed" : "Send Reply"}
+                    {isInquiryClosed ? "Conversation Closed" : "Send Reply"}
                   </Button>
                 </form>
               </div>
