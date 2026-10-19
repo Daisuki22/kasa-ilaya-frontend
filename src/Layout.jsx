@@ -670,7 +670,7 @@ export default function Layout({ children, currentPageName }) {
             type="button"
             onClick={() => setTheme(id)}
             title={label}
-            className={`flex min-h-9 min-w-9 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors md:px-2.5 ${
+            className={`flex min-h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-1.5 py-1 text-xs font-medium transition-colors md:px-2 ${
               theme === id
                 ? "bg-primary text-primary-foreground"
                 : onHero ? "text-white/85 hover:bg-white/15 hover:text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"
