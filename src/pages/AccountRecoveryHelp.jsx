@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CircleHelp } from 'lucide-react';
 import { baseClient } from '@/api/baseClient';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function AccountRecoveryHelp() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recoveryForm, setRecoveryForm] = useState({
@@ -33,7 +34,7 @@ export default function AccountRecoveryHelp() {
     try {
       await baseClient.auth.requestAccountRecovery(recoveryForm);
       toast.success('If an eligible account was found, the request is now awaiting admin review. If approved, the reset link will be sent to your new email.');
-      setRecoveryForm({ old_email: '', requested_email: '', full_name: '', phone: '', booking_reference: '', reason: '' });
+      navigate(createPageUrl('Login'), { replace: true });
     } catch (error) {
       toast.error(error?.message || 'Unable to send the account recovery request. Please try again or contact the resort.');
     } finally {
