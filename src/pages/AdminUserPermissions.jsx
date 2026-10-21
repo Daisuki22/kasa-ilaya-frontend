@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Archive, Loader2, Search, ShieldCheck, UserPlus } from "lucide-react";
+import { Archive, KeyRound, Loader2, Search, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,6 +73,7 @@ export default function AdminUserPermissions() {
   const [pageSize, setPageSize] = useState(10);
   const [recoveryPage, setRecoveryPage] = useState(1);
   const [savingKey, setSavingKey] = useState("");
+  const [passwordResetTarget, setPasswordResetTarget] = useState(null);
   const [recoveryReviewTarget, setRecoveryReviewTarget] = useState(null);
   const [recoveryDecision, setRecoveryDecision] = useState("approve");
   const [recoveryIdentityVerified, setRecoveryIdentityVerified] = useState(false);
@@ -257,6 +258,24 @@ export default function AdminUserPermissions() {
     }
   };
 
+  const resetAdminPassword = async () => {
+    if (!isSuperAdmin || passwordResetTarget?.role !== "admin") return;
+
+    const target = passwordResetTarget;
+    const saveId = `password-reset-${target.id}`;
+    setSavingKey(saveId);
+    try {
+      await baseClient.auth.resetAdminPasswordWithTemporaryPassword(target.id);
+      toast.success(`A temporary password was emailed to ${target.email}.`);
+      setPasswordResetTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] });
+    } catch (error) {
+      toast.error(error?.message || "Unable to reset the admin password.");
+    } finally {
+      setSavingKey("");
+    }
+  };
+
   const openRecoveryReview = (request, decision) => {
     setRecoveryReviewTarget(request);
     setRecoveryDecision(decision);
@@ -415,6 +434,7 @@ export default function AdminUserPermissions() {
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Account Status</TableHead>
+                  {isSuperAdmin ? <TableHead>Password</TableHead> : null}
                   <TableHead className="text-right">Archive</TableHead>
                   <TableHead>Registered</TableHead>
                 </TableRow>
@@ -422,7 +442,7 @@ export default function AdminUserPermissions() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
                       No users found.
                     </TableCell>
                   </TableRow>
@@ -460,6 +480,22 @@ export default function AdminUserPermissions() {
                             {statusSaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
                           </div>
                         </TableCell>
+                        {isSuperAdmin ? (
+                          <TableCell>
+                            {targetUser.role === "admin" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => setPasswordResetTarget(targetUser)}
+                                disabled={Boolean(savingKey)}
+                              >
+                                <KeyRound className="h-4 w-4" />
+                                Reset password
+                              </Button>
+                            ) : <span className="text-xs text-muted-foreground">—</span>}
+                          </TableCell>
+                        ) : null}
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -519,6 +555,27 @@ export default function AdminUserPermissions() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={Boolean(passwordResetTarget)} onOpenChange={(open) => { if (!open && !savingKey) setPasswordResetTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset this admin's password?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A new random temporary password will replace the current password and be sent to {passwordResetTarget?.email}. Their active sessions will be signed out.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(savingKey)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={Boolean(savingKey)}
+              onClick={(event) => { event.preventDefault(); void resetAdminPassword(); }}
+            >
+              {savingKey === `password-reset-${passwordResetTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+              Reset and email password
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={Boolean(recoveryReviewTarget)} onOpenChange={(open) => { if (!open && !savingKey) setRecoveryReviewTarget(null); }}>
         <DialogContent>

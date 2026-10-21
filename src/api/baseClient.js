@@ -679,6 +679,13 @@ export const baseClient = {
       });
     },
 
+    async resetAdminPasswordWithTemporaryPassword(userId) {
+      return request("/auth.php?action=admin-reset-password-with-temporary-password", {
+        method: "POST",
+        body: { user_id: userId },
+      });
+    },
+
     async createManagedAccount(data) {
       return request("/auth.php?action=admin-create-account", {
         method: "POST",
