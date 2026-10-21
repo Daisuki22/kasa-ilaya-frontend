@@ -353,6 +353,14 @@ export default function BookingForm() {
 
   const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
   const isSelectedDateManuallyBlocked = Boolean(selectedDateKey && manualScheduleDatesSet.has(selectedDateKey));
+  const selectedDateTourConflicts = selectedDate ? availableTourChoices.map(({ value: tourType, label }) => ({
+    tourType,
+    label,
+    bookings: existingBookings.filter((booking) => booking.booking_date && booking.tour_type
+      && bookingSchedulesOverlap(selectedDateKey, tourType, booking.booking_date, booking.tour_type)),
+    manualDate: manualScheduleDatesSet.has(selectedDateKey)
+      || (tourCrossesMidnight(tourType) && manualScheduleDatesSet.has(format(addDays(selectedDate, 1), 'yyyy-MM-dd'))),
+  })).filter(({ bookings, manualDate }) => bookings.length || manualDate) : [];
   const isSelectedDateFull = selectedDate ? isDateDisabled(selectedDate) : false;
   const isCustomerInfoComplete = Boolean(form.customer_name && form.customer_email && form.customer_phone);
   const displayStep = isBookingModalOpen ? modalStep + 1 : 1;
@@ -944,6 +952,23 @@ export default function BookingForm() {
                       );
                     })}
                   </div>
+                  {selectedDateTourConflicts.length > 0 && (
+                    <div className="mt-4 space-y-2 border-t border-border pt-3 text-left">
+                      <p className="text-sm font-semibold text-foreground">Unavailable tour details</p>
+                      {selectedDateTourConflicts.map(({ tourType, label, bookings, manualDate }) => (
+                        <div key={tourType} className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm">
+                          <p className="font-medium text-destructive">{label} is unavailable</p>
+                          {manualDate && <p className="mt-1 text-xs text-muted-foreground">Blocked by a resort schedule or manual event.</p>}
+                          {bookings.map((booking) => (
+                            <p key={`${tourType}-${booking.id || booking.booking_date}-${booking.tour_type}`} className="mt-1 text-xs text-muted-foreground">
+                              Overlaps {booking.package_name || "a resort booking"} ({tourTypeLabels[booking.tour_type]?.label || booking.tour_type}) on {booking.booking_date ? format(new Date(`${booking.booking_date}T00:00:00`), "MMM d, yyyy") : "another date"}
+                              {booking.status ? ` · ${booking.status}` : ""}.
+                            </p>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {selectedTour && isTourAvailable(selectedDate, selectedTour) ? (
                     <div className="mt-4 flex flex-col items-center gap-3 border-t border-border pt-4 sm:flex-row sm:justify-between">
                       <p className="text-sm text-foreground"><span className="text-muted-foreground">Selected tour:</span> <span className="font-semibold">{tourTypeLabels[selectedTour]?.label}</span> <span className="text-muted-foreground">({tourTypeLabels[selectedTour]?.time})</span></p>

@@ -402,6 +402,14 @@ export default function MyBookings() {
     ? Math.max(0, Number((selectedRebookingTotal - verifiedBookingPayment).toFixed(2)))
     : 0;
 
+  const getRebookingConflictBookings = (date, booking = bookingToRebook) => {
+    if (!date || !booking) return [];
+    const dateKey = dateInputValue(date);
+    return rebookingAvailabilityBookings.filter((existingBooking) =>
+      bookingSchedulesOverlap(dateKey, booking.tour_type, existingBooking.booking_date, existingBooking.tour_type)
+    );
+  };
+
   const getRebookingDateIssue = (date, booking = bookingToRebook) => {
     if (!date || !booking) {
       return "";
@@ -426,14 +434,18 @@ export default function MyBookings() {
       return "This date is blocked by a resort schedule or event.";
     }
 
-    if (rebookingAvailabilityBookings.some((existingBooking) =>
-      bookingSchedulesOverlap(dateKey, booking.tour_type, existingBooking.booking_date, existingBooking.tour_type)
-    )) {
+    if (getRebookingConflictBookings(date, booking).length > 0) {
       return "The selected schedule is unavailable. Please choose another date or time.";
     }
 
     return "";
   };
+
+  const selectedRebookingConflicts = getRebookingConflictBookings(selectedRebookingDate);
+  const selectedRebookingManualConflict = Boolean(selectedRebookingDate && bookingToRebook && (
+    rebookingManualScheduleDates.has(dateInputValue(selectedRebookingDate))
+    || (tourCrossesMidnight(bookingToRebook.tour_type) && rebookingManualScheduleDates.has(format(addDays(selectedRebookingDate, 1), "yyyy-MM-dd")))
+  ));
 
   const isRebookingDateDisabled = (date) => Boolean(getRebookingDateIssue(date));
 
@@ -1147,6 +1159,19 @@ export default function MyBookings() {
                 >
                   {rebookingDateStatus.message}
                 </div>
+                {(selectedRebookingManualConflict || selectedRebookingConflicts.length > 0) && (
+                  <div className="space-y-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-3 text-sm">
+                    <p className="font-semibold text-destructive">Why this tour is unavailable</p>
+                    {selectedRebookingManualConflict && (
+                      <p className="text-xs text-muted-foreground">The selected tour overlaps a resort schedule or manual event.</p>
+                    )}
+                    {selectedRebookingConflicts.map((conflict) => (
+                      <p key={`${conflict.id || conflict.booking_date}-${conflict.tour_type}`} className="text-xs text-muted-foreground">
+                        Overlaps an existing {tourLabels[conflict.tour_type] || conflict.tour_type} reservation starting {formatDate(conflict.booking_date)}.
+                      </p>
+                    ))}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="reschedule-request-note">Reason or note (optional)</Label>
                   <Textarea

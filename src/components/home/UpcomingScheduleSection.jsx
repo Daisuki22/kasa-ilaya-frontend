@@ -15,6 +15,7 @@ import { CalendarCheck, Clock3, Loader2, MapPin, PencilLine, Plus, Trash2 } from
 import { toast } from "sonner";
 import { parseSafeDate, safeFormatDate } from "@/lib/safeDate";
 import { useConfirmation } from "@/hooks/useConfirmation";
+import { bookingSchedulesOverlap } from "@/lib/bookingSchedule";
 
 const invalidDateWarnings = new WeakMap();
 
@@ -109,10 +110,21 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
     isSameDay(getDateField(schedule, "schedule_date"), selectedDate)
   );
 
-  const selectedDateBookings = upcomingBookings.filter((booking) =>
-    getBookingDateSpan(booking).some((date) => isSameDay(date, selectedDate))
-  );
-  const selectedDateUnavailable = selectedDateSchedules.length > 0 || selectedDateBookings.length > 0;
+  const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
+  const selectedDateBookingConflicts = Object.keys(bookingTourLabels).map((blockedTourType) => {
+    const blockingBookings = upcomingBookings.filter((booking) => {
+      const bookingDate = getDateField(booking, "booking_date");
+      if (!bookingDate || !booking.tour_type) return false;
+      return bookingSchedulesOverlap(
+        selectedDateKey,
+        blockedTourType,
+        format(bookingDate, "yyyy-MM-dd"),
+        booking.tour_type
+      );
+    });
+    return { blockedTourType, bookings: blockingBookings };
+  }).filter(({ bookings: blockingBookings }) => blockingBookings.length > 0);
+  const selectedDateUnavailable = selectedDateSchedules.length > 0 || selectedDateBookingConflicts.length > 0;
 
   const featuredUpcomingSchedules = [
     ...upcomingSchedules.map((schedule) => ({
@@ -361,7 +373,7 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                   <div className="flex items-center justify-center py-10">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   </div>
-                ) : selectedDateSchedules.length === 0 && selectedDateBookings.length === 0 ? (
+                ) : selectedDateSchedules.length === 0 && selectedDateBookingConflicts.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                     No scheduled event for this date yet.
                   </div>
@@ -412,35 +424,41 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                       </div>
                     )}
 
-                    {selectedDateBookings.length > 0 && (
+                    {selectedDateBookingConflicts.length > 0 && (
                       <div className="space-y-4">
                         <div className="flex items-center gap-2 text-sm font-medium text-secondary">
                           <span className="h-2.5 w-2.5 rounded-full bg-secondary" />
-                          Booking Schedules
+                          Unavailable Tour Types
                         </div>
-                        {selectedDateBookings.map((booking) => (
-                          <div key={booking.id} className="rounded-lg border border-secondary/20 bg-secondary/5 p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <h3 className="font-semibold text-foreground">{booking.package_name}</h3>
-                                <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                                  <p className="flex items-center gap-2">
-                                    <Clock3 className="h-4 w-4 text-secondary" />
-                                    {bookingTourLabels[booking.tour_type] || "Reserved booking"}
-                                  </p>
-                                  {booking.tour_type === "22_hours" && (
-                                    <p className="text-xs text-muted-foreground">
-                                      22-hour stay spans check-in and checkout day
-                                    </p>
-                                  )}
-                                  <p className="text-xs text-muted-foreground">
-                                    Reservation status: {booking.status}
-                                  </p>
-                                </div>
-                              </div>
-                              <Badge className={bookingStatusColors[booking.status] || bookingStatusColors.pending} variant="outline">
-                                {booking.status}
-                              </Badge>
+                        {selectedDateBookingConflicts.map(({ blockedTourType, bookings: blockingBookings }) => (
+                          <div key={blockedTourType} className="rounded-lg border border-secondary/20 bg-secondary/5 p-4">
+                            <h3 className="font-semibold text-foreground">{bookingTourLabels[blockedTourType]} unavailable</h3>
+                            <div className="mt-2 space-y-3">
+                              {blockingBookings.map((booking) => {
+                                const bookingDate = getDateField(booking, "booking_date");
+                                const sameDate = bookingDate && isSameDay(bookingDate, selectedDate);
+                                return (
+                                  <div key={booking.id} className="flex items-start justify-between gap-3 border-t border-secondary/10 pt-2 first:border-t-0 first:pt-0">
+                                    <div className="space-y-1 text-sm text-muted-foreground">
+                                      <p className="flex items-center gap-2">
+                                        <Clock3 className="h-4 w-4 text-secondary" />
+                                        Blocked by {bookingTourLabels[booking.tour_type] || "another tour"} booking
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {booking.package_name || "Resort booking"} on {bookingDate ? safeFormatDate(bookingDate, "EEEE, MMM d, yyyy") : "another date"}
+                                        {sameDate ? " (same date)" : " (overlapping date)"}
+                                      </p>
+                                      {booking.tour_type === "22_hours" && (
+                                        <p className="text-xs text-muted-foreground">22-hour stay spans check-in and checkout day</p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground">Reservation status: {booking.status}</p>
+                                    </div>
+                                    <Badge className={bookingStatusColors[booking.status] || bookingStatusColors.pending} variant="outline">
+                                      {booking.status}
+                                    </Badge>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
