@@ -434,15 +434,14 @@ export default function AdminUserPermissions() {
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Account Status</TableHead>
-                  {isSuperAdmin ? <TableHead>Password</TableHead> : null}
-                  <TableHead className="text-right">Archive</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                   <TableHead>Registered</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                       No users found.
                     </TableCell>
                   </TableRow>
@@ -480,9 +479,9 @@ export default function AdminUserPermissions() {
                             {statusSaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
                           </div>
                         </TableCell>
-                        {isSuperAdmin ? (
-                          <TableCell>
-                            {targetUser.role === "admin" ? (
+                        <TableCell className="text-right">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {isSuperAdmin && targetUser.role === "admin" ? (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -493,20 +492,18 @@ export default function AdminUserPermissions() {
                                 <KeyRound className="h-4 w-4" />
                                 Reset password
                               </Button>
-                            ) : <span className="text-xs text-muted-foreground">—</span>}
-                          </TableCell>
-                        ) : null}
-                        <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setArchiveTarget(targetUser)}
-                            disabled={statusSaving || isSelf(targetUser.id)}
-                          >
-                            <Archive className="h-4 w-4" />
-                            Archive
-                          </Button>
+                            ) : null}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => setArchiveTarget(targetUser)}
+                              disabled={statusSaving || isSelf(targetUser.id)}
+                            >
+                              <Archive className="h-4 w-4" />
+                              Archive
+                            </Button>
+                          </div>
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                           {targetUser.created_date ? format(new Date(targetUser.created_date), "MMM d, yyyy") : "Unknown"}
