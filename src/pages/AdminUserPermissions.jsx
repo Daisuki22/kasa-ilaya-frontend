@@ -278,9 +278,13 @@ export default function AdminUserPermissions() {
         identity_verified: recoveryIdentityVerified,
         review_note: recoveryReviewNote,
       });
-      toast.success(recoveryDecision === "approve"
-        ? `Recovery link sent to ${recoveryReviewTarget.requested_email}.`
-        : "Account recovery request declined.");
+      if (recoveryDecision === "approve") {
+        toast.success(`Account recovery request approved. Recovery link sent to ${recoveryReviewTarget.requested_email}.`);
+      } else if (result.email_sent) {
+        toast.success(`Request declined. The reason was emailed to ${recoveryReviewTarget.requested_email}.`);
+      } else {
+        toast.error("Request declined, but the email with the reason could not be delivered. Please contact the requester using their account phone number.");
+      }
       setRecoveryReviewTarget(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["admin-account-recovery-requests"] }),
@@ -553,14 +557,20 @@ export default function AdminUserPermissions() {
             </DialogDescription>
           </DialogHeader>
           {recoveryDecision === "approve" ? (
-            <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
-              <Checkbox checked={recoveryIdentityVerified} onCheckedChange={(checked) => setRecoveryIdentityVerified(checked === true)} />
-              <span>I verified the user's identity through contact information already on the account and checked the submitted details against resort records.</span>
-            </label>
+            <div className="space-y-4">
+              <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
+                <Checkbox checked={recoveryIdentityVerified} onCheckedChange={(checked) => setRecoveryIdentityVerified(checked === true)} />
+                <span>I verified the user's identity through contact information already on the account and checked the submitted details against resort records.</span>
+              </label>
+              <div className="space-y-2">
+                <Label htmlFor="recovery-review-note">Approval comment (optional)</Label>
+                <Textarea id="recovery-review-note" maxLength={1000} value={recoveryReviewNote} onChange={(event) => setRecoveryReviewNote(event.target.value)} placeholder="Add a note to include in the approval email, if needed." />
+              </div>
+            </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="recovery-review-note">Reason for declining</Label>
-              <Textarea id="recovery-review-note" maxLength={1000} value={recoveryReviewNote} onChange={(event) => setRecoveryReviewNote(event.target.value)} placeholder="Explain what the user should do next." />
+              <Label htmlFor="recovery-review-note">Reason for declining (required)</Label>
+              <Textarea id="recovery-review-note" maxLength={1000} value={recoveryReviewNote} onChange={(event) => setRecoveryReviewNote(event.target.value)} placeholder="Explain why the request was declined and what the user should do next. This comment will be emailed to the new address." />
             </div>
           )}
           <DialogFooter>
