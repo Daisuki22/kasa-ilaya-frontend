@@ -84,6 +84,10 @@ export default function AdminUserPermissions() {
   const isSuperAdmin = currentUser?.role === "super_admin"
     || currentUser?.app_role === "super_admin"
     || currentUser?._app_role === "super_admin";
+  const canReviewAccountRecovery = isSuperAdmin
+    || currentUser?.role === "admin"
+    || currentUser?.app_role === "admin"
+    || currentUser?._app_role === "admin";
 
   useEffect(() => {
     baseClient.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -96,7 +100,7 @@ export default function AdminUserPermissions() {
   const { data: recoveryRequests = [], isLoading: isLoadingRecoveryRequests } = useQuery({
     queryKey: ["admin-account-recovery-requests"],
     queryFn: () => baseClient.auth.listAccountRecoveryRequests(),
-    enabled: isSuperAdmin,
+    enabled: canReviewAccountRecovery,
     refetchInterval: 15000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
@@ -274,7 +278,7 @@ export default function AdminUserPermissions() {
   };
 
   const reviewAccountRecovery = async () => {
-    if (!recoveryReviewTarget || !isSuperAdmin) return;
+    if (!recoveryReviewTarget || !canReviewAccountRecovery) return;
     if (recoveryDecision === "approve" && !recoveryIdentityVerified) {
       toast.error("Verify the person using contact information already on the account before approving.");
       return;
@@ -322,13 +326,13 @@ export default function AdminUserPermissions() {
         </p>
       </div>
 
-      {isSuperAdmin ? (
+      {canReviewAccountRecovery ? (
         <Card>
           <CardContent className="space-y-4 p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Account recovery requests</h2>
-                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Before approval, contact the user using the phone number already on the account and compare their details with resort records. Approving sends a one-time link to the proposed email; the email changes only after the user completes the link.</p>
+                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Before approval, contact the user using the phone number already on the account and compare their details with resort records. Approving sends a one-time link to the proposed email; the email changes only after the user completes the link. Regular admins can review user accounts; only a super admin can review admin account requests.</p>
               </div>
               <Badge variant="outline">{recoveryRequests.length} pending</Badge>
             </div>
