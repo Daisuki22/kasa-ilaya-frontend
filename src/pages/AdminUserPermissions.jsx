@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Archive, Loader2, Mail, Search, ShieldCheck, UserPlus } from "lucide-react";
+import { Archive, Loader2, Search, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { baseClient } from "@/api/baseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,7 +73,6 @@ export default function AdminUserPermissions() {
   const [pageSize, setPageSize] = useState(10);
   const [recoveryPage, setRecoveryPage] = useState(1);
   const [savingKey, setSavingKey] = useState("");
-  const [resetTarget, setResetTarget] = useState(null);
   const [recoveryReviewTarget, setRecoveryReviewTarget] = useState(null);
   const [recoveryDecision, setRecoveryDecision] = useState("approve");
   const [recoveryIdentityVerified, setRecoveryIdentityVerified] = useState(false);
@@ -258,22 +257,6 @@ export default function AdminUserPermissions() {
     }
   };
 
-  const sendPasswordResetLink = async () => {
-    if (!resetTarget) return;
-
-    const saveId = `reset-${resetTarget.id}`;
-    setSavingKey(saveId);
-    try {
-      await baseClient.auth.sendAdminPasswordResetLink(resetTarget.id);
-      toast.success(`Password reset link sent to ${resetTarget.email}.`);
-      setResetTarget(null);
-    } catch (error) {
-      toast.error(error?.message || "Unable to send the password reset link.");
-    } finally {
-      setSavingKey("");
-    }
-  };
-
   const openRecoveryReview = (request, decision) => {
     setRecoveryReviewTarget(request);
     setRecoveryDecision(decision);
@@ -432,7 +415,6 @@ export default function AdminUserPermissions() {
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Account Status</TableHead>
-                  {isSuperAdmin ? <TableHead>Password</TableHead> : null}
                   <TableHead className="text-right">Archive</TableHead>
                   <TableHead>Registered</TableHead>
                 </TableRow>
@@ -440,15 +422,13 @@ export default function AdminUserPermissions() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                       No users found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   visibleUsers.map((targetUser) => {
                     const statusSaving = savingKey === `status-${targetUser.id}`;
-                    const resetSaving = savingKey === `reset-${targetUser.id}`;
-
                     return (
                       <TableRow key={targetUser.id}>
                         <TableCell className="text-center">
@@ -480,24 +460,6 @@ export default function AdminUserPermissions() {
                             {statusSaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
                           </div>
                         </TableCell>
-                        {isSuperAdmin ? (
-                          <TableCell>
-                            {targetUser.has_local_password ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                                onClick={() => setResetTarget(targetUser)}
-                                disabled={Boolean(savingKey)}
-                              >
-                                {resetSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                                Send reset link
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Google-managed</span>
-                            )}
-                          </TableCell>
-                        ) : null}
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -557,27 +519,6 @@ export default function AdminUserPermissions() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={Boolean(resetTarget)} onOpenChange={(open) => { if (!open && !savingKey) setResetTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Send password reset link?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to send a forgot password link to {resetTarget?.email}? The link will let them create a new password and expires after 15 minutes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={Boolean(savingKey)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={Boolean(savingKey)}
-              onClick={(event) => { event.preventDefault(); void sendPasswordResetLink(); }}
-            >
-              {savingKey === `reset-${resetTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-              Send link
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={Boolean(recoveryReviewTarget)} onOpenChange={(open) => { if (!open && !savingKey) setRecoveryReviewTarget(null); }}>
         <DialogContent>
