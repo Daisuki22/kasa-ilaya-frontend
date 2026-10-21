@@ -654,6 +654,24 @@ export const baseClient = {
       );
     },
 
+    async requestAccountRecovery(data) {
+      return request("/auth.php?action=request-account-recovery", {
+        method: "POST",
+        body: data,
+      });
+    },
+
+    async listAccountRecoveryRequests() {
+      return request("/auth.php?action=admin-account-recovery-list");
+    },
+
+    async reviewAccountRecoveryRequest(data) {
+      return request("/auth.php?action=admin-review-account-recovery", {
+        method: "POST",
+        body: data,
+      });
+    },
+
     async sendAdminPasswordResetLink(userId) {
       return request("/auth.php?action=admin-send-password-reset-link", {
         method: "POST",

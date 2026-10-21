@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import PaginationControls from "@/components/admin/PaginationControls";
 import PasswordInput from "@/components/auth/PasswordInput";
 import { Label } from "@/components/ui/label";
@@ -56,10 +58,17 @@ export default function AdminUserPermissions() {
   const [pageSize, setPageSize] = useState(10);
   const [savingKey, setSavingKey] = useState("");
   const [resetTarget, setResetTarget] = useState(null);
+  const [recoveryReviewTarget, setRecoveryReviewTarget] = useState(null);
+  const [recoveryDecision, setRecoveryDecision] = useState("approve");
+  const [recoveryIdentityVerified, setRecoveryIdentityVerified] = useState(false);
+  const [recoveryReviewNote, setRecoveryReviewNote] = useState("");
   const [archiveTarget, setArchiveTarget] = useState(null);
   const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
   const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
   const [isBulkArchiving, setIsBulkArchiving] = useState(false);
+  const isSuperAdmin = currentUser?.role === "super_admin"
+    || currentUser?.app_role === "super_admin"
+    || currentUser?._app_role === "super_admin";
 
   useEffect(() => {
     baseClient.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -68,6 +77,14 @@ export default function AdminUserPermissions() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-user-permissions"],
     queryFn: () => baseClient.entities.User.list("full_name", 1000),
+  });
+  const { data: recoveryRequests = [], isLoading: isLoadingRecoveryRequests } = useQuery({
+    queryKey: ["admin-account-recovery-requests"],
+    queryFn: () => baseClient.auth.listAccountRecoveryRequests(),
+    enabled: isSuperAdmin,
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const filteredUsers = useMemo(() => {
@@ -97,9 +114,6 @@ export default function AdminUserPermissions() {
   const visibleUsers = useMemo(() => filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredUsers, currentPage, pageSize]);
 
   const isSelf = (userId) => currentUser?.id && userId === currentUser.id;
-  const isSuperAdmin = currentUser?.role === "super_admin"
-    || currentUser?.app_role === "super_admin"
-    || currentUser?._app_role === "super_admin";
   const archivableVisibleUsers = visibleUsers.filter((targetUser) => !isSelf(targetUser.id));
   const allArchivableVisibleUsersSelected = archivableVisibleUsers.length > 0 && archivableVisibleUsers.every((targetUser) => selectedArchiveIds.includes(targetUser.id));
 
@@ -237,6 +251,49 @@ export default function AdminUserPermissions() {
     }
   };
 
+  const openRecoveryReview = (request, decision) => {
+    setRecoveryReviewTarget(request);
+    setRecoveryDecision(decision);
+    setRecoveryIdentityVerified(false);
+    setRecoveryReviewNote("");
+  };
+
+  const reviewAccountRecovery = async () => {
+    if (!recoveryReviewTarget || !isSuperAdmin) return;
+    if (recoveryDecision === "approve" && !recoveryIdentityVerified) {
+      toast.error("Verify the person using contact information already on the account before approving.");
+      return;
+    }
+    if (recoveryDecision === "decline" && recoveryReviewNote.trim().length < 5) {
+      toast.error("Add a brief reason before declining this request.");
+      return;
+    }
+
+    const saveId = `recovery-${recoveryReviewTarget.id}`;
+    setSavingKey(saveId);
+    try {
+      const result = await baseClient.auth.reviewAccountRecoveryRequest({
+        request_id: recoveryReviewTarget.id,
+        decision: recoveryDecision,
+        identity_verified: recoveryIdentityVerified,
+        review_note: recoveryReviewNote,
+      });
+      toast.success(recoveryDecision === "approve"
+        ? `Recovery link sent to ${recoveryReviewTarget.requested_email}.`
+        : "Account recovery request declined.");
+      setRecoveryReviewTarget(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-account-recovery-requests"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-activity-logs"] }),
+      ]);
+      return result;
+    } catch (error) {
+      toast.error(error?.message || "Unable to review this account recovery request.");
+    } finally {
+      setSavingKey("");
+    }
+  };
+
   return (
     <div className="w-full max-w-none space-y-6 px-2 py-6 sm:px-3 lg:px-4">
       <div>
@@ -245,6 +302,47 @@ export default function AdminUserPermissions() {
           User roles are fixed after account creation. Create administrator accounts separately; archived accounts are restored from Archive.
         </p>
       </div>
+
+      {isSuperAdmin ? (
+        <Card>
+          <CardContent className="space-y-4 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Account recovery requests</h2>
+                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Before approval, contact the user using the phone number already on the account and compare their details with resort records. Approving sends a one-time link to the proposed email; the email changes only after the user completes the link.</p>
+              </div>
+              <Badge variant="outline">{recoveryRequests.length} pending</Badge>
+            </div>
+            {isLoadingRecoveryRequests ? (
+              <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            ) : recoveryRequests.length ? (
+              <div className="space-y-3">
+                {recoveryRequests.map((request) => (
+                  <div key={request.id} className="grid gap-4 rounded-lg border border-border p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                      <p><span className="text-muted-foreground">Account name:</span> <strong>{request.account_full_name || request.full_name}</strong></p>
+                      <p><span className="text-muted-foreground">Submitted name:</span> {request.full_name}</p>
+                      <p className="break-all"><span className="text-muted-foreground">Current email:</span> {request.account_email || request.old_email}</p>
+                      <p className="break-all"><span className="text-muted-foreground">New email:</span> <strong>{request.requested_email}</strong></p>
+                      <p><span className="text-muted-foreground">Phone on account:</span> {request.account_phone || "Not on file"}</p>
+                      <p><span className="text-muted-foreground">Phone submitted:</span> {request.phone}</p>
+                      {request.booking_reference ? <p><span className="text-muted-foreground">Booking reference:</span> {request.booking_reference}</p> : null}
+                      {request.reason ? <p className="sm:col-span-2"><span className="text-muted-foreground">User note:</span> {request.reason}</p> : null}
+                      <p className="text-xs text-muted-foreground sm:col-span-2">Submitted {request.created_date ? format(new Date(request.created_date), "MMM d, yyyy 'at' h:mm a") : "recently"}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 lg:justify-end">
+                      <Button type="button" size="sm" onClick={() => openRecoveryReview(request, "approve")} disabled={Boolean(savingKey)}>Verify &amp; approve</Button>
+                      <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => openRecoveryReview(request, "decline")} disabled={Boolean(savingKey)}>Decline</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">No pending account recovery requests.</p>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-md flex-1 min-w-[280px]">
@@ -443,6 +541,37 @@ export default function AdminUserPermissions() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={Boolean(recoveryReviewTarget)} onOpenChange={(open) => { if (!open && !savingKey) setRecoveryReviewTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{recoveryDecision === "approve" ? "Verify and approve account recovery?" : "Decline account recovery?"}</DialogTitle>
+            <DialogDescription>
+              {recoveryDecision === "approve"
+                ? `A one-time link will be sent to ${recoveryReviewTarget?.requested_email}. The account email will change only after the user opens that link and sets a new password.`
+                : `The request for ${recoveryReviewTarget?.requested_email} will be closed. The user will need to contact the resort for next steps.`}
+            </DialogDescription>
+          </DialogHeader>
+          {recoveryDecision === "approve" ? (
+            <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
+              <Checkbox checked={recoveryIdentityVerified} onCheckedChange={(checked) => setRecoveryIdentityVerified(checked === true)} />
+              <span>I verified the user's identity through contact information already on the account and checked the submitted details against resort records.</span>
+            </label>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="recovery-review-note">Reason for declining</Label>
+              <Textarea id="recovery-review-note" maxLength={1000} value={recoveryReviewNote} onChange={(event) => setRecoveryReviewNote(event.target.value)} placeholder="Explain what the user should do next." />
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setRecoveryReviewTarget(null)} disabled={Boolean(savingKey)}>Cancel</Button>
+            <Button type="button" variant={recoveryDecision === "approve" ? "default" : "destructive"} onClick={() => void reviewAccountRecovery()} disabled={Boolean(savingKey) || (recoveryDecision === "approve" ? !recoveryIdentityVerified : recoveryReviewNote.trim().length < 5)}>
+              {savingKey === `recovery-${recoveryReviewTarget?.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {recoveryDecision === "approve" ? "Approve & send link" : "Decline request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={Boolean(archiveTarget)} onOpenChange={(open) => { if (!open && !savingKey) setArchiveTarget(null); }}>
         <AlertDialogContent>
