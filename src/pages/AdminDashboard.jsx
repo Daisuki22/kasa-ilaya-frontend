@@ -44,6 +44,9 @@ export default function AdminDashboard() {
   const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
     queryKey: ["admin-bookings"],
     queryFn: () => baseClient.entities.Booking.list("-created_date", 1000),
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const { data: packages = [], isLoading: isLoadingPackages } = useQuery({

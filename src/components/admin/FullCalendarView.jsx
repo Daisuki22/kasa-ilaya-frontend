@@ -126,7 +126,8 @@ export default function FullCalendarView({ embedded = false }) {
         "booking_date",
         500
       ),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
 

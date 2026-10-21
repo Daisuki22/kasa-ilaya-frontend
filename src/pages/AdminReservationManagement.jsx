@@ -90,7 +90,7 @@ export default function AdminReservationManagement() {
   const { data: bookingPage, isLoading, error: bookingPageError } = useQuery({
     queryKey: ["admin-bookings", reservationFilters],
     queryFn: () => baseClient.entities.Booking.adminPage(reservationFilters),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
@@ -98,8 +98,9 @@ export default function AdminReservationManagement() {
     queryKey: ["super-admin-pending-bookings"],
     queryFn: () => baseClient.entities.Booking.adminPage({ page: 1, limit: 50, status: "pending", sort: "-created_date" }),
     enabled: isSuperAdmin,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
     refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
   const { data: packages = [] } = useQuery({
     queryKey: ["admin-reservation-package-filters"],

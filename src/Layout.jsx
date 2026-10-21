@@ -145,6 +145,7 @@ export default function Layout({ children, currentPageName }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
+  const observedBookingNotificationIds = useRef({ email: "", ids: null });
   const initializedChatNotifications = useRef(false);
   const deliveredChatNotifications = useRef(new Set());
   const chatNotificationUserKey = useRef("");
@@ -335,15 +336,48 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ["user-notifications", user?.email],
     queryFn: () => baseClient.entities.Notification.list("-created_date", 100),
     enabled: Boolean(user?.email),
-    refetchInterval: 30000,
+    refetchInterval: isAdmin ? 5000 : 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const { data: persistedUnreadCount = { count: 0 } } = useQuery({
     queryKey: ["user-notification-unread-count", user?.email],
     queryFn: () => baseClient.entities.Notification.unreadCount(),
     enabled: Boolean(user?.email),
-    refetchInterval: 30000,
+    refetchInterval: isAdmin ? 5000 : 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
+
+  useEffect(() => {
+    if (!isAdmin || !user?.email) {
+      observedBookingNotificationIds.current = { email: "", ids: null };
+      return;
+    }
+
+    const storedNotifications = asArray(persistedNotifications);
+    const bookingNotifications = storedNotifications.filter((item) => (
+      String(item.entity_type || "").toLowerCase() === "booking"
+      && String(item.event_key || "").endsWith(":received")
+    ));
+    const observed = observedBookingNotificationIds.current;
+    if (observed.email !== user.email || observed.ids === null) {
+      observedBookingNotificationIds.current = {
+        email: user.email,
+        ids: new Set(bookingNotifications.map((item) => item.id)),
+      };
+      return;
+    }
+
+    const newNotifications = bookingNotifications.filter((item) => !observed.ids.has(item.id));
+    bookingNotifications.forEach((item) => observed.ids.add(item.id));
+    newNotifications.reverse().forEach((item) => {
+      toast.info(item.title || "New reservation received", {
+        description: item.description || "A guest submitted a new reservation.",
+      });
+    });
+  }, [isAdmin, persistedNotifications, user?.email]);
 
   const { data: notificationInquiries = [] } = useQuery({
     queryKey: ["user-notification-inquiries", user?.id, user?.email, isAdmin],

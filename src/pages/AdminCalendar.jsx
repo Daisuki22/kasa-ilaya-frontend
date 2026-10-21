@@ -210,7 +210,9 @@ export default function AdminCalendar() {
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["admin-all-bookings", requestedBookingId],
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const listedBookings = await baseClient.entities.Booking.list("-created_date", 500);
       if (!requestedBookingId || listedBookings.some((booking) => String(booking.id) === requestedBookingId)) {

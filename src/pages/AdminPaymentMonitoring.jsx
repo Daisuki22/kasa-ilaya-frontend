@@ -196,6 +196,9 @@ export default function AdminPaymentMonitoring() {
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["admin-payment-monitoring"],
     queryFn: () => baseClient.entities.Booking.list("-created_date", 500),
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const paymentBookings = useMemo(
