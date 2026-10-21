@@ -38,6 +38,21 @@ const roleLabel = {
   guest: "Guest",
 };
 
+const recoveryDeclineSuggestions = [
+  {
+    label: "Couldn't verify identity",
+    comment: "We couldn't verify your identity using the contact details on your account. Please contact the resort to verify your details before submitting a new request.",
+  },
+  {
+    label: "Details don't match",
+    comment: "The information provided doesn't match the details on your account. Please check your name and phone number, then contact the resort if you need help.",
+  },
+  {
+    label: "More information needed",
+    comment: "We need more information to verify this request. Please contact the resort with details that can help confirm you own the account.",
+  },
+];
+
 const formatBirthDate = (value) => {
   const dateValue = value ? String(value).slice(0, 10) : "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) return "Not provided";
@@ -571,6 +586,23 @@ export default function AdminUserPermissions() {
             <div className="space-y-2">
               <Label htmlFor="recovery-review-note">Reason for declining (required)</Label>
               <Textarea id="recovery-review-note" maxLength={1000} value={recoveryReviewNote} onChange={(event) => setRecoveryReviewNote(event.target.value)} placeholder="Explain why the request was declined and what the user should do next. This comment will be emailed to the new address." />
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Suggested comments — click one to use it, then edit if needed:</p>
+                <div className="flex flex-wrap gap-2">
+                  {recoveryDeclineSuggestions.map((suggestion) => (
+                    <Button
+                      key={suggestion.label}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-auto whitespace-normal py-2 text-left text-xs"
+                      onClick={() => setRecoveryReviewNote(suggestion.comment)}
+                    >
+                      {suggestion.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           <DialogFooter>
