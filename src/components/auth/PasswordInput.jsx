@@ -24,7 +24,7 @@ const checkLabels = [
 export default function PasswordInput({
   id, label, value, onChange, required = false, autoComplete,
   placeholder, showRequirements = false, showRequirementsOnFocus = false,
-  showMatch = false, confirmValue,
+  showMatch = false, confirmValue, requirementsPlacement = "bottom",
 }) {
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -58,6 +58,7 @@ export default function PasswordInput({
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
+      {shouldShowRequirements && requirementsPlacement === "top" ? requirementsPanel : null}
       <div
         className="relative"
         onFocusCapture={() => setFocused(true)}
@@ -85,7 +86,7 @@ export default function PasswordInput({
         >
           {visible ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
         </button>
-        {shouldShowRequirements ? (
+        {shouldShowRequirements && requirementsPlacement !== "top" ? (
           <div className="absolute left-0 right-0 top-full z-30 mt-2 animate-in fade-in-0 slide-in-from-top-1 duration-150">
             {requirementsPanel}
           </div>
