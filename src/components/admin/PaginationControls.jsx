@@ -8,7 +8,7 @@ const getPageItems = (page, totalPages) => {
   return sorted.flatMap((value, index) => index && value - sorted[index - 1] > 1 ? ["ellipsis", value] : [value]);
 };
 
-export default function PaginationControls({ page, pageSize, total, onPageChange, onPageSizeChange }) {
+export default function PaginationControls({ page, pageSize, total, onPageChange, onPageSizeChange, pageSizeOptions = [10, 25, 50] }) {
   if (!total) return null;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(Math.max(1, page), totalPages);
@@ -28,7 +28,7 @@ export default function PaginationControls({ page, pageSize, total, onPageChange
             className="h-9 rounded-md border border-input bg-background px-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Rows per page"
           >
-            {[10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
+            {pageSizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
         </label>
       </div>

@@ -71,6 +71,7 @@ export default function AdminUserPermissions() {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [recoveryPage, setRecoveryPage] = useState(1);
   const [savingKey, setSavingKey] = useState("");
   const [resetTarget, setResetTarget] = useState(null);
   const [recoveryReviewTarget, setRecoveryReviewTarget] = useState(null);
@@ -105,6 +106,9 @@ export default function AdminUserPermissions() {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
+  const recoveryTotalPages = Math.max(1, recoveryRequests.length);
+  const currentRecoveryPage = Math.min(recoveryPage, recoveryTotalPages);
+  const visibleRecoveryRequests = recoveryRequests.slice(currentRecoveryPage - 1, currentRecoveryPage);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -340,7 +344,7 @@ export default function AdminUserPermissions() {
               <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
             ) : recoveryRequests.length ? (
               <div className="space-y-3">
-                {recoveryRequests.map((request) => (
+                {visibleRecoveryRequests.map((request) => (
                   <div key={request.id} className="grid gap-4 rounded-lg border border-border p-4 lg:grid-cols-[1fr_auto] lg:items-center">
                     <div className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
                       <p><span className="text-muted-foreground">Account name:</span> <strong>{request.account_full_name || request.full_name}</strong></p>
@@ -359,6 +363,16 @@ export default function AdminUserPermissions() {
                     </div>
                   </div>
                 ))}
+                {recoveryRequests.length > 1 ? (
+                  <PaginationControls
+                    page={currentRecoveryPage}
+                    pageSize={1}
+                    total={recoveryRequests.length}
+                    onPageChange={setRecoveryPage}
+                    onPageSizeChange={() => {}}
+                    pageSizeOptions={[1]}
+                  />
+                ) : null}
               </div>
             ) : (
               <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">No pending account recovery requests.</p>
