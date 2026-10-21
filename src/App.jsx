@@ -76,7 +76,7 @@ const AdminOnlyRoute = ({ user, pageName, children }) => {
 
 const AdminDestinationGuard = ({ user, pageName, children }) => {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const authenticationPage = ['Login', 'ForgotPassword', 'ResetPassword', 'VerifyRegistrationOtp'].includes(pageName);
+  const authenticationPage = ['Login', 'ForgotPassword', 'AccountRecoveryHelp', 'ResetPassword', 'VerifyRegistrationOtp'].includes(pageName);
 
   if (pageName === 'MyActivity' && !isAdmin) {
     return <Navigate to="/" replace />;
@@ -92,7 +92,7 @@ const AdminDestinationGuard = ({ user, pageName, children }) => {
 const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "ProfileSettings"]);
 const guestOrRegularUserPages = new Set(["About", "Contact"]);
 const GOOGLE_NEXT_PATH_SESSION_KEY = 'ki-google-signin-next-path';
-const authenticationPaths = new Set(['/Login', '/ForgotPassword', '/ResetPassword', '/VerifyRegistrationOtp']);
+const authenticationPaths = new Set(['/Login', '/ForgotPassword', '/AccountRecoveryHelp', '/ResetPassword', '/VerifyRegistrationOtp']);
 
 const UserOnlyRoute = ({ isAuthenticated, children }) => {
   const location = useLocation();

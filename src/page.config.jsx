@@ -18,6 +18,7 @@ export const PAGES = {
     "AdminSystemSettings": lazy(() => import('./pages/AdminSystemSettings.jsx')),
     "AdminUserPermissions": lazy(() => import('./pages/AdminUserPermissions.jsx')),
     "BookingForm": lazy(() => import('./pages/BookingForm.jsx')),
+    "AccountRecoveryHelp": lazy(() => import('./pages/AccountRecoveryHelp.jsx')),
     "ForgotPassword": lazy(() => import('./pages/ForgotPassword.jsx')),
     "VerifyRegistrationOtp": lazy(() => import('./pages/VerifyRegistrationOtp.jsx')),
     "Home": lazy(() => import('./pages/Home.jsx')),
