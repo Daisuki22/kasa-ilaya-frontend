@@ -1167,7 +1167,9 @@ export default function MyBookings() {
                     )}
                     {selectedRebookingConflicts.map((conflict) => (
                       <p key={`${conflict.id || conflict.booking_date}-${conflict.tour_type}`} className="text-xs text-muted-foreground">
-                        Overlaps an existing {tourLabels[conflict.tour_type] || conflict.tour_type} reservation starting {formatDate(conflict.booking_date)}.
+                        {conflict.booking_date === dateInputValue(selectedRebookingDate)
+                          ? `A ${tourLabels[conflict.tour_type] || conflict.tour_type} reservation is already scheduled for this date (${tourTimeLabels[conflict.tour_type]?.start || ""}${tourTimeLabels[conflict.tour_type] ? `–${tourTimeLabels[conflict.tour_type].end}` : ""}). This blocks the ${tourLabels[bookingToRebook?.tour_type] || "selected tour"} option.`
+                          : `The ${tourLabels[conflict.tour_type] || conflict.tour_type} reservation starting ${formatDate(conflict.booking_date)} (${tourTimeLabels[conflict.tour_type]?.start || ""}${tourTimeLabels[conflict.tour_type] ? `–${tourTimeLabels[conflict.tour_type].end}` : ""}) overlaps your selected ${tourLabels[bookingToRebook?.tour_type] || "tour"} schedule.`}
                       </p>
                     ))}
                   </div>

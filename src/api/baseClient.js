@@ -4,29 +4,9 @@ import { normalizeDateOnly } from "@/lib/safeDate";
 
 const createId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
-const THEME_STORAGE_KEY = "kasa-ilaya-theme";
 const AUTH_MARKER_KEY = `ki-authenticated:${API_BASE_URL}`;
 
-let inMemoryAuthMarker = false;
-
-const hasClientAuthMarker = () => {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    return (
-      window.localStorage.getItem(AUTH_MARKER_KEY) === "true" ||
-      inMemoryAuthMarker
-    );
-  } catch {
-    return inMemoryAuthMarker;
-  }
-};
-
 const markClientAuthenticated = () => {
-  inMemoryAuthMarker = true;
-
   if (typeof window === "undefined") {
     return;
   }
@@ -34,15 +14,8 @@ const markClientAuthenticated = () => {
   try {
     window.localStorage.setItem(AUTH_MARKER_KEY, "true");
   } catch {
-    // The in-memory marker keeps this tab authenticated until it closes.
+    // Authentication is restored from the server's session cookie.
   }
-};
-
-const unauthenticatedError = () => {
-  const error = new Error("Not authenticated.");
-  error.error = "Not authenticated.";
-  error.status = 401;
-  return error;
 };
 
 const clearClientAuthState = () => {
@@ -50,31 +23,9 @@ const clearClientAuthState = () => {
     return;
   }
 
-  const preservedLocal = new Map();
-
   try {
-    const theme = window.localStorage.getItem(THEME_STORAGE_KEY);
-
-    if (theme !== null) {
-      preservedLocal.set(THEME_STORAGE_KEY, theme);
-    }
+    window.localStorage.removeItem(AUTH_MARKER_KEY);
   } catch {}
-
-  try {
-    window.sessionStorage.clear();
-  } catch {}
-
-  try {
-    window.localStorage.clear();
-  } catch {}
-
-  inMemoryAuthMarker = false;
-
-  preservedLocal.forEach((value, key) => {
-    try {
-      window.localStorage.setItem(key, value);
-    } catch {}
-  });
 };
 
 const dispatchAuthChange = (user = null) => {
@@ -559,13 +510,11 @@ const createEntityHandler = (entityName) => ({
 export const baseClient = {
   auth: {
     async me() {
-      if (!hasClientAuthMarker()) {
-        throw unauthenticatedError();
-      }
-
-      return request("/auth.php?action=me", {
+      const user = await request("/auth.php?action=me", {
         suppressAuthEvent: true,
       });
+      markClientAuthenticated();
+      return user;
     },
 
     async login(data) {

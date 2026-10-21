@@ -34,6 +34,10 @@ const tourTimeLabels = {
   "22_hours": "6:00 PM - 4:00 PM next day",
 };
 const canAdminReschedule = (booking) => ["pending", "confirmed"].includes(booking?.status || "");
+const isOutdatedReceipt = (booking) => booking?.payment_proof_review === "auto_declined"
+  && /^Receipt is outdated\./i.test(String(booking.rejection_reason || ""));
+const canAcceptBooking = (booking) => (booking?.status === "pending" && booking?.payment_status === "pending_verification")
+  || (isOutdatedReceipt(booking) && booking?.status === "rejected" && booking?.payment_status === "declined");
 const todayInputValue = () => {
   const now = new Date();
   return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -396,7 +400,7 @@ export default function AdminReservationManagement() {
                                 <CalendarPlus className="h-4 w-4" /> Reschedule
                               </Button>
                             ) : null}
-                            {booking.status === "pending" ? (
+                            {booking.status === "pending" || isOutdatedReceipt(booking) ? (
                               <Button variant="outline" size="sm" className="gap-2" onClick={() => { setUnavailableReceiptUrl(""); setReviewBooking(booking); }}>
                                 <Eye className="h-4 w-4" /> Review
                               </Button>
@@ -498,6 +502,11 @@ export default function AdminReservationManagement() {
                 </div>
                 <p className="mt-2 text-muted-foreground">OCR is only a reading aid. Confirm the original GCash receipt and payment details before accepting.</p>
               </div>
+              {isOutdatedReceipt(reviewBooking) ? (
+                <p className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-foreground">
+                  This receipt is older than today, so it was sent for manual review. An admin or super admin can accept it after checking the original receipt, payment amount, and payment method.
+                </p>
+              ) : null}
               {reviewReceiptUrl ? (
                 receiptImageUnavailable ? (
                   <p role="status" className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-foreground">
@@ -520,7 +529,7 @@ export default function AdminReservationManagement() {
           ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewBooking(null)} disabled={acceptingBooking}>Close</Button>
-            <Button onClick={() => setAcceptConfirmOpen(true)} disabled={acceptingBooking || receiptImageUnavailable || reviewBooking?.status !== "pending" || reviewBooking?.payment_status !== "pending_verification" || !reviewBooking?.receipt_url} className="gap-2">
+            <Button onClick={() => setAcceptConfirmOpen(true)} disabled={acceptingBooking || receiptImageUnavailable || !canAcceptBooking(reviewBooking) || !reviewBooking?.receipt_url} className="gap-2">
               {acceptingBooking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Accept booking
             </Button>

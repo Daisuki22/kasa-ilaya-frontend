@@ -959,12 +959,21 @@ export default function BookingForm() {
                         <div key={tourType} className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm">
                           <p className="font-medium text-destructive">{label} is unavailable</p>
                           {manualDate && <p className="mt-1 text-xs text-muted-foreground">Blocked by a resort schedule or manual event.</p>}
-                          {bookings.map((booking) => (
-                            <p key={`${tourType}-${booking.id || booking.booking_date}-${booking.tour_type}`} className="mt-1 text-xs text-muted-foreground">
-                              Overlaps {booking.package_name || "a resort booking"} ({tourTypeLabels[booking.tour_type]?.label || booking.tour_type}) on {booking.booking_date ? format(new Date(`${booking.booking_date}T00:00:00`), "MMM d, yyyy") : "another date"}
-                              {booking.status ? ` · ${booking.status}` : ""}.
-                            </p>
-                          ))}
+                          {bookings.map((booking) => {
+                            const blockerLabel = tourTypeLabels[booking.tour_type]?.label || booking.tour_type;
+                            const blockerTime = tourTypeLabels[booking.tour_type]?.time;
+                            const blockedTime = tourTypeLabels[tourType]?.time;
+                            const bookingDate = booking.booking_date ? format(new Date(`${booking.booking_date}T00:00:00`), "MMM d, yyyy") : "another date";
+                            const sameDate = booking.booking_date === selectedDateKey;
+                            return (
+                              <p key={`${tourType}-${booking.id || booking.booking_date}-${booking.tour_type}`} className="mt-1 text-xs text-muted-foreground">
+                                {sameDate
+                                  ? `A ${blockerLabel} reservation is already scheduled for ${bookingDate}${blockerTime ? ` (${blockerTime})` : ""}. The ${label} option is blocked by this reservation.`
+                                  : `A ${blockerLabel} reservation on ${bookingDate}${blockerTime ? ` (${blockerTime})` : ""} overlaps the ${label} schedule${blockedTime ? ` (${blockedTime})` : ""}.`}
+                                {booking.status ? ` Status: ${booking.status}.` : ""}
+                              </p>
+                            );
+                          })}
                         </div>
                       ))}
                     </div>

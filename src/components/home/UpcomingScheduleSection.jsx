@@ -57,6 +57,11 @@ const bookingTourLabels = {
   night_tour: "Night Tour",
   "22_hours": "22 Hours",
 };
+const bookingTourTimes = {
+  day_tour: "8 AM–6 PM",
+  night_tour: "6 PM–6 AM next day",
+  "22_hours": "6 PM–4 PM next day",
+};
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const getBookingDateSpan = (booking) => {
@@ -442,11 +447,13 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                                     <div className="space-y-1 text-sm text-muted-foreground">
                                       <p className="flex items-center gap-2">
                                         <Clock3 className="h-4 w-4 text-secondary" />
-                                        Blocked by {bookingTourLabels[booking.tour_type] || "another tour"} booking
+                                        {sameDate
+                                          ? `Unavailable because of a ${bookingTourLabels[booking.tour_type] || "resort"} reservation on this date.`
+                                          : `Conflicts with a ${bookingTourLabels[booking.tour_type] || "resort"} reservation from another date.`}
                                       </p>
                                       <p className="text-xs text-muted-foreground">
                                         {booking.package_name || "Resort booking"} on {bookingDate ? safeFormatDate(bookingDate, "EEEE, MMM d, yyyy") : "another date"}
-                                        {sameDate ? " (same date)" : " (overlapping date)"}
+                                        {bookingTourTimes[booking.tour_type] ? ` · ${bookingTourTimes[booking.tour_type]}` : ""}
                                       </p>
                                       {booking.tour_type === "22_hours" && (
                                         <p className="text-xs text-muted-foreground">22-hour stay spans check-in and checkout day</p>
