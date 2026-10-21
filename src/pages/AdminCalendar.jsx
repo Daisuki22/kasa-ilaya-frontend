@@ -74,6 +74,29 @@ const paymentTypeLabels = {
   full_payment: "Full payment",
 };
 
+const rejectionReasonSuggestions = [
+  {
+    label: "Payment amount does not match",
+    reason: "The payment amount does not match the required reservation fee. Please contact the resort if you need help confirming the correct amount.",
+  },
+  {
+    label: "Receipt is unclear",
+    reason: "We could not clearly verify the payment details in the receipt you submitted. Please contact the resort for assistance with your reservation.",
+  },
+  {
+    label: "Payment details do not match",
+    reason: "The payment method or transaction details could not be matched to this reservation. Please contact the resort so we can clarify the payment record.",
+  },
+  {
+    label: "Date is unavailable",
+    reason: "We are unable to accommodate this reservation on the requested date. Please contact the resort to ask about other available dates.",
+  },
+  {
+    label: "Incomplete reservation details",
+    reason: "Some information needed to review this reservation is missing or unclear. Please contact the resort for assistance and next steps.",
+  },
+];
+
 const statusOptions = [
   { value: "all", label: "All active" },
   { value: "pending", label: "Pending" },
@@ -878,6 +901,21 @@ export default function AdminCalendar() {
                     </Button>
                     <div className="space-y-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                       <Label htmlFor="booking-rejection-reason">Rejection reason *</Label>
+                      <p className="text-xs text-muted-foreground">Choose a suggested reason, then edit it if you need to add details.</p>
+                      <div className="flex flex-wrap gap-2">
+                        {rejectionReasonSuggestions.map(({ label, reason }) => (
+                          <Button
+                            key={label}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-auto whitespace-normal px-2 py-1.5 text-left text-xs"
+                            onClick={() => setRejectionReason(reason)}
+                          >
+                            {label}
+                          </Button>
+                        ))}
+                      </div>
                       <Textarea id="booking-rejection-reason" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} maxLength={1000} placeholder="Explain why this booking cannot be approved." />
                       <Button type="button" variant="destructive" className="w-full" onClick={rejectSelectedBooking} disabled={rejectionReason.trim().length < 5}>
                         Reject Booking
