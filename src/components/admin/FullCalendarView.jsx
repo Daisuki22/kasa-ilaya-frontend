@@ -126,6 +126,8 @@ export default function FullCalendarView({ embedded = false }) {
         "booking_date",
         500
       ),
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 
   const isLoading = isLoadingSchedules || isLoadingBookings;
@@ -142,9 +144,10 @@ export default function FullCalendarView({ embedded = false }) {
     })),
     ...asArray(bookings).flatMap((booking) => {
       const color = BOOKING_COLORS[booking.status] || BOOKING_COLORS.pending;
+      const tourLabel = tourLabels[booking.tour_type];
       const base = {
         id: `booking-${booking.id}`,
-        title: booking.package_name || "Booking",
+        title: `${booking.package_name || "Booking"}${tourLabel ? ` · ${tourLabel}` : ""}`,
         backgroundColor: color,
         borderColor: color,
         extendedProps: { type: "booking", raw: booking },
@@ -395,7 +398,7 @@ export default function FullCalendarView({ embedded = false }) {
                 eventClick={handleEventClick}
                 editable={false}
                 selectable={canManage}
-                dayMaxEvents={3}
+                dayMaxEvents={false}
                 height="auto"
                 eventDisplay="block"
               />

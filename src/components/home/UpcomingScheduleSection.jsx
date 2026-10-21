@@ -97,6 +97,8 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
   const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
     queryKey: ["calendar-bookings"],
     queryFn: () => baseClient.entities.Booking.filter({ status: ["pending", "confirmed", "completed"] }, "booking_date", 500),
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 
   const upcomingSchedules = asArray(schedules).filter((schedule) => {
