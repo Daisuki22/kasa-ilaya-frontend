@@ -544,14 +544,14 @@ const buildLocalResponse = (
     "what time is check-in?": assistantReply({
       title: "Check-in time",
       intro: "Check-in follows the tour time selected for your reservation:",
-      bullets: ["Day Tour: 8 AM.", "Night Tour: 6 PM.", "22 Hours: 6 PM."],
+      bullets: ["Day Tour: 7 AM.", "Night Tour: 7 PM.", "22 Hours: 7 PM."],
       important: "Arrive within your reserved tour schedule.",
     }),
 
     "what time is check-out?": assistantReply({
       title: "Check-out time",
       intro: "Check-out depends on the selected tour:",
-      bullets: ["Day Tour: 6 PM.", "Night Tour: 6 AM.", "22 Hours: 4 PM the following day."],
+      bullets: ["Day Tour: 5 PM.", "Night Tour: 5 AM.", "22 Hours: 5 PM the following day."],
       important: "Follow the schedule shown on your reservation confirmation.",
     }),
 

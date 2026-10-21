@@ -58,9 +58,9 @@ const bookingTourLabels = {
   "22_hours": "22 Hours",
 };
 const bookingTourTimes = {
-  day_tour: "8 AM–6 PM",
-  night_tour: "6 PM–6 AM next day",
-  "22_hours": "6 PM–4 PM next day",
+  day_tour: "7 AM–5 PM",
+  night_tour: "7 PM–5 AM next day",
+  "22_hours": "7 PM–5 PM next day",
 };
 const asArray = (value) => (Array.isArray(value) ? value : []);
 

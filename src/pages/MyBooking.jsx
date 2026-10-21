@@ -82,9 +82,9 @@ const tourLabels = {
 };
 
 const tourTimeLabels = {
-  day_tour: { start: "8:00 AM", end: "6:00 PM" },
-  night_tour: { start: "6:00 PM", end: "6:00 AM (next day)" },
-  "22_hours": { start: "6:00 PM", end: "4:00 PM (next day)" },
+  day_tour: { start: "7:00 AM", end: "5:00 PM" },
+  night_tour: { start: "7:00 PM", end: "5:00 AM (next day)" },
+  "22_hours": { start: "7:00 PM", end: "5:00 PM (next day)" },
 };
 
 const paymentTypeLabels = {

@@ -1,7 +1,7 @@
 const TOUR_WINDOWS = {
-  day_tour: { start: "08:00", end: "18:00" },
-  night_tour: { start: "18:00", end: "06:00", crossesMidnight: true },
-  "22_hours": { start: "18:00", end: "16:00", crossesMidnight: true },
+  day_tour: { start: "07:00", end: "17:00" },
+  night_tour: { start: "19:00", end: "05:00", crossesMidnight: true },
+  "22_hours": { start: "19:00", end: "17:00", crossesMidnight: true },
 };
 
 export const getResortDateKey = (date = new Date()) => {

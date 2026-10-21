@@ -29,9 +29,9 @@ const rebookingBadgeClasses = {
 const formatStatusLabel = (value) => (value || "none").replace(/_/g, " ");
 const formatMoney = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 const tourTimeLabels = {
-  day_tour: "8:00 AM - 6:00 PM",
-  night_tour: "6:00 PM - 6:00 AM next day",
-  "22_hours": "6:00 PM - 4:00 PM next day",
+  day_tour: "7:00 AM - 5:00 PM",
+  night_tour: "7:00 PM - 5:00 AM next day",
+  "22_hours": "7:00 PM - 5:00 PM next day",
 };
 const canAdminReschedule = (booking) => ["pending", "confirmed"].includes(booking?.status || "");
 const isOutdatedReceipt = (booking) => booking?.payment_proof_review === "auto_declined"

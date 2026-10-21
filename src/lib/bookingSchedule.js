@@ -1,7 +1,7 @@
 const TOUR_WINDOWS = {
-  day_tour: { start: 8 * 60, end: 18 * 60 },
-  night_tour: { start: 18 * 60, end: 6 * 60 },
-  "22_hours": { start: 18 * 60, end: 16 * 60 },
+  day_tour: { start: 7 * 60, end: 17 * 60 },
+  night_tour: { start: 19 * 60, end: 5 * 60 },
+  "22_hours": { start: 19 * 60, end: 17 * 60 },
 };
 
 const DAY_IN_MINUTES = 24 * 60;

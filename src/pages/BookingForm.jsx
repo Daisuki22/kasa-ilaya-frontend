@@ -28,14 +28,14 @@ import SiteLogo from "@/components/common/SiteLogo";
 import { bookingSchedulesOverlap, isTourStartTimePassed, tourCrossesMidnight } from "@/lib/bookingSchedule";
 
 const tourTypeLabels = {
-  day_tour: { label: "Day Tour", time: "8 AM - 6 PM" },
-  night_tour: { label: "Night Tour", time: "6 PM - 6 AM" },
-  "22_hours": { label: "22 Hours", time: "6 PM – 4 PM (Next Day)" },
+  day_tour: { label: "Day Tour", time: "7 AM - 5 PM" },
+  night_tour: { label: "Night Tour", time: "7 PM - 5 AM (Next Day)" },
+  "22_hours": { label: "22 Hours", time: "7 PM – 5 PM (Next Day)" },
 };
 const availableTourChoices = [
-  { value: "day_tour", label: "Day Tour", time: "8 AM - 6 PM", Icon: Sun },
-  { value: "night_tour", label: "Night Tour", time: "6 PM - 6 AM", Icon: Moon },
-  { value: "22_hours", label: "22 Hours", time: "6 PM - 4 PM next day", Icon: Clock },
+  { value: "day_tour", label: "Day Tour", time: "7 AM - 5 PM", Icon: Sun },
+  { value: "night_tour", label: "Night Tour", time: "7 PM - 5 AM next day", Icon: Moon },
+  { value: "22_hours", label: "22 Hours", time: "7 PM - 5 PM next day", Icon: Clock },
 ];
 
 const getPackagePriceByTourType = (pkg, tourType) => {
