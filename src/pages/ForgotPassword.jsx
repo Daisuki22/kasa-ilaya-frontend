@@ -74,12 +74,13 @@ export default function ForgotPassword() {
           </form>
 
           <div className="mt-5 border-t border-border pt-4">
-            <Button asChild variant="outline" className="w-full gap-2">
-              <Link to={`${createPageUrl('AccountRecoveryHelp')}${email ? `?email=${encodeURIComponent(email)}` : ''}`}>
+            <Link
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+              to={`${createPageUrl('AccountRecoveryHelp')}${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+            >
                 <CircleHelp className="h-4 w-4" />
                 Help! I can't access this email
-              </Link>
-            </Button>
+            </Link>
           </div>
 
           <div className="mt-6 text-sm text-muted-foreground">
