@@ -25,7 +25,7 @@ import { optimizeStaticImageUrl } from "@/hooks/useSiteSettings";
 import { PAYMENT_POLICY_NOTICE, RESCHEDULE_POLICY_NOTICE } from "@/lib/resortNotices";
 import { RESORT_CONTACT } from "@/lib/resortContact";
 import SiteLogo from "@/components/common/SiteLogo";
-import { bookingSchedulesOverlap, tourCrossesMidnight } from "@/lib/bookingSchedule";
+import { bookingSchedulesOverlap, isTourStartTimePassed, tourCrossesMidnight } from "@/lib/bookingSchedule";
 
 const tourTypeLabels = {
   day_tour: { label: "Day Tour", time: "8 AM - 6 PM" },
@@ -134,6 +134,7 @@ export default function BookingForm() {
   const [modalStep, setModalStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTour, setSelectedTour] = useState("");
+  const [availabilityNow, setAvailabilityNow] = useState(() => new Date());
   const [form, setForm] = useState({
     customer_name: "",
     customer_email: "",
@@ -164,6 +165,11 @@ export default function BookingForm() {
   const bookingSubmissionLock = useRef(false);
   const bookingSubmissionReference = useRef("");
   const [selectedPackageImage, setSelectedPackageImage] = useState("");
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setAvailabilityNow(new Date()), 15000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     baseClient.auth.me().then(u => {
@@ -334,6 +340,7 @@ export default function BookingForm() {
   const isTourAvailable = (date, tourType) => {
     if (!date || isAvailabilityError || isLoadingAvailability) return false;
     const dateStr = format(date, 'yyyy-MM-dd');
+    if (isTourStartTimePassed(dateStr, tourType, availabilityNow)) return false;
     const nextDateStr = format(addDays(date, 1), 'yyyy-MM-dd');
     if (manualScheduleDatesSet.has(dateStr)) return false;
     if (tourCrossesMidnight(tourType) && manualScheduleDatesSet.has(nextDateStr)) return false;
@@ -350,6 +357,13 @@ export default function BookingForm() {
     if (manualScheduleDatesSet.has(dateStr)) return true;
     return availableTourChoices.every(({ value }) => !isTourAvailable(date, value));
   };
+
+  useEffect(() => {
+    if (selectedDate && selectedTour
+      && isTourStartTimePassed(format(selectedDate, "yyyy-MM-dd"), selectedTour, availabilityNow)) {
+      setSelectedTour("");
+    }
+  }, [availabilityNow, selectedDate, selectedTour]);
 
   const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
   const isSelectedDateManuallyBlocked = Boolean(selectedDateKey && manualScheduleDatesSet.has(selectedDateKey));
@@ -421,7 +435,11 @@ export default function BookingForm() {
       return;
     }
 
-    if (!selectedDate || isSelectedDateFull) {
+    if (!selectedDate || !isTourAvailable(selectedDate, selectedTour)) {
+      if (selectedDate && isTourStartTimePassed(format(selectedDate, "yyyy-MM-dd"), selectedTour, availabilityNow)) {
+        toast.error(`The ${tourTypeLabels[selectedTour]?.label || "selected tour"} start time has passed for today. Please choose another tour or date.`);
+        return;
+      }
       toast.error("Selected date is no longer available. Please choose another date.");
       return;
     }
@@ -936,6 +954,7 @@ export default function BookingForm() {
                   <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {availableTourChoices.map(({ value: tourType, label, time, Icon }) => {
                       const available = !isLoadingAvailability && isTourAvailable(selectedDate, tourType);
+                      const startTimePassed = isTourStartTimePassed(selectedDateKey, tourType, availabilityNow);
                       const selected = selectedTour === tourType;
                       return (
                         <button
@@ -947,7 +966,7 @@ export default function BookingForm() {
                         >
                           <span className="flex items-center gap-2 font-medium text-foreground"><Icon className="h-4 w-4" />{label}</span>
                           <span className="mt-1 block text-xs text-muted-foreground">{time}</span>
-                          <span className={`mt-1 block text-xs ${available ? "text-primary" : "text-destructive"}`}>{available ? "Available" : isLoadingAvailability ? "Checking…" : "Unavailable"}</span>
+                          <span className={`mt-1 block text-xs ${available ? "text-primary" : "text-destructive"}`}>{available ? "Available" : isLoadingAvailability ? "Checking…" : startTimePassed ? "Start time has passed" : "Unavailable"}</span>
                         </button>
                       );
                     })}

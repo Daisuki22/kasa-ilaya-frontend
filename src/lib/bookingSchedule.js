@@ -23,4 +23,13 @@ export const bookingSchedulesOverlap = (dateA, tourA, dateB, tourB) => {
   return intervalA.start < intervalB.end && intervalB.start < intervalA.end;
 };
 
+export const isTourStartTimePassed = (dateKey, tourType, now = new Date()) => {
+  const window = TOUR_WINDOWS[tourType];
+  if (!window || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey || ""))) return false;
+  const hours = String(Math.floor(window.start / 60)).padStart(2, "0");
+  const minutes = String(window.start % 60).padStart(2, "0");
+  const tourStart = new Date(`${dateKey}T${hours}:${minutes}:00+08:00`);
+  return tourStart <= now;
+};
+
 export const tourCrossesMidnight = (tourType) => ["night_tour", "22_hours"].includes(tourType);
