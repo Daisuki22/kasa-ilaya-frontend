@@ -854,13 +854,16 @@ export default function Layout({ children, currentPageName }) {
               <ThemeToggle />
 
               {/* Account Settings */}
-              <Link
-                to={createPageUrl(profilePageTarget)}
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <Settings className="h-4 w-4" />
-                Account Settings
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={createPageUrl(profilePageTarget)}
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Settings className="h-4 w-4" />
+                  Account Settings
+                </Link>
+                {renderNotificationMenu({ compact: true })}
+              </div>
 
               {/* Logout */}
               <button
@@ -882,12 +885,6 @@ export default function Layout({ children, currentPageName }) {
       ) : null}
 
       <div className="min-h-screen">
-        {isAdminMode && user ? (
-          <div className="fixed right-3 top-3 z-50 hidden items-center gap-2 md:flex lg:right-4 lg:top-4">
-            {renderNotificationMenu({ compact: true })}
-          </div>
-        ) : null}
-
         <header
           className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${isAdminMode ? "border-border bg-card/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 md:hidden" : isTransparentHomeNav ? "border-transparent bg-transparent shadow-none backdrop-blur-0 supports-[backdrop-filter]:bg-transparent" : "border-border bg-card/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-card/80"}`}
           style={isTransparentHomeNav ? { backgroundColor: "transparent", backgroundImage: "none", backdropFilter: "none", WebkitBackdropFilter: "none" } : undefined}
@@ -922,7 +919,11 @@ export default function Layout({ children, currentPageName }) {
 
             <div className={`flex items-center gap-2 sm:gap-3 ${isAdminMode ? "" : "lg:justify-self-end"}`}>
               <NavbarThemeToggle onHero={isTransparentHomeNav} />
-              {!isAdminMode ? renderNotificationMenu({ compact: true, onHero: isTransparentHomeNav }) : null}
+              {!isAdminMode ? (
+                <div className="hidden lg:block">
+                  {renderNotificationMenu({ compact: true, onHero: isTransparentHomeNav })}
+                </div>
+              ) : null}
               <div className="hidden sm:block">
                 {renderUserMenu({ onHero: isTransparentHomeNav })}
               </div>
@@ -1016,14 +1017,17 @@ export default function Layout({ children, currentPageName }) {
                   </div>
                 </div>
 
-                <Link
-                  to={createPageUrl(profilePageTarget)}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <Settings className="h-4 w-4" />
-                  Account Settings
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={createPageUrl(profilePageTarget)}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Account Settings
+                  </Link>
+                  {renderNotificationMenu({ compact: true })}
+                </div>
 
                 <button
                   type="button"
