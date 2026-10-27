@@ -768,17 +768,19 @@ export default function AdminCalendar() {
                               <Button variant="ghost" size="icon" title="View reservation" onClick={() => setSelectedBooking(booking)}>
                                 <Eye className="h-4 w-4" />
                               </Button>
-                {booking.status === "confirmed" && isBookingDateToday(booking) && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-success hover:text-success"
-                                  title="Mark as completed"
-                                  onClick={() => updateStatus(booking.id, "completed")}
-                                >
-                                  <CheckCheck className="h-4 w-4" />
-                                </Button>
-                              )}
+                                {booking.status === "confirmed" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 whitespace-nowrap text-success hover:text-success"
+                                    title={isBookingDateToday(booking) ? "Mark as completed" : "Available on the booking date"}
+                                    disabled={!isBookingDateToday(booking)}
+                                    onClick={() => setCompleteBookingTarget(booking)}
+                                  >
+                                    <CheckCheck className="h-4 w-4" />
+                                    Complete
+                                  </Button>
+                                )}
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -925,12 +927,13 @@ export default function AdminCalendar() {
                     </div>
                   </div>
                 )}
-                {selectedBooking.status === "confirmed" && isBookingDateToday(selectedBooking) && (
+                {selectedBooking.status === "confirmed" && (
                   <div className="border-t border-border pt-4">
-                    <Button className="w-full gap-2" onClick={() => setCompleteBookingTarget(selectedBooking)}>
+                    <Button className="w-full gap-2" onClick={() => setCompleteBookingTarget(selectedBooking)} disabled={!isBookingDateToday(selectedBooking)} title={isBookingDateToday(selectedBooking) ? "Mark as completed" : "Available on the booking date"}>
                       <CheckCheck className="h-4 w-4" />
-                      Mark as Completed
+                      Complete Booking
                     </Button>
+                    {!isBookingDateToday(selectedBooking) ? <p className="mt-2 text-center text-xs text-muted-foreground">Available on the booking date.</p> : null}
                   </div>
                 )}
               </div>
