@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Shield, KeyRound, TimerReset, LockKeyhole, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { baseClient } from "@/api/baseClient";
 import { useAuth } from "@/lib/AuthContext";
-import { createPageUrl } from "@/utils";
 import { defaultSiteSettings, useSiteSettings } from "@/hooks/useSiteSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -165,22 +163,6 @@ export default function AdminSecuritySettings() {
           <div className="rounded-xl border border-border bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
             New passwords require at least 10 characters, uppercase and lowercase letters, a number, and a special character. This policy is enforced in both the app and the backend.
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-2xl">Admin account recovery</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            If you no longer have access to your admin account email, send an account recovery request for super admin review. Your current account email will be filled in for you.
-          </p>
-          <Button asChild variant="outline">
-            <Link to={`${createPageUrl("AccountRecoveryHelp")}?email=${encodeURIComponent(user?.email || "")}`}>
-              Request account recovery
-            </Link>
-          </Button>
         </CardContent>
       </Card>
 
