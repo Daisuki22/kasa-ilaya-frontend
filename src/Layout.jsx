@@ -838,40 +838,40 @@ export default function Layout({ children, currentPageName }) {
           {user ? (
             <>
               {/* User info */}
-              <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
-                  {user.profile_image_url ? (
-                    <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-sm font-semibold text-primary">
-                      {user.full_name?.[0]?.toUpperCase() || "U"}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-medium text-foreground">{user.full_name}</p>
-                  <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
-                </div>
-              </div>
-
-              {/* Theme toggle */}
-              <ThemeToggle />
-
-              {/* Account Settings */}
               <div className="flex items-center gap-2">
-                <Link
-                  to={createPageUrl(profilePageTarget)}
-                  className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <Settings className="h-4 w-4" />
-                  Account Settings
-                </Link>
+                <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                    {user.profile_image_url ? (
+                      <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-semibold text-primary">
+                        {user.full_name?.[0]?.toUpperCase() || "U"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-foreground">{user.full_name}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
                 {renderNotificationMenu({
                   compact: true,
                   open: adminSidebarNotificationOpen,
                   onOpenChange: setAdminSidebarNotificationOpen,
                 })}
               </div>
+
+              {/* Theme toggle */}
+              <ThemeToggle />
+
+              {/* Account Settings */}
+              <Link
+                to={createPageUrl(profilePageTarget)}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+                Account Settings
+              </Link>
 
               {/* Logout */}
               <button
@@ -1014,37 +1014,37 @@ export default function Layout({ children, currentPageName }) {
             <ThemeToggle />
             {user ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
-                    {user.profile_image_url ? (
-                      <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-sm font-semibold text-primary">
-                        {user.full_name?.[0]?.toUpperCase() || "U"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-foreground">{user.full_name || "Account"}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-2">
-                  <Link
-                    to={createPageUrl(profilePageTarget)}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Account Settings
-                  </Link>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                      {user.profile_image_url ? (
+                        <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-semibold text-primary">
+                          {user.full_name?.[0]?.toUpperCase() || "U"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium text-foreground">{user.full_name || "Account"}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
                   {renderNotificationMenu({
                     compact: true,
                     open: mobileDrawerNotificationOpen,
                     onOpenChange: setMobileDrawerNotificationOpen,
                   })}
                 </div>
+
+                <Link
+                  to={createPageUrl(profilePageTarget)}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Settings className="h-4 w-4" />
+                  Account Settings
+                </Link>
 
                 <button
                   type="button"
