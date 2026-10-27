@@ -852,8 +852,8 @@ export default function Login() {
                         required
                       />
                     </div>
-                    <div className="grid items-end gap-4 sm:grid-cols-2">
-                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements showRequirementsOnFocus requirementsPlacement="top" confirmValue={signUpForm.confirmPassword} required />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements requirementsPlacement="bottom" confirmValue={signUpForm.confirmPassword} required />
                       <PasswordInput id="signup-confirm" label="Confirm password" value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
                     </div>
                     <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
@@ -892,7 +892,7 @@ export default function Login() {
                         </p>
                       </div>
                     </div>
-                    <Button className="h-11 w-full rounded-lg" disabled={isSubmitting || !termsAccepted || !privacyAcknowledged || !passwordMeetsRequirements(signUpForm.password) || signUpForm.password !== signUpForm.confirmPassword} type="submit">
+                    <Button className="h-11 w-full rounded-lg" disabled={isSubmitting} type="submit">
                       {isSubmitting ? 'Creating account...' : 'Create Account'}
                     </Button>
                   </form>
