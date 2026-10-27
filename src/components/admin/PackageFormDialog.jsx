@@ -73,19 +73,41 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
   };
 
   const handleSubmit = async () => {
-    const dayTourPrice = Number(form.day_tour_price) || 0;
-    const nightTourPrice = Number(form.night_tour_price) || 0;
-    const twentyTwoHourPrice = Number(form.twenty_two_hour_price) || 0;
+    const dayTourPrice = Number(form.day_tour_price);
+    const nightTourPrice = Number(form.night_tour_price);
+    const twentyTwoHourPrice = Number(form.twenty_two_hour_price);
+    const includedGuests = Number(form.max_guests);
+    const prices = [dayTourPrice, nightTourPrice, twentyTwoHourPrice];
+    if (prices.some((price) => !Number.isFinite(price) || price < 0 || price > 99999999.99 || Math.round(price * 100) !== price * 100)) {
+      toast.error("Enter valid package prices with no more than two decimal places.");
+      return;
+    }
+    if (!prices.some((price) => price > 0)) {
+      toast.error("Set a price for at least one tour type.");
+      return;
+    }
+    if (!Number.isInteger(includedGuests) || includedGuests < 1 || includedGuests > 1000) {
+      toast.error("Included guest count must be a whole number from 1 to 1,000.");
+      return;
+    }
+    if (!form.name.trim()) {
+      toast.error("Package name is required.");
+      return;
+    }
+    if (form.name.trim().length > 191) {
+      toast.error("Package name must be 191 characters or fewer.");
+      return;
+    }
 
     const payload = {
-      name: form.name,
-      description: form.description,
+      name: form.name.trim(),
+      description: form.description.trim(),
       tour_type: form.tour_type,
       price: Math.min(dayTourPrice, nightTourPrice, twentyTwoHourPrice),
       day_tour_price: dayTourPrice,
       night_tour_price: nightTourPrice,
       twenty_two_hour_price: twentyTwoHourPrice,
-      max_guests: Number(form.max_guests) || 1,
+      max_guests: includedGuests,
       inclusions: Array.isArray(form.inclusions) ? form.inclusions : [],
       gallery_images: Array.isArray(form.gallery_images) ? form.gallery_images : [],
       image_url: form.gallery_images?.[0] || form.image_url || "",
@@ -193,7 +215,7 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
             <div className="space-y-4">
               <div>
                 <Label>Package Name *</Label>
-                <Input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Deluxe Resort Package" className="mt-1" />
+                <Input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Deluxe Resort Package" maxLength={191} required className="mt-1" />
               </div>
               <div>
                 <Label>Description</Label>
@@ -211,20 +233,20 @@ export default function PackageFormDialog({ open, onOpenChange, pkg, onSave }) {
             <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
                 <Label className="text-xs text-muted-foreground">Day Tour</Label>
-                <Input type="number" value={form.day_tour_price} onChange={(event) => setForm((prev) => ({ ...prev, day_tour_price: parseFloat(event.target.value) || 0 }))} className="mt-1" />
+                <Input type="number" min="0" max="99999999.99" step="0.01" value={form.day_tour_price} onChange={(event) => setForm((prev) => ({ ...prev, day_tour_price: event.target.value }))} className="mt-1" />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Night Tour</Label>
-                <Input type="number" value={form.night_tour_price} onChange={(event) => setForm((prev) => ({ ...prev, night_tour_price: parseFloat(event.target.value) || 0 }))} className="mt-1" />
+                <Input type="number" min="0" max="99999999.99" step="0.01" value={form.night_tour_price} onChange={(event) => setForm((prev) => ({ ...prev, night_tour_price: event.target.value }))} className="mt-1" />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">22 Hours</Label>
-                <Input type="number" value={form.twenty_two_hour_price} onChange={(event) => setForm((prev) => ({ ...prev, twenty_two_hour_price: parseFloat(event.target.value) || 0 }))} className="mt-1" />
+                <Input type="number" min="0" max="99999999.99" step="0.01" value={form.twenty_two_hour_price} onChange={(event) => setForm((prev) => ({ ...prev, twenty_two_hour_price: event.target.value }))} className="mt-1" />
               </div>
             </div>
             <div className="mt-4 max-w-xs">
               <Label>Fixed Pax Included</Label>
-              <Input type="number" value={form.max_guests} onChange={(event) => setForm((prev) => ({ ...prev, max_guests: parseInt(event.target.value) || 10 }))} className="mt-1" />
+              <Input type="number" min="1" max="1000" step="1" value={form.max_guests} onChange={(event) => setForm((prev) => ({ ...prev, max_guests: event.target.value }))} className="mt-1" />
             </div>
           </section>
 
