@@ -37,8 +37,8 @@ import { matchesActivityLogSearch } from '@/lib/activityLogAnalytics';
 
 const chartColors = {
 	entity: [
-		'hsl(var(--primary))',
-		'hsl(var(--secondary))',
+		'hsl(var(--chart-1))',
+		'hsl(var(--chart-2))',
 		'hsl(var(--chart-3))',
 		'hsl(var(--chart-4))',
 		'hsl(var(--chart-5))',
@@ -246,7 +246,7 @@ export default function AdminActivityLogs() {
 										<XAxis dataKey="label" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" />
 										<YAxis width={chartMetrics.tickFontSize * 3} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
 										<Tooltip content={<AuditTooltip />} />
-										<Line type="monotone" dataKey="total" name="Total logs" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 3 }} />
+										<Line type="monotone" dataKey="total" name="Total logs" stroke="hsl(var(--chart-3))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--chart-3))" }} activeDot={{ r: 6 }} />
 									</LineChart>
 								</ResponsiveContainer>
 							</div>

@@ -44,11 +44,11 @@
   --input: 36 18% 78%;
   --ring: 180 39% 40%;
   --radius: 0.65rem;
-  --chart-1: 185 69% 19%;
-  --chart-2: 40 50% 57%;
-  --chart-3: 180 39% 40%;
-  --chart-4: 164 55% 27%;
-  --chart-5: 0 65% 45%;
+  --chart-1: 174 72% 32%;
+  --chart-2: 39 95% 50%;
+  --chart-3: 217 91% 60%;
+  --chart-4: 271 81% 56%;
+  --chart-5: 346 77% 58%;
   --font-body: 'Inter', sans-serif;
   --font-heading: 'Playfair Display', serif;
 }
@@ -78,11 +78,11 @@
   --border: 180 20% 30%;
   --input: 180 20% 34%;
   --ring: 178 38% 64%;
-  --chart-1: 178 38% 64%;
-  --chart-2: 40 50% 57%;
-  --chart-3: 164 55% 45%;
-  --chart-4: 180 39% 40%;
-  --chart-5: 0 69% 64%;
+  --chart-1: 173 80% 45%;
+  --chart-2: 42 95% 58%;
+  --chart-3: 213 92% 67%;
+  --chart-4: 270 87% 72%;
+  --chart-5: 346 85% 70%;
 }
 
 /* Keep accent-colored text readable against dark surfaces while preserving

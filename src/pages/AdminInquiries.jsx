@@ -51,11 +51,11 @@ const statusClasses = {
 };
 
 const statusChartColors = {
-  open: "hsl(var(--secondary))",
-  in_progress: "hsl(var(--primary))",
-  resolved: "hsl(var(--chart-3))",
+  open: "hsl(var(--chart-2))",
+  in_progress: "hsl(var(--chart-3))",
+  resolved: "hsl(var(--chart-1))",
   closed: "hsl(var(--muted-foreground))",
-  archived: "hsl(var(--chart-2))",
+  archived: "hsl(var(--chart-4))",
 };
 
 const InquiryTooltip = ({ active, payload }) => {

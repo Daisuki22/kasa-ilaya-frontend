@@ -66,8 +66,8 @@ const loadAllBookings = async () => {
 };
 
 const chartColors = [
-  "hsl(var(--primary))",
-  "hsl(var(--secondary))",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
   "hsl(var(--chart-3))",
   "hsl(var(--chart-4))",
   "hsl(var(--chart-5))",
@@ -1033,8 +1033,8 @@ export default function AdminReport() {
                       <YAxis yAxisId="left" width={chartMetrics.tickFontSize * 5} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
                       <YAxis yAxisId="right" orientation="right" width={chartMetrics.tickFontSize * 3} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                       <Tooltip content={<ChartTooltip />} />
-                      <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 3 }} />
-                      <Line yAxisId="right" type="monotone" dataKey="bookings" name="Bookings" stroke="hsl(var(--secondary))" strokeWidth={3} dot={{ r: 3 }} />
+                      <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--chart-1))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--chart-1))" }} activeDot={{ r: 6 }} />
+                      <Line yAxisId="right" type="monotone" dataKey="bookings" name="Bookings" stroke="hsl(var(--chart-2))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--chart-2))" }} activeDot={{ r: 6 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

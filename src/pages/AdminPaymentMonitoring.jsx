@@ -119,12 +119,19 @@ const isBookingDateActive = (booking) => {
 };
 
 const chartColors = {
-  paid: "hsl(var(--primary))",
-  pending_verification: "hsl(var(--secondary))",
+  paid: "hsl(var(--chart-1))",
+  pending_verification: "hsl(var(--chart-2))",
   unpaid: "hsl(var(--destructive))",
-  declined: "hsl(var(--destructive))",
-  pending: "hsl(var(--secondary))",
+  declined: "hsl(var(--chart-5))",
+  pending: "hsl(var(--chart-3))",
 };
+const paymentChannelColors = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+];
 
 const PaymentTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) {
@@ -655,7 +662,11 @@ export default function AdminPaymentMonitoring() {
                     <XAxis dataKey="channel" tick={{ fontSize: chartMetrics.tickFontSize }} angle={chartMetrics.xAxisAngle} height={chartMetrics.xAxisHeight} stroke="hsl(var(--muted-foreground))" interval="preserveStartEnd" />
                     <YAxis width={chartMetrics.tickFontSize * 5} tick={{ fontSize: chartMetrics.tickFontSize }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `P${Number(value) / 1000}k`} />
                     <Tooltip content={<PaymentTooltip />} />
-                    <Bar dataKey="amount" name="Amount" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="amount" name="Amount" radius={[6, 6, 0, 0]}>
+                      {paymentChannelChart.map((item, index) => (
+                        <Cell key={item.channel} fill={paymentChannelColors[index % paymentChannelColors.length]} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
