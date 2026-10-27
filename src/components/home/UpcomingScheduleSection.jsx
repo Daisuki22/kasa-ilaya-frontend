@@ -337,6 +337,8 @@ export default function UpcomingScheduleSection({ allowAdminActions = false }) {
                   captionLayout="dropdown"
                   fromYear={new Date().getFullYear()}
                   toYear={new Date().getFullYear() + 3}
+                  fromDate={today}
+                  toDate={new Date(today.getFullYear() + 3, 11, 31)}
                   selected={selectedDate}
                   disabled={{ before: today }}
                   onSelect={(date) => {

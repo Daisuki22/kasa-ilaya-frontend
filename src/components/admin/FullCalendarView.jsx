@@ -388,6 +388,7 @@ export default function FullCalendarView({ embedded = false }) {
                   week: "week",
                   day: "day",
                 }}
+                validRange={() => ({ start: format(new Date(), "yyyy-MM-dd") })}
                 events={calendarEvents}
                 dayCellClassNames={({ date }) => {
                   const cellDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());

@@ -1,9 +1,11 @@
 import React from 'react';
-import { DayPicker, Day as DayPickerDay, useActiveModifiers, useDayPicker } from 'react-day-picker';
+import { DayPicker, Day as DayPickerDay, useActiveModifiers, useDayPicker, useNavigation } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function CalendarDropdown({ name, caption, children, className, style, value, onChange, ...props }) {
+  const { today } = useDayPicker();
+  const { currentMonth } = useNavigation();
   const options = React.Children.toArray(children).filter((option) => React.isValidElement(option));
 
   return (
@@ -22,11 +24,25 @@ function CalendarDropdown({ name, caption, children, className, style, value, on
           <SelectValue>{caption}</SelectValue>
         </SelectTrigger>
         <SelectContent className="max-h-64">
-          {options.map((option) => (
-            <SelectItem key={option.key ?? option.props.value} value={String(option.props.value)}>
-              {option.props.children}
-            </SelectItem>
-          ))}
+          {options.map((option) => {
+            const optionValue = Number(option.props.value);
+            const isPastMonth = name === 'months'
+              && currentMonth.getFullYear() === today.getFullYear()
+              && optionValue < today.getMonth();
+            const isPastYear = name === 'years' && optionValue < today.getFullYear();
+            const isDisabled = Boolean(option.props.disabled || isPastMonth || isPastYear);
+
+            return (
+              <SelectItem
+                key={option.key ?? option.props.value}
+                value={String(option.props.value)}
+                disabled={isDisabled}
+                className={isDisabled ? 'text-muted-foreground line-through' : undefined}
+              >
+                {option.props.children}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>
