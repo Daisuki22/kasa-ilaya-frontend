@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPageBannerImages } from "@/lib/pageBannerImages";
 import RotatingBannerBackground from "@/components/common/RotatingBannerBackground";
@@ -83,6 +84,7 @@ export default function Contact() {
   });
   const [guestInquiryAccess, setGuestInquiryAccess] = useState(() => loadStoredInquiryAccess());
   const [selectedInquiryId, setSelectedInquiryId] = useState(null);
+  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [selectedHistoryInquiryId, setSelectedHistoryInquiryId] = useState(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,13 +115,13 @@ export default function Contact() {
     [inquiries]
   );
   const shouldShowInquiryMessages = Boolean(
-    user && selectedInquiryId && activeInquiries.some((inquiry) => inquiry.id === selectedInquiryId)
+    isInquiryModalOpen && user && selectedInquiryId && activeInquiries.some((inquiry) => inquiry.id === selectedInquiryId)
   );
 
   const { data: inquiryThread, isLoading: isLoadingThread } = useQuery({
     queryKey: ["contact-inquiry-thread", selectedInquiryId, selectedInquiryToken, user?.id],
     queryFn: () => baseClient.inquiries.thread(selectedInquiryId, selectedInquiryToken),
-    enabled: Boolean(user && selectedInquiryId),
+    enabled: Boolean(user && selectedInquiryId && isInquiryModalOpen),
     refetchInterval: 15000,
   });
 
@@ -161,12 +163,14 @@ export default function Contact() {
   useEffect(() => {
     if (!activeInquiries.length) {
       setSelectedInquiryId(null);
+      setIsInquiryModalOpen(false);
       return;
     }
 
     const exists = activeInquiries.some((entry) => entry.id === selectedInquiryId);
     if (!exists) {
       setSelectedInquiryId(activeInquiries[0].id);
+      setIsInquiryModalOpen(false);
     }
   }, [activeInquiries, selectedInquiryId]);
 
@@ -212,6 +216,7 @@ export default function Contact() {
 
       await queryClient.invalidateQueries({ queryKey: ["contact-inquiries"] });
       setSelectedInquiryId(user ? response?.inquiry?.id || null : null);
+      if (user && response?.inquiry?.id) setIsInquiryModalOpen(true);
       setForm((prev) => ({ ...prev, subject: "", message: "" }));
       toast.success(user ? "Your inquiry has been sent. You can continue the conversation below." : "Your inquiry has been sent.");
     } catch (error) {
@@ -405,7 +410,7 @@ export default function Contact() {
                         <button
                           key={inquiry.id}
                           type="button"
-                          onClick={() => setSelectedInquiryId(inquiry.id)}
+                          onClick={() => { setSelectedInquiryId(inquiry.id); setIsInquiryModalOpen(true); }}
                           className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40 hover:bg-muted/30"}`}
                         >
                           <div className="flex items-start justify-between gap-3">
@@ -595,15 +600,13 @@ export default function Contact() {
       </section>
 
       {shouldShowInquiryMessages ? (
-      <section className="w-full app-content-container px-2 py-8 sm:px-3 lg:px-4 lg:py-10">
-        <Card className="border-border/80 shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle className="font-display text-2xl">Conversation</CardTitle>
-            <p className="text-sm leading-6 text-muted-foreground">
-              View the messages for the inquiry selected from your history.
-            </p>
-          </CardHeader>
-          <CardContent>
+      <Dialog open={shouldShowInquiryMessages} onOpenChange={setIsInquiryModalOpen}>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90dvh]">
+          <DialogHeader className="border-b border-border px-5 py-4 pr-12 sm:px-6">
+            <DialogTitle className="font-display text-2xl">Conversation</DialogTitle>
+            <DialogDescription>Continue your conversation with the resort team.</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto p-5 sm:p-6">
             {!selectedInquiryId ? (
               <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center text-sm leading-6 text-muted-foreground">
                 Select an inquiry from your history to view its messages.
@@ -624,7 +627,7 @@ export default function Contact() {
                   </Badge>
                 </div>
 
-                <div ref={messagesContainerRef} className="h-[480px] space-y-3 overflow-y-auto rounded-xl border border-border bg-muted/10 p-4">
+                <div ref={messagesContainerRef} className="h-[min(48dvh,28rem)] min-h-48 space-y-3 overflow-y-auto rounded-xl border border-border bg-muted/10 p-4">
                   {(inquiryThread?.messages || []).map((message) => {
                     const isOwnMessage =
                       (message.sender_user_id && user?.id && message.sender_user_id === user.id) ||
@@ -667,7 +670,7 @@ export default function Contact() {
                     <Label htmlFor="contact-reply">Reply</Label>
                     <Textarea
                       id="contact-reply"
-                      rows={5}
+                      rows={3}
                       value={replyMessage}
                       onChange={(event) => setReplyMessage(event.target.value)}
                       onKeyDown={handleReplyKeyDown}
@@ -682,9 +685,9 @@ export default function Contact() {
                 </form>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </DialogContent>
+      </Dialog>
       ) : null}
     </div>
   );
