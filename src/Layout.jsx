@@ -142,7 +142,9 @@ export default function Layout({ children, currentPageName }) {
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isHomeAtTop, setIsHomeAtTop] = useState(currentPageName === "Home");
-  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [headerNotificationOpen, setHeaderNotificationOpen] = useState(false);
+  const [adminSidebarNotificationOpen, setAdminSidebarNotificationOpen] = useState(false);
+  const [mobileDrawerNotificationOpen, setMobileDrawerNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
   const observedBookingNotificationIds = useRef({ email: "", ids: null });
@@ -533,16 +535,16 @@ export default function Layout({ children, currentPageName }) {
       ? "Booking and guest chat updates"
       : "Account, booking, and chat updates";
 
-  const renderNotificationMenu = ({ compact = false, onHero = false } = {}) => {
+  const renderNotificationMenu = ({ compact = false, onHero = false, open = false, onOpenChange = () => {} } = {}) => {
     if (!user) {
       return null;
     }
 
     return (
       <DropdownMenu
-        open={notificationOpen}
+        open={open}
         onOpenChange={(open) => {
-          setNotificationOpen(open);
+          onOpenChange(open);
           if (open) {
             markNotificationsAsRead();
           }
@@ -710,7 +712,9 @@ export default function Layout({ children, currentPageName }) {
 
   const handleLogout = () => {
     setMobileOpen(false);
-    setNotificationOpen(false);
+    setHeaderNotificationOpen(false);
+    setAdminSidebarNotificationOpen(false);
+    setMobileDrawerNotificationOpen(false);
     void baseClient.auth.logout("/Login");
   };
 
@@ -862,7 +866,11 @@ export default function Layout({ children, currentPageName }) {
                   <Settings className="h-4 w-4" />
                   Account Settings
                 </Link>
-                {renderNotificationMenu({ compact: true })}
+                {renderNotificationMenu({
+                  compact: true,
+                  open: adminSidebarNotificationOpen,
+                  onOpenChange: setAdminSidebarNotificationOpen,
+                })}
               </div>
 
               {/* Logout */}
@@ -921,7 +929,12 @@ export default function Layout({ children, currentPageName }) {
               <NavbarThemeToggle onHero={isTransparentHomeNav} />
               {!isAdminMode ? (
                 <div className="hidden lg:block">
-                  {renderNotificationMenu({ compact: true, onHero: isTransparentHomeNav })}
+                  {renderNotificationMenu({
+                    compact: true,
+                    onHero: isTransparentHomeNav,
+                    open: headerNotificationOpen,
+                    onOpenChange: setHeaderNotificationOpen,
+                  })}
                 </div>
               ) : null}
               <div className="hidden sm:block">
@@ -1026,7 +1039,11 @@ export default function Layout({ children, currentPageName }) {
                     <Settings className="h-4 w-4" />
                     Account Settings
                   </Link>
-                  {renderNotificationMenu({ compact: true })}
+                  {renderNotificationMenu({
+                    compact: true,
+                    open: mobileDrawerNotificationOpen,
+                    onOpenChange: setMobileDrawerNotificationOpen,
+                  })}
                 </div>
 
                 <button
