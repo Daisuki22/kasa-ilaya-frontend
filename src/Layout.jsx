@@ -714,17 +714,22 @@ export default function Layout({ children, currentPageName }) {
     void baseClient.auth.logout("/Login");
   };
 
-  const renderUserMenu = () => {
+  const renderUserMenu = ({ onHero = false } = {}) => {
     if (user) {
       return (
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full p-0" aria-label="Open user menu">
-              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-11 w-11 rounded-full border p-1 shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 ${onHero ? "border-white/70 bg-black/25 text-white shadow-black/30 backdrop-blur-sm hover:bg-white/20 focus-visible:ring-white" : "border-border bg-background/80 text-foreground hover:bg-muted focus-visible:ring-ring"}`}
+              aria-label="Open user menu"
+            >
+              <div className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ${onHero ? "border-2 border-white bg-primary text-primary-foreground" : "border border-border bg-primary/10"}`}>
                 {user.profile_image_url ? (
                   <img src={resolveAssetUrl(user.profile_image_url)} alt={user.full_name || "Profile"} loading="lazy" decoding="async" onError={(event) => handleImageFallback(event, LOGO_IMAGE_FALLBACK)} className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-xs font-semibold text-primary">
+                  <span className={`text-sm font-bold ${onHero ? "text-primary-foreground" : "text-primary"}`}>
                     {user.full_name?.[0]?.toUpperCase() || "U"}
                   </span>
                 )}
@@ -919,7 +924,7 @@ export default function Layout({ children, currentPageName }) {
               <NavbarThemeToggle onHero={isTransparentHomeNav} />
               {!isAdminMode ? renderNotificationMenu({ compact: true, onHero: isTransparentHomeNav }) : null}
               <div className="hidden sm:block">
-                {renderUserMenu()}
+                {renderUserMenu({ onHero: isTransparentHomeNav })}
               </div>
 
               <Button
