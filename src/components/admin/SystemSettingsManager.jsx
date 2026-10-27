@@ -371,11 +371,6 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
                     <p className="text-xs text-muted-foreground">No custom logo uploaded</p>
                   )}
                 </div>
-                {logoPreviewFailed ? (
-                  <p className="mb-3 text-xs text-amber-700 dark:text-amber-400">
-                    The saved logo file could not be loaded. Upload a replacement to restore your custom logo.
-                  </p>
-                ) : null}
                 <div className="flex gap-2">
                   <label className="flex-1">
                     <Button type="button" variant="outline" className="w-full gap-2" asChild>
