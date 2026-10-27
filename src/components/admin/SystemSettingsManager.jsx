@@ -31,6 +31,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { isSuperAdmin } from "@/lib/adminAccess";
 import { defaultSiteSettings, FONT_STYLE_OPTIONS, AMENITY_ICON_OPTIONS, useSiteSettings } from "@/hooks/useSiteSettings";
 import { optimizeImageFile } from "@/lib/optimizeImageFile";
+import { resolveAssetUrl } from "@/lib/assetUrls";
 
 const buildForm = (settings) => ({
   site_name: settings?.site_name || defaultSiteSettings.site_name,
@@ -70,12 +71,17 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingPackagesBanner, setUploadingPackagesBanner] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [logoPreviewFailed, setLogoPreviewFailed] = useState(false);
 
   useEffect(() => {
     setForm(buildForm(settings));
     setAmenities(settings?.amenities || defaultSiteSettings.amenities);
     setResortGallery(settings?.resort_gallery || defaultSiteSettings.resort_gallery);
   }, [settings]);
+
+  useEffect(() => {
+    setLogoPreviewFailed(false);
+  }, [form.logo_url]);
 
   const previewHeroImages = Array.isArray(form.hero_images) && form.hero_images.length > 0
     ? form.hero_images.filter(Boolean)
@@ -355,11 +361,21 @@ export default function SystemSettingsManager({ embedded = false, actorUser = nu
               <div className="rounded-xl border border-border bg-muted/20 p-3">
                 <div className="mb-3 flex h-28 items-center justify-center overflow-hidden rounded-lg bg-muted">
                   {form.logo_url ? (
-                    <img src={form.logo_url} alt="Logo preview" className="h-full w-full object-contain" />
+                    <img
+                      src={logoPreviewFailed ? "/img/kasa-ilaya-main-logo.webp" : resolveAssetUrl(form.logo_url)}
+                      alt="Logo preview"
+                      onError={() => setLogoPreviewFailed(true)}
+                      className="h-full w-full object-contain"
+                    />
                   ) : (
                     <p className="text-xs text-muted-foreground">No custom logo uploaded</p>
                   )}
                 </div>
+                {logoPreviewFailed ? (
+                  <p className="mb-3 text-xs text-amber-700 dark:text-amber-400">
+                    The saved logo file could not be loaded. Upload a replacement to restore your custom logo.
+                  </p>
+                ) : null}
                 <div className="flex gap-2">
                   <label className="flex-1">
                     <Button type="button" variant="outline" className="w-full gap-2" asChild>
