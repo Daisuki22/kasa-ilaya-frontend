@@ -89,7 +89,7 @@ const AdminDestinationGuard = ({ user, pageName, children }) => {
   return children;
 };
 
-const protectedUserPages = new Set(["Packages", "BookingForm", "MyBookings", "ProfileSettings"]);
+const protectedUserPages = new Set(["BookingForm", "MyBookings", "ProfileSettings"]);
 const guestOrRegularUserPages = new Set(["About", "Contact"]);
 const GOOGLE_NEXT_PATH_SESSION_KEY = 'ki-google-signin-next-path';
 const authenticationPaths = new Set(['/Login', '/ForgotPassword', '/AccountRecoveryHelp', '/ResetPassword', '/VerifyRegistrationOtp']);

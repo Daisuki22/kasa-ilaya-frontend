@@ -61,20 +61,8 @@ const filterOptions = [
 export default function Packages() {
   const prefersReducedMotion = useReducedMotion();
   const [tourFilter, setTourFilter] = useState("all");
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { settings: siteSettings } = useSiteSettings();
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
-
-  useEffect(() => {
-    baseClient.auth.me()
-      .catch(() => {
-        baseClient.auth.redirectToLogin(window.location.href);
-        return null;
-      })
-      .finally(() => {
-        setIsCheckingAuth(false);
-      });
-  }, []);
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ["packages"],
@@ -135,14 +123,6 @@ export default function Packages() {
 
     return () => window.clearInterval(intervalId);
   }, [packagesBannerImages.length]);
-
-  if (isCheckingAuth) {
-    return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="bg-background">
