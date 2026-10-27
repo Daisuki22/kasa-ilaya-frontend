@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import PasswordInput, { passwordMeetsRequirements } from '@/components/auth/PasswordInput';
+import PasswordInput, { PasswordRequirements, passwordMeetsRequirements } from '@/components/auth/PasswordInput';
 import { DATA_PRIVACY_NOTICE } from '@/lib/resortNotices';
 import { defaultSiteSettings, useSiteSettings } from '@/hooks/useSiteSettings';
 import { optimizeImageFile } from '@/lib/optimizeImageFile';
@@ -853,9 +853,10 @@ export default function Login() {
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" showRequirements requirementsPlacement="bottom" confirmValue={signUpForm.confirmPassword} required />
+                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" confirmValue={signUpForm.confirmPassword} required />
                       <PasswordInput id="signup-confirm" label="Confirm password" value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
                     </div>
+                    <PasswordRequirements id="signup-password-requirements" value={signUpForm.password} />
                     <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
                       <div className="flex items-start gap-2 text-sm leading-5 text-muted-foreground">
                         <input

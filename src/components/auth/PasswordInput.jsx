@@ -21,29 +21,19 @@ const checkLabels = [
   ["special", "At least 1 special character"],
 ];
 
-export default function PasswordInput({
-  id, label, value, onChange, required = false, autoComplete,
-  placeholder, showRequirements = false, showRequirementsOnFocus = false,
-  showMatch = false, confirmValue, requirementsPlacement = "bottom",
-}) {
-  const [visible, setVisible] = useState(false);
-  const [focused, setFocused] = useState(false);
+export function PasswordRequirements({ id = "password-requirements", value = "", className = "" }) {
   const checks = passwordChecks(value);
   const passed = Object.values(checks).filter(Boolean).length;
   const strength = value.length === 0 ? "" : passed <= 2 ? "Weak" : passed <= 3 ? "Fair" : passed < 5 ? "Good" : "Strong";
-  const hasConfirmation = typeof confirmValue === "string";
-  const passwordsMatch = hasConfirmation && value === confirmValue && value.length > 0;
-  const shouldShowRequirements = showRequirements && (
-    !showRequirementsOnFocus || (focused && !passwordMeetsRequirements(value))
-  );
-  const requirementsPanel = (
+
+  return (
     <div
-      id={`${id}-requirements`}
-      className="rounded-lg border bg-card p-3 shadow-lg"
+      id={id}
+      className={`rounded-lg border bg-card p-3 shadow-lg ${className}`}
       aria-live="polite"
     >
       <p className="mb-2 text-xs font-medium text-foreground">Password must contain:</p>
-      <ul className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2">
+      <ul className="grid gap-x-3 gap-y-1 text-xs sm:grid-cols-2 md:grid-cols-3">
         {checkLabels.map(([key, text]) => (
           <li key={key} className={checks[key] ? "flex items-center gap-1.5 text-success dark:text-success" : "flex items-center gap-1.5 text-muted-foreground"}>
             {checks[key] ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
@@ -54,11 +44,25 @@ export default function PasswordInput({
       {strength ? <p className="mt-2 text-xs text-muted-foreground">Password strength: <span className="font-medium text-foreground">{strength}</span></p> : null}
     </div>
   );
+}
 
+export default function PasswordInput({
+  id, label, value, onChange, required = false, autoComplete,
+  placeholder, showRequirements = false, showRequirementsOnFocus = false,
+  showMatch = false, confirmValue, requirementsPlacement = "bottom",
+}) {
+  const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const checks = passwordChecks(value);
+  const hasConfirmation = typeof confirmValue === "string";
+  const passwordsMatch = hasConfirmation && value === confirmValue && value.length > 0;
+  const shouldShowRequirements = showRequirements && (
+    !showRequirementsOnFocus || (focused && !passwordMeetsRequirements(value))
+  );
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      {shouldShowRequirements && requirementsPlacement === "top" ? requirementsPanel : null}
+      {shouldShowRequirements && requirementsPlacement === "top" ? <PasswordRequirements id={`${id}-requirements`} value={value} /> : null}
       <div
         className="relative"
         onFocusCapture={() => setFocused(true)}
@@ -89,7 +93,7 @@ export default function PasswordInput({
       </div>
       {shouldShowRequirements && requirementsPlacement !== "top" ? (
         <div className="animate-in fade-in-0 slide-in-from-top-1 duration-150">
-          {requirementsPanel}
+          <PasswordRequirements id={`${id}-requirements`} value={value} />
         </div>
       ) : null}
       {showMatch && hasConfirmation && confirmValue.length > 0 ? (
