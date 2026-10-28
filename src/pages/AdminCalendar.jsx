@@ -670,7 +670,7 @@ export default function AdminCalendar() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <Table className="min-w-[1300px] table-fixed">
+                <Table className="mx-auto w-[1442px] min-w-[1442px] table-fixed">
                   <colgroup>
                     <col className="w-[52px]" />
                     <col className="w-[150px]" />
@@ -698,7 +698,7 @@ export default function AdminCalendar() {
                       <TableHead>Guest</TableHead>
                       <TableHead>Package</TableHead>
                       <TableHead className="text-center">Schedule</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
                       <TableHead className="text-right">Submitted Payment</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment</TableHead>
@@ -739,7 +739,7 @@ export default function AdminCalendar() {
                               {booking.guest_count || 0} guest{Number(booking.guest_count || 0) === 1 ? "" : "s"}
                             </p>
                           </TableCell>
-                          <TableCell className="font-semibold text-foreground">{formatMoney(booking.total_amount)}</TableCell>
+                          <TableCell className="text-right font-semibold text-foreground">{formatMoney(booking.total_amount)}</TableCell>
                           <TableCell className="text-right">
                             <p className="font-semibold text-primary">{formatMoney(getSubmittedPaymentAmount(booking))}</p>
                             <p className="mt-1 text-xs text-muted-foreground">{paymentTypeLabels[booking.payment_type] || "Downpayment"}</p>
