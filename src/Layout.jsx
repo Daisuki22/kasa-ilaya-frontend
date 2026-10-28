@@ -143,6 +143,7 @@ export default function Layout({ children, currentPageName }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isHomeAtTop, setIsHomeAtTop] = useState(currentPageName === "Home");
   const [headerNotificationOpen, setHeaderNotificationOpen] = useState(false);
+  const [mobileHeaderNotificationOpen, setMobileHeaderNotificationOpen] = useState(false);
   const [adminSidebarNotificationOpen, setAdminSidebarNotificationOpen] = useState(false);
   const [mobileDrawerNotificationOpen, setMobileDrawerNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
@@ -713,6 +714,7 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = () => {
     setMobileOpen(false);
     setHeaderNotificationOpen(false);
+    setMobileHeaderNotificationOpen(false);
     setAdminSidebarNotificationOpen(false);
     setMobileDrawerNotificationOpen(false);
     void baseClient.auth.logout("/Login");
@@ -942,9 +944,9 @@ export default function Layout({ children, currentPageName }) {
                   {renderNotificationMenu({
                     compact: true,
                     onHero: isTransparentHomeNav,
-                    open: headerNotificationOpen,
+                    open: mobileHeaderNotificationOpen,
                     onOpenChange: (open) => {
-                      setHeaderNotificationOpen(open);
+                      setMobileHeaderNotificationOpen(open);
                       if (open) setMobileOpen(false);
                     },
                   })}
@@ -960,6 +962,7 @@ export default function Layout({ children, currentPageName }) {
                 className={isAdminMode ? "rounded-xl border border-border/70 bg-background/80 shadow-sm" : isTransparentHomeNav ? "rounded-xl border border-white/30 bg-black/20 text-white shadow-sm backdrop-blur-sm hover:bg-white/15 hover:text-white lg:hidden" : "rounded-xl border border-border/70 bg-background/80 text-foreground shadow-sm lg:hidden"}
                 onClick={() => {
                   setHeaderNotificationOpen(false);
+                  setMobileHeaderNotificationOpen(false);
                   setMobileOpen(!mobileOpen);
                 }}
                 aria-expanded={mobileOpen}
