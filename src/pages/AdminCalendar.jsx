@@ -697,7 +697,7 @@ export default function AdminCalendar() {
                       <TableHead>Reference</TableHead>
                       <TableHead>Guest</TableHead>
                       <TableHead>Package</TableHead>
-                      <TableHead>Schedule</TableHead>
+                      <TableHead className="text-center">Schedule</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead className="text-right">Submitted Payment</TableHead>
                       <TableHead>Status</TableHead>
@@ -732,9 +732,9 @@ export default function AdminCalendar() {
                             <p className="font-medium text-foreground">{booking.package_name || "-"}</p>
                             <p className="mt-1 text-xs text-muted-foreground">{tourLabels[booking.tour_type] || booking.tour_type || "-"}</p>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <p className="font-medium text-foreground">{formatDate(booking.booking_date)}</p>
-                            <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <p className="mt-1 inline-flex items-center justify-center gap-1 text-xs text-muted-foreground">
                               <Users className="h-3.5 w-3.5" />
                               {booking.guest_count || 0} guest{Number(booking.guest_count || 0) === 1 ? "" : "s"}
                             </p>
