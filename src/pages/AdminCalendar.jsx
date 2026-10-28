@@ -699,7 +699,7 @@ export default function AdminCalendar() {
                       <TableHead>Package</TableHead>
                       <TableHead>Schedule</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Submitted Payment</TableHead>
+                      <TableHead className="text-right">Submitted Payment</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -740,7 +740,7 @@ export default function AdminCalendar() {
                             </p>
                           </TableCell>
                           <TableCell className="font-semibold text-foreground">{formatMoney(booking.total_amount)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             <p className="font-semibold text-primary">{formatMoney(getSubmittedPaymentAmount(booking))}</p>
                             <p className="mt-1 text-xs text-muted-foreground">{paymentTypeLabels[booking.payment_type] || "Downpayment"}</p>
                           </TableCell>
