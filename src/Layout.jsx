@@ -937,6 +937,19 @@ export default function Layout({ children, currentPageName }) {
                   })}
                 </div>
               ) : null}
+              {!isAdminMode ? (
+                <div className="lg:hidden">
+                  {renderNotificationMenu({
+                    compact: true,
+                    onHero: isTransparentHomeNav,
+                    open: headerNotificationOpen,
+                    onOpenChange: (open) => {
+                      setHeaderNotificationOpen(open);
+                      if (open) setMobileOpen(false);
+                    },
+                  })}
+                </div>
+              ) : null}
               <div className="hidden sm:block">
                 {renderUserMenu({ onHero: isTransparentHomeNav })}
               </div>
@@ -945,7 +958,10 @@ export default function Layout({ children, currentPageName }) {
                 variant="ghost"
                 size="icon"
                 className={isAdminMode ? "rounded-xl border border-border/70 bg-background/80 shadow-sm" : isTransparentHomeNav ? "rounded-xl border border-white/30 bg-black/20 text-white shadow-sm backdrop-blur-sm hover:bg-white/15 hover:text-white lg:hidden" : "rounded-xl border border-border/70 bg-background/80 text-foreground shadow-sm lg:hidden"}
-                onClick={() => setMobileOpen(!mobileOpen)}
+                onClick={() => {
+                  setHeaderNotificationOpen(false);
+                  setMobileOpen(!mobileOpen);
+                }}
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-navigation-drawer"
                 aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
@@ -1030,11 +1046,11 @@ export default function Layout({ children, currentPageName }) {
                       <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                  {renderNotificationMenu({
+                  {isAdminMode ? renderNotificationMenu({
                     compact: true,
                     open: mobileDrawerNotificationOpen,
                     onOpenChange: setMobileDrawerNotificationOpen,
-                  })}
+                  }) : null}
                 </div>
 
                 <Link
