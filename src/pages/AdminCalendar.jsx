@@ -675,8 +675,8 @@ export default function AdminCalendar() {
                     <col className="w-[52px]" />
                     <col className="w-[150px]" />
                     <col className="w-[136px]" />
-                    <col className="w-[160px]" />
-                    <col className="w-[170px]" />
+                    <col className="w-[120px]" />
+                    <col className="w-[210px]" />
                     <col className="w-[125px]" />
                     <col className="w-[150px]" />
                     <col className="w-[165px]" />
@@ -696,7 +696,7 @@ export default function AdminCalendar() {
                       </TableHead>
                       <TableHead>Reference</TableHead>
                       <TableHead>Guest</TableHead>
-                      <TableHead>Package</TableHead>
+                      <TableHead className="px-2">Package</TableHead>
                       <TableHead className="text-center">Schedule</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead className="text-right">Submitted Payment</TableHead>
@@ -728,7 +728,7 @@ export default function AdminCalendar() {
                               <p className="truncate text-xs leading-4 text-muted-foreground">{booking.customer_email || "-"}</p>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-2">
                             <p className="font-medium text-foreground">{booking.package_name || "-"}</p>
                             <p className="mt-1 text-xs text-muted-foreground">{tourLabels[booking.tour_type] || booking.tour_type || "-"}</p>
                           </TableCell>
