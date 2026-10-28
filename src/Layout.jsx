@@ -153,19 +153,6 @@ export default function Layout({ children, currentPageName }) {
   const chatNotificationUserKey = useRef("");
   const { settings: siteSettings } = useSiteSettings();
   const { theme, setTheme } = useTheme();
-  useEffect(() => {
-    if (!mobileOpen && !mobileHeaderNotificationOpen) return undefined;
-    const root = document.documentElement;
-    const body = document.body;
-    const rootOverflow = root.style.overflow;
-    const bodyOverflow = body.style.overflow;
-    root.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    return () => {
-      root.style.overflow = rootOverflow;
-      body.style.overflow = bodyOverflow;
-    };
-  }, [mobileOpen, mobileHeaderNotificationOpen]);
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdminUser = Boolean(
     user && (user?.role === "super_admin" || user?.app_role === "super_admin" || user?._app_role === "super_admin")
@@ -987,7 +974,7 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         <div
-          className={`fixed inset-0 z-[55] bg-black/45 transition-opacity duration-300 ${
+          className={`fixed inset-0 z-[55] touch-none bg-black/45 transition-opacity duration-300 ${
             isAdminMode ? "md:hidden" : "lg:hidden"
           } ${mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
           onClick={() => setMobileOpen(false)}
@@ -996,7 +983,7 @@ export default function Layout({ children, currentPageName }) {
 
         <aside
           id="mobile-navigation-drawer"
-          className={`fixed right-0 top-0 z-[60] flex h-dvh w-[min(82vw,22rem)] flex-col border-l border-border bg-card shadow-2xl transition-transform duration-300 ease-out ${
+          className={`fixed right-0 top-0 z-[60] flex h-dvh w-[min(82vw,22rem)] flex-col overscroll-contain border-l border-border bg-card shadow-2xl transition-transform duration-300 ease-out ${
             isAdminMode ? "md:hidden" : "lg:hidden"
           } ${mobileOpen ? "translate-x-0" : "translate-x-full"}`}
           aria-hidden={!mobileOpen}
