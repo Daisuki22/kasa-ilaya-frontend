@@ -145,7 +145,6 @@ export default function Layout({ children, currentPageName }) {
   const [headerNotificationOpen, setHeaderNotificationOpen] = useState(false);
   const [mobileHeaderNotificationOpen, setMobileHeaderNotificationOpen] = useState(false);
   const [adminSidebarNotificationOpen, setAdminSidebarNotificationOpen] = useState(false);
-  const [mobileDrawerNotificationOpen, setMobileDrawerNotificationOpen] = useState(false);
   const [footerLegalType, setFooterLegalType] = useState(null);
   const [notificationSeenAt, setNotificationSeenAt] = useState(0);
   const observedBookingNotificationIds = useRef({ email: "", ids: null });
@@ -155,7 +154,7 @@ export default function Layout({ children, currentPageName }) {
   const { settings: siteSettings } = useSiteSettings();
   const { theme, setTheme } = useTheme();
   useEffect(() => {
-    if (!mobileHeaderNotificationOpen) return undefined;
+    if (!mobileOpen && !mobileHeaderNotificationOpen) return undefined;
     const root = document.documentElement;
     const body = document.body;
     const rootOverflow = root.style.overflow;
@@ -166,7 +165,7 @@ export default function Layout({ children, currentPageName }) {
       root.style.overflow = rootOverflow;
       body.style.overflow = bodyOverflow;
     };
-  }, [mobileHeaderNotificationOpen]);
+  }, [mobileOpen, mobileHeaderNotificationOpen]);
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdminUser = Boolean(
     user && (user?.role === "super_admin" || user?.app_role === "super_admin" || user?._app_role === "super_admin")
@@ -729,7 +728,6 @@ export default function Layout({ children, currentPageName }) {
     setHeaderNotificationOpen(false);
     setMobileHeaderNotificationOpen(false);
     setAdminSidebarNotificationOpen(false);
-    setMobileDrawerNotificationOpen(false);
     void baseClient.auth.logout("/Login");
   };
 
@@ -952,11 +950,11 @@ export default function Layout({ children, currentPageName }) {
                   })}
                 </div>
               ) : null}
-              {!isAdminMode ? (
-                <div className="lg:hidden">
+              {user ? (
+                <div className={isAdminMode ? "md:hidden" : "lg:hidden"}>
                   {renderNotificationMenu({
                     compact: true,
-                    onHero: isTransparentHomeNav,
+                    onHero: !isAdminMode && isTransparentHomeNav,
                     open: mobileHeaderNotificationOpen,
                     onOpenChange: (open) => {
                       setMobileHeaderNotificationOpen(open);
@@ -1012,7 +1010,7 @@ export default function Layout({ children, currentPageName }) {
             </Button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-4 py-5">
+          <nav className="flex-1 overflow-y-auto overscroll-contain px-4 py-5">
             <p className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{isAdminMode ? "Admin workspace" : "Explore Kasa Ilaya"}</p>
             <div className="space-y-1.5">
               {navItems.map((item) => (
@@ -1062,11 +1060,6 @@ export default function Layout({ children, currentPageName }) {
                       <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                  {isAdminMode ? renderNotificationMenu({
-                    compact: true,
-                    open: mobileDrawerNotificationOpen,
-                    onOpenChange: setMobileDrawerNotificationOpen,
-                  }) : null}
                 </div>
 
                 <Link
