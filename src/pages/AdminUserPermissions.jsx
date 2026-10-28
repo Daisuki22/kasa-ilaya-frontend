@@ -456,7 +456,6 @@ export default function AdminUserPermissions() {
                         <TableCell>
                           <div>
                             <p className="font-medium text-sm text-foreground">{targetUser.full_name || "Unnamed"}</p>
-                            <p className="text-xs font-mono text-muted-foreground">{targetUser.id}</p>
                           </div>
                         </TableCell>
                         <TableCell>

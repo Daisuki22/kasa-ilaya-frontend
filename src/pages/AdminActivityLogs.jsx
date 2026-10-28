@@ -333,7 +333,6 @@ export default function AdminActivityLogs() {
 											<TableCell>
 												<div>
 													<p>{log.entity_type || 'Unknown'}</p>
-													<p className="text-xs font-mono text-muted-foreground">{log.entity_id || 'No ID'}</p>
 												</div>
 											</TableCell>
 											<TableCell className="max-w-md text-sm leading-6 text-muted-foreground">{log.details || 'No details provided.'}</TableCell>
