@@ -154,6 +154,19 @@ export default function Layout({ children, currentPageName }) {
   const chatNotificationUserKey = useRef("");
   const { settings: siteSettings } = useSiteSettings();
   const { theme, setTheme } = useTheme();
+  useEffect(() => {
+    if (!mobileHeaderNotificationOpen) return undefined;
+    const root = document.documentElement;
+    const body = document.body;
+    const rootOverflow = root.style.overflow;
+    const bodyOverflow = body.style.overflow;
+    root.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = rootOverflow;
+      body.style.overflow = bodyOverflow;
+    };
+  }, [mobileHeaderNotificationOpen]);
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdminUser = Boolean(
     user && (user?.role === "super_admin" || user?.app_role === "super_admin" || user?._app_role === "super_admin")
@@ -594,7 +607,7 @@ export default function Layout({ children, currentPageName }) {
             </Button>
           </div>
 
-          <div className="max-h-[min(70vh,30rem)] overflow-y-auto p-2">
+          <div className="max-h-[min(70dvh,30rem)] overflow-y-auto overscroll-contain p-2">
             {notifications.length === 0 ? (
               <div className="px-3 py-10 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground"><Bell className="h-5 w-5" /></div>
