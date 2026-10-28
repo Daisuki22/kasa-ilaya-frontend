@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import PaginationControls from "@/components/admin/PaginationControls";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -136,17 +137,6 @@ export default function AdminInquiries() {
       container.scrollTop = container.scrollHeight;
     }
   }, [selectedInquiryId, selectedThread?.messages?.length, selectedThread?.messages?.at(-1)?.id]);
-
-  useEffect(() => {
-    if (!inquiries.length) {
-      setSelectedInquiryId(null);
-      return;
-    }
-
-    if (!inquiries.some((entry) => entry.id === selectedInquiryId)) {
-      setSelectedInquiryId(inquiries[0].id);
-    }
-  }, [inquiries, selectedInquiryId]);
 
   useEffect(() => {
     setStatusValue(selectedThread?.inquiry?.status || "open");
@@ -381,7 +371,7 @@ export default function AdminInquiries() {
         <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); setSelectedArchiveIds([]); }} placeholder="Search guest, email, subject..." aria-label="Search inquiries" />
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.05fr)_minmax(26rem,0.95fr)]">
+      <div>
         <Card className="border-border/80 shadow-sm">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -415,7 +405,7 @@ export default function AdminInquiries() {
                     <TableRow
                       key={inquiry.id}
                       className={`cursor-pointer ${selectedInquiryId === inquiry.id ? "bg-muted/50" : ""}`}
-                      onClick={() => setSelectedInquiryId(inquiry.id)}
+                      onClick={() => { setSelectedInquiryId(inquiry.id); setReplyMessage(""); }}
                     >
                       <TableCell className="text-center" onClick={(event) => event.stopPropagation()}>
                         <input type="checkbox" aria-label={`Select inquiry ${inquiry.subject} for archive`} checked={selectedArchiveIds.includes(inquiry.id)} disabled={inquiry.status === "archived"} onChange={() => setSelectedArchiveIds((current) => current.includes(inquiry.id) ? current.filter((id) => id !== inquiry.id) : [...current, inquiry.id])} className="h-4 w-4 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
@@ -466,22 +456,20 @@ export default function AdminInquiries() {
           {!isLoading ? <PaginationControls page={currentPage} pageSize={pageSize} total={filteredInquiries.length} onPageChange={(value) => { setPage(value); setSelectedArchiveIds([]); }} onPageSizeChange={(size) => { setPageSize(size); setPage(1); setSelectedArchiveIds([]); }} /> : null}
         </Card>
 
-        <Card className="border-border/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="font-display text-2xl">Conversation Detail</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!selectedInquiryId ? (
-              <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-5 py-14 text-center text-sm text-muted-foreground">
-                Select an inquiry to review and reply.
-              </div>
-            ) : isLoadingThread ? (
+        <Dialog open={Boolean(selectedInquiryId)} onOpenChange={(open) => { if (!open) { setSelectedInquiryId(null); setReplyMessage(""); } }}>
+          <DialogContent className="flex h-[min(90dvh,52rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+            <DialogHeader className="shrink-0 border-b border-border px-5 py-4 pr-12 sm:px-6">
+              <DialogTitle className="font-display text-2xl">Conversation Detail</DialogTitle>
+              <DialogDescription>Review the inquiry, update its status, and reply to the guest.</DialogDescription>
+            </DialogHeader>
+            <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-6">
+            {isLoadingThread ? (
               <div className="flex items-center justify-center py-16 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : (
-              <div className="space-y-5">
-                <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+              <div className="flex min-h-0 flex-1 flex-col gap-4">
+                <div className="shrink-0 rounded-2xl border border-border/70 bg-muted/20 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-lg font-semibold text-foreground">{selectedThread?.inquiry?.subject}</p>
@@ -518,7 +506,7 @@ export default function AdminInquiries() {
                   </div>
                 </div>
 
-                <div ref={messagesContainerRef} className="h-[460px] space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-muted/10 p-4">
+                <div ref={messagesContainerRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-2xl border border-border/70 bg-muted/10 p-4">
                   {(selectedThread?.messages || []).map((message) => {
                     const isOwnMessage =
                       (message.sender_user_id && user?.id && message.sender_user_id === user.id) ||
@@ -550,7 +538,7 @@ export default function AdminInquiries() {
                   })}
                 </div>
 
-                <form className="space-y-3" onSubmit={handleSendReply}>
+                <form className="shrink-0 space-y-3" onSubmit={handleSendReply}>
                   {isSelectedInquiryClosed ? (
                     <div className="rounded-2xl border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
                       This inquiry is {selectedInquiryStatus}. Messaging is disabled because the conversation is already done.
@@ -576,8 +564,9 @@ export default function AdminInquiries() {
                 </form>
               </div>
             )}
-          </CardContent>
-        </Card>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <AlertDialog open={!!archiveId} onOpenChange={(open) => !open && !isArchiving && setArchiveId(null)}>
