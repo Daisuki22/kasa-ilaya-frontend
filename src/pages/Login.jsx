@@ -831,13 +831,15 @@ export default function Login() {
                         <Label htmlFor="signup-birthday">Birthday</Label>
                         <Input
                           id="signup-birthday"
-                          className="h-11 rounded-lg"
+                          className="h-11 min-w-0 max-w-full box-border text-left rounded-lg ios-date-input-width-fix"
                           type="date"
                           value={signUpForm.birth_date}
+                          min="1900-01-01"
                           max={todayInputValue}
                           onChange={(event) => setSignUpForm((current) => ({ ...current, birth_date: event.target.value }))}
                           required
                         />
+                        <p className="text-xs text-muted-foreground">Select your birth date.</p>
                       </div>
                     </div>
                     <div className="space-y-2">
