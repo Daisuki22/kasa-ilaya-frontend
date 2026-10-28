@@ -772,7 +772,7 @@ export default function AdminCalendar() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="gap-2 whitespace-nowrap text-success hover:text-success"
+                                    className="h-9 min-w-[104px] shrink-0 gap-2 whitespace-nowrap border-success/40 bg-success/10 px-3 font-semibold text-success hover:bg-success/20 hover:text-success"
                                     title={isBookingDateToday(booking) ? "Mark as completed" : "Available on the booking date"}
                                     disabled={!isBookingDateToday(booking)}
                                     onClick={() => setCompleteBookingTarget(booking)}
