@@ -530,7 +530,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const notificationSubtitle = isSuperAdminUser
-    ? "Bookings, chat messages, audit logs, archive actions, and system events"
+    ? "Bookings, chat messages, activity logs, archive actions, and system events"
     : isRegularAdmin
       ? "Booking and guest chat updates"
       : "Account, booking, and chat updates";

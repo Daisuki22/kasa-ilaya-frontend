@@ -163,9 +163,9 @@ export default function AdminActivityLogs() {
 					<div>
 						<div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
 							<ShieldCheck className="h-3.5 w-3.5" />
-							Audit center
+							Activity logs
 						</div>
-						<h1 className="font-display text-3xl font-bold text-foreground">Audit Logs Monitoring</h1>
+						<h1 className="font-display text-3xl font-bold text-foreground">Activity Logs</h1>
 						<p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
 							Monitor user actions, booking updates, and system changes in near real time.
 						</p>
@@ -290,7 +290,7 @@ export default function AdminActivityLogs() {
 			) : (
 				<Card className="border-border/80 shadow-sm">
 					<CardHeader className="border-b border-border pb-4">
-						<CardTitle className="font-display text-xl">Audit Trail</CardTitle>
+						<CardTitle className="font-display text-xl">Activity Logs</CardTitle>
 						<p className="text-sm text-muted-foreground">Showing {filteredLogs.length} filtered log{filteredLogs.length === 1 ? '' : 's'} from {logs.length} loaded records.</p>
 					</CardHeader>
 					<CardContent className="overflow-x-auto p-0 text-foreground">
