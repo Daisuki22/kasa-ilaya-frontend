@@ -220,7 +220,7 @@ export default function AdminActivityLogs() {
 					</SelectContent>
 				</Select>
 				<Select value={actorFilter} onValueChange={(value) => { setActorFilter(value); setPage(1); }}>
-					<SelectTrigger aria-label="Filter audit trail by actor role"><SelectValue placeholder="All Actors" /></SelectTrigger>
+					<SelectTrigger aria-label="Filter activity logs by actor role"><SelectValue placeholder="All Actors" /></SelectTrigger>
 					<SelectContent>
 						<SelectItem value="all">All Actors</SelectItem>
 						<SelectItem value="user">Users / Guests</SelectItem>
@@ -235,8 +235,8 @@ export default function AdminActivityLogs() {
 				<div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
 					<Card className="border-border/80 shadow-sm">
 						<CardHeader className="pb-3">
-							<CardTitle className="font-display text-xl">Audit Activity Trend</CardTitle>
-							<p className="text-sm text-muted-foreground">Filtered audit volume over the last 7 days.</p>
+							<CardTitle className="font-display text-xl">Activity Trend</CardTitle>
+							<p className="text-sm text-muted-foreground">Filtered activity over the last 7 days.</p>
 						</CardHeader>
 						<CardContent>
 							<div className="h-80">
@@ -255,8 +255,8 @@ export default function AdminActivityLogs() {
 
 					<Card className="border-border/80 shadow-sm xl:col-span-2">
 						<CardHeader className="pb-3">
-							<CardTitle className="font-display text-xl">Entity Activity Distribution</CardTitle>
-							<p className="text-sm text-muted-foreground">Most frequently affected modules or records in the filtered audit trail.</p>
+							<CardTitle className="font-display text-xl">Activity by Entity</CardTitle>
+							<p className="text-sm text-muted-foreground">Most frequently affected modules or records in the filtered activity logs.</p>
 						</CardHeader>
 						<CardContent>
 							<div className="h-72">
