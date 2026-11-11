@@ -861,7 +861,7 @@ export default function Login() {
                   <form className="space-y-4" onSubmit={handleSignUp}>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="signup-first-name">First name</Label>
+                        <Label htmlFor="signup-first-name">First name <span className="text-destructive">*</span></Label>
                         <Input
                           id="signup-first-name"
                           className="h-11 rounded-lg"
@@ -872,7 +872,7 @@ export default function Login() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="signup-last-name">Last name</Label>
+                        <Label htmlFor="signup-last-name">Last name <span className="text-destructive">*</span></Label>
                         <Input
                           id="signup-last-name"
                           className="h-11 rounded-lg"
@@ -895,7 +895,7 @@ export default function Login() {
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="signup-phone">Phone number</Label>
+                        <Label htmlFor="signup-phone">Phone number <span className="text-destructive">*</span></Label>
                         <Input
                           id="signup-phone"
                           className="h-11 rounded-lg"
@@ -906,7 +906,7 @@ export default function Login() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="signup-birthday">Birthday</Label>
+                        <Label htmlFor="signup-birthday">Birthday <span className="text-destructive">*</span></Label>
                         <Input
                           id="signup-birthday"
                           className="h-11 min-w-0 max-w-full box-border text-left rounded-lg ios-date-input-width-fix"
@@ -921,7 +921,7 @@ export default function Login() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
+                      <Label htmlFor="signup-email">Email <span className="text-destructive">*</span></Label>
                       <Input
                         id="signup-email"
                         className="h-11 rounded-lg"
@@ -933,8 +933,8 @@ export default function Login() {
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <PasswordInput id="signup-password" label="Password" value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" confirmValue={signUpForm.confirmPassword} required />
-                      <PasswordInput id="signup-confirm" label="Confirm password" value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
+                      <PasswordInput id="signup-password" label={<>Password <span className="text-destructive">*</span></>} value={signUpForm.password} onChange={(event) => setSignUpForm((current) => ({ ...current, password: event.target.value }))} placeholder="Create a strong password" autoComplete="new-password" confirmValue={signUpForm.confirmPassword} required />
+                      <PasswordInput id="signup-confirm" label={<>Confirm password <span className="text-destructive">*</span></>} value={signUpForm.confirmPassword} onChange={(event) => setSignUpForm((current) => ({ ...current, confirmPassword: event.target.value }))} placeholder="Repeat password" autoComplete="new-password" showMatch confirmValue={signUpForm.password} required />
                     </div>
                     <PasswordRequirements id="signup-password-requirements" value={signUpForm.password} />
                     <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
@@ -951,8 +951,8 @@ export default function Login() {
                         <p>
                           I agree to the{' '}
                           <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => setLegalDialogType('terms')}>
-                            Terms &amp; Conditions
-                          </button>.
+                          Terms &amp; Conditions
+                          </button><span className="text-destructive"> *</span>.
                         </p>
                       </div>
                       <div className="flex items-start gap-2 text-sm leading-5 text-muted-foreground">
@@ -969,7 +969,7 @@ export default function Login() {
                           I acknowledge the{' '}
                           <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => setLegalDialogType('privacy')}>
                             Privacy Notice
-                          </button>.
+                          </button><span className="text-destructive"> *</span>.
                         </p>
                       </div>
                     </div>
