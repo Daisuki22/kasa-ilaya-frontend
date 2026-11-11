@@ -628,12 +628,12 @@ export default function Login() {
 
     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
 
-    if (firstName.length < 2) {
+    if (firstName.length < 2 || firstName.length > 100) {
       toast.error('Please enter your first name.');
       return;
     }
 
-    if (lastName.length < 2) {
+    if (lastName.length < 2 || lastName.length > 100) {
       toast.error('Please enter your last name.');
       return;
     }
@@ -660,7 +660,12 @@ export default function Login() {
       return;
     }
 
-    if (phone && !isValidPhoneNumber(phone)) {
+    if (!phone) {
+      toast.error('Please enter your phone number.');
+      return;
+    }
+
+    if (!isValidPhoneNumber(phone)) {
       toast.error('Please enter a valid Philippine mobile number using 09XXXXXXXXX or 639XXXXXXXXX.');
       return;
     }
